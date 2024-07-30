@@ -1,17 +1,24 @@
 import pg from 'pg';
 import type { PoolClient } from 'pg';
+import path from 'path';
 import dotenv from 'dotenv';
 import Chance from 'chance';
 import { journalEntrySchema } from '../../schemas/journalEntrySchema';
 import { moodSchema } from '../../schemas/moodSchema';
 import { signupSchema } from '../../schemas/userSchema';
 import { activityInputSchema } from '../../schemas/activitySchema';
+import { fileURLToPath } from 'url';
 
 const { Pool } = pg;
 
-console.log('Current working directory:', process.cwd());
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootDir = path.resolve(__dirname, '..', '..', '..', '..', '..');
 
-const result = dotenv.config();
+console.log('Current working directory:', process.cwd());
+console.log('Root directory:', rootDir);
+
+const result = dotenv.config({ path: path.join(rootDir, '.env') });
 if (result.error) {
   console.log('Error loading .env file:', result.error);
 } else {
