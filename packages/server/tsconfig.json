@@ -1,0 +1,26 @@
+{
+  "extends": "@tsconfig/node20/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": ".",
+    "outDir": "dist",
+    "sourceMap": true,
+    "types": ["vitest/globals"],
+
+    "module": "ESNext",
+    "target": "ES2022",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+
+    "strict": true,
+    "verbatimModuleSyntax": true,
+
+    "paths": {
+      "@server/*": ["./src/*"],
+      "@tests/*": ["./tests/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
