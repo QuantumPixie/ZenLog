@@ -1,17 +1,20 @@
-import { createTRPCProxyClient, httpBatchLink } from '@trpc/client';
-import type { AppRouter } from '../../server';
-import { createServer, Server } from 'http';
+import * as trpcExpress from '@trpc/server/adapters/express';
+import bcrypt from 'bcrypt';
 import express from 'express';
+import jwt from 'jsonwebtoken';
+import { beforeAll, afterAll, beforeEach, describe, it, expect, vi } from 'vitest';
+import { createTRPCProxyClient, httpBatchLink } from '@trpc/client';
+import { createServer, Server } from 'http';
+
+import type { AppRouter } from '../../server';
+import type { CustomRequest } from '../../types/customRequest';
+import type { MockDatabase } from '../mocks/databaseMock';
+
 import { appRouter } from '../../server';
 import { createContext } from '../../trpc';
-import * as trpcExpress from '@trpc/server/adapters/express';
 import { authenticateJWT } from '../../middleware/auth';
 import { setDb } from '../../services/userService';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import type { CustomRequest } from '../../types/customRequest';
-import { beforeAll, afterAll, beforeEach, describe, it, expect, vi } from 'vitest';
-import { MockDatabase, createMockDatabase } from '../mocks/databaseMock';
+import { createMockDatabase } from '../mocks/databaseMock';
 import { testConfig } from '../testConfig';
 
 // Mocks
@@ -80,6 +83,10 @@ describe('tRPC Endpoints', () => {
   beforeEach(() => {
     mockDb = createMockDatabase();
     setDb(mockDb);
+  });
+  
+  afterEach(() => {
+    vi.resetAllMocks();
   });
 
 

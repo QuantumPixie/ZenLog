@@ -10,9 +10,7 @@
   "author": "",
   "license": "ISC",
   "description": "",
-  "dependencies": {
-
-  },
   "devDependencies": {
+    "dotenv": "^16.4.5"
   }
 }

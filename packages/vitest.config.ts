@@ -7,8 +7,8 @@ export default defineConfig({
     testTimeout: 10000,
     globals: true,
     environment: 'node',
-    setupFiles: ['./src/__tests__/setup.ts'],
-    include: ['src/**/*.test.ts'],
+    setupFiles: ['dotenv/config'],
+    include: [ 'src/**/*.test.ts'],
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
