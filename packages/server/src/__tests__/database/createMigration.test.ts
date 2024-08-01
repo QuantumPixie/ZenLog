@@ -1,4 +1,3 @@
-// createMigration.test.ts
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import fs from 'fs';
 import path from 'path';

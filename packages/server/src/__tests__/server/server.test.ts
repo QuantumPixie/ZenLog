@@ -18,6 +18,7 @@ describe('Server', () => {
         const address = server.address();
         if (address && typeof address !== 'string') {
           baseUrl = `http://localhost:${address.port}`;
+          mockDb = createMockDatabase();
         } else {
           throw new Error('Server address is not valid');
         }
@@ -51,4 +52,13 @@ describe('Server', () => {
     const response = await fetch(`${baseUrl}/api/unknown`);
     expect(response.status).toBe(404);
   });
+
+  it('should interact with the mock database', async () => {
+    const mockData = { id: 1, name: 'test' };
+    mockDb.insert(mockData);
+
+    const item = mockDb.find(1);
+    expect(item).toEqual(mockData);
+  });
+
 });

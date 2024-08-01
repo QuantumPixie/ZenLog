@@ -8,7 +8,7 @@ import { appRouter } from '../../server';
 import * as trpcExpress from '@trpc/server/adapters/express';
 import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
 
-// Mock the userService
+
 vi.mock('../../services/userService', () => ({
   createUser: vi.fn(),
   loginUser: vi.fn(),
@@ -35,9 +35,9 @@ describe('User Router', () => {
         },
       })
     );
-    
+
     server = createServer(app);
-    
+
     await new Promise<void>((resolve) => {
       server.listen(0, () => {
         const address = server.address();
