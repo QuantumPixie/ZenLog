@@ -1,19 +1,12 @@
-import type { Selectable, Insertable, Kysely } from 'kysely';
+import type {Selectable, Insertable } from 'kysely';
 import type { UserTable } from '../models/user';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import type { Database } from '@server/database';
-import type { MockDatabase } from '@server/__tests__/mocks/databaseMock';
+import { db } from '../database';
 
 type User = Selectable<UserTable>;
 type NewUser = Insertable<UserTable>;
 type SafeUser = Omit<User, 'password'>;
-
-let db: Kysely<Database> | MockDatabase;
-
-export const setDb = (database: Kysely<Database> | MockDatabase) => {
-  db = database;
-};
 
 export async function createUser(newUser: NewUser): Promise<SafeUser> {
   console.log('createUser called with:', newUser);

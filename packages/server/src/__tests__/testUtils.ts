@@ -1,15 +1,17 @@
 import { vi } from 'vitest';
-import type { MockDatabase } from './mocks/databaseMock';
-import { db } from '../database';
+import { mockKysely } from './mocks/databaseMock';
 
-export const getMockDb = (): MockDatabase => db as unknown as MockDatabase;
-
-export const clearMocks = (): void => {
-  const mockDb = getMockDb();
-  vi.clearAllMocks();
-  Object.values(mockDb).forEach(mock => {
-    if (typeof mock === 'function' && mock.mockClear) {
+export function resetMocks() {
+  vi.resetAllMocks();
+  Object.values(mockKysely).forEach(mock => {
+    if (typeof mock === 'function' && vi.isMockFunction(mock)) {
       mock.mockClear();
+    } else if (typeof mock === 'object' && mock !== null) {
+      Object.values(mock).forEach(subMock => {
+        if (vi.isMockFunction(subMock)) {
+          subMock.mockClear();
+        }
+      });
     }
   });
-};
+}

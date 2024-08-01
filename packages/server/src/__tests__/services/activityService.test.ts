@@ -75,8 +75,7 @@ describe('activityService', () => {
       expect(result).toEqual(mockInsertedActivity);
       expect(mockKysely.insertInto).toHaveBeenCalledWith('activities');
       expect(mockKysely.insertInto('activities').values).toHaveBeenCalledWith(expect.objectContaining({ user_id: userId, ...newActivity }));
-      expect(mockKysely.insertInto('activities').values().returning).toHaveBeenCalledWith(['id', 'user_id', 'date', 'activity', 'duration', 'notes']);    });
-  });
+      expect(mockKysely.insertInto('activities').values(expect.any(Object)).returning).toHaveBeenCalledWith(['id', 'user_id', 'date', 'activity', 'duration', 'notes']);  });
 
   describe('getActivitiesByDateRange', () => {
     it('should return activities within the specified date range', async () => {
@@ -99,7 +98,7 @@ describe('activityService', () => {
       expect(result).toEqual(mockActivities);
       expect(mockKysely.selectFrom).toHaveBeenCalledWith('activities');
       expect(mockKysely.selectFrom('activities').selectAll).toHaveBeenCalled();
-      
     });
   });
+});
 });

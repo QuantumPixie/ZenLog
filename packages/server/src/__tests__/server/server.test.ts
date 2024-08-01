@@ -1,8 +1,13 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { createServer, Server } from 'http';
+
+import type { MockDatabase } from '../mocks/databaseMock';
+
+import { createMockDatabase } from '../mocks/databaseMock';
 import app from '../../server';
 
 describe('Server', () => {
+  let mockDb: MockDatabase;
   let server: Server;
   let baseUrl: string;
 
@@ -20,6 +25,15 @@ describe('Server', () => {
       });
     });
   });
+
+  beforeEach(() => {
+    mockDb = createMockDatabase();
+  });
+
+  afterEach(() => {
+    vi.resetAllMocks();
+  });
+
 
   afterAll(() => {
     return new Promise<void>((resolve) => {
