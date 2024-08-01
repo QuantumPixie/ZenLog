@@ -9,7 +9,7 @@ import { signupSchema } from '../../schemas/userSchema';
 import { activityInputSchema } from '../../schemas/activitySchema';
 import { fileURLToPath } from 'url';
 
-const { Pool } = pg;
+export const { Pool } = pg;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,15 +33,15 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
-const chance = new Chance();
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const chance = new Chance();
+export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 const activityList = [
   'Running', 'Yoga', 'Meditation', 'Reading', 'Cooking', 'Painting', 'Swimming',
   'Cycling', 'Hiking', 'Gardening', 'Writing', 'Dancing', 'Photography', 'Singing'
 ];
 
-const clearExistingData = async (client: PoolClient) => {
+export const clearExistingData = async (client: PoolClient) => {
   const tableExistsQuery = await client.query(`
     SELECT EXISTS (
       SELECT FROM information_schema.tables
@@ -60,17 +60,17 @@ const clearExistingData = async (client: PoolClient) => {
   }
 };
 
-const generateUniqueDataForUser = (userId: number, count: number) => {
+export const generateUniqueDataForUser = (userId: number, count: number) => {
   const dates = new Set<string>();
   while (dates.size < count) {
     const date = new Date(chance.date({ year: 2024 }));
-    const dateString = date.toISOString().split('T')[0];  // YYYY-MM-DD format
+    const dateString = date.toISOString().split('T')[0];
     dates.add(dateString);
   }
   return Array.from(dates).map(date => ({ userId, date }));
 };
 
-const seed = async (recordCount = 10) => {
+export const seed = async (recordCount = 10) => {
   let client: PoolClient | null = null;
   try {
     client = await pool.connect();

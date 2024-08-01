@@ -1,16 +1,24 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createUser, loginUser, getUserById, changePassword, setDb } from '../../services/userService';
-import { mockKysely } from '../mocks/databaseMock';
+import { createUser, loginUser, getUserById, changePassword } from '../../services/userService';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
 vi.mock('bcrypt');
 vi.mock('jsonwebtoken');
+vi.mock('../../database', () => ({
+  db: {
+    insertInto: vi.fn(),
+    selectFrom: vi.fn(),
+    updateTable: vi.fn(),
+  },
+}));
+
+import { db } from '../../database';
 
 describe('userService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    setDb(mockKysely);
   });
 
   describe('createUser', () => {
@@ -18,20 +26,20 @@ describe('userService', () => {
       const newUser = { email: 'test@example.com', username: 'testuser', password: 'password' };
       const createdUser = { id: 1, email: newUser.email, username: newUser.username };
 
-      mockKysely.insertInto = vi.fn().mockReturnValue({
+      vi.mocked(db.insertInto).mockReturnValue({
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockReturnValue({
             execute: vi.fn().mockResolvedValue([createdUser])
           })
         })
-      });
+      } as any);
 
       const result = await createUser(newUser);
 
       expect(result).toEqual(createdUser);
-      expect(mockKysely.insertInto).toHaveBeenCalledWith('users');
-      expect(mockKysely.insertInto('users').values).toHaveBeenCalledWith(newUser);
-      expect(mockKysely.insertInto('users').values(newUser).returning).toHaveBeenCalledWith(['id', 'email', 'username']);
+      expect(db.insertInto).toHaveBeenCalledWith('users');
+      expect(db.insertInto('users').values).toHaveBeenCalledWith(newUser);
+      expect(db.insertInto('users').values(newUser).returning).toHaveBeenCalledWith(['id', 'email', 'username']);
     });
   });
 
@@ -41,7 +49,7 @@ describe('userService', () => {
       const password = 'password';
       const user = { id: 1, email, username: 'testuser', password: 'hashedpassword' };
 
-      mockKysely.selectFrom= vi.fn().mockReturnValue({
+      vi.mocked(db.selectFrom).mockReturnValue({
         select: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             limit: vi.fn().mockReturnValue({
@@ -49,7 +57,7 @@ describe('userService', () => {
             })
           })
         })
-      });
+      } as any);
 
       vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
       vi.mocked(jwt.sign).mockReturnValue('token' as never);
@@ -67,7 +75,7 @@ describe('userService', () => {
       const password = 'wrongpassword';
       const user = { id: 1, email, username: 'testuser', password: 'hashedpassword' };
 
-      mockKysely.selectFrom= vi.fn().mockReturnValue({
+      vi.mocked(db.selectFrom).mockReturnValue({
         select: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             limit: vi.fn().mockReturnValue({
@@ -75,7 +83,7 @@ describe('userService', () => {
             })
           })
         })
-      });
+      } as any);
 
       vi.mocked(bcrypt.compare).mockResolvedValue(false as never);
 
@@ -90,7 +98,7 @@ describe('userService', () => {
       const userId = 1;
       const user = { id: userId, email: 'test@example.com', username: 'testuser' };
 
-      mockKysely.selectFrom= vi.fn().mockReturnValue({
+      vi.mocked(db.selectFrom).mockReturnValue({
         select: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             limit: vi.fn().mockReturnValue({
@@ -98,7 +106,7 @@ describe('userService', () => {
             })
           })
         })
-      });
+      } as any);
 
       const result = await getUserById(userId);
 
@@ -113,7 +121,7 @@ describe('userService', () => {
       const newPassword = 'newpassword';
       const user = { password: 'hashedoldpassword' };
 
-      mockKysely.selectFrom= vi.fn().mockReturnValue({
+      vi.mocked(db.selectFrom).mockReturnValue({
         select: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             limit: vi.fn().mockReturnValue({
@@ -121,25 +129,25 @@ describe('userService', () => {
             })
           })
         })
-      });
+      } as any);
 
       vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
       vi.mocked(bcrypt.hash).mockResolvedValue('hashednewpassword' as never);
 
-      mockKysely.updateTable = vi.fn().mockReturnValue({
+      vi.mocked(db.updateTable).mockReturnValue({
         set: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             execute: vi.fn().mockResolvedValue([{ affected: 1 }])
           })
         })
-      });
+      } as any);
 
       const result = await changePassword(userId, oldPassword, newPassword);
 
       expect(result).toBe(true);
-      expect(mockKysely.updateTable).toHaveBeenCalledWith('users');
-      expect(mockKysely.updateTable('users').set).toHaveBeenCalledWith({ password: 'hashednewpassword' });
-      expect(mockKysely.updateTable('users').set({ password: 'hashednewpassword' }).where).toHaveBeenCalledWith('id', '=', userId);
+      expect(db.updateTable).toHaveBeenCalledWith('users');
+      expect(db.updateTable('users').set).toHaveBeenCalledWith({ password: 'hashednewpassword' });
+      expect(db.updateTable('users').set({ password: 'hashednewpassword' }).where).toHaveBeenCalledWith('id', '=', userId);
     });
 
     it('should return false for incorrect old password', async () => {
@@ -148,7 +156,7 @@ describe('userService', () => {
       const newPassword = 'newpassword';
       const user = { password: 'hashedoldpassword' };
 
-      mockKysely.selectFrom = vi.fn().mockReturnValue({
+      vi.mocked(db.selectFrom).mockReturnValue({
         select: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             limit: vi.fn().mockReturnValue({
@@ -156,7 +164,7 @@ describe('userService', () => {
             })
           })
         })
-      });
+      } as any);
 
       vi.mocked(bcrypt.compare).mockResolvedValue(false as never);
 
