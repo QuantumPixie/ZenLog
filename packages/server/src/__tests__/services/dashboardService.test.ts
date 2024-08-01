@@ -3,7 +3,7 @@ import type { Kysely } from 'kysely';
 import type { Database } from '../../models/database';
 import { dashboardService } from '../../services/dashboardService';
 
-// Mock the database module
+
 vi.mock('../../database', () => ({
   db: {
     selectFrom: vi.fn(),
@@ -13,7 +13,7 @@ vi.mock('../../database', () => ({
   },
 }));
 
-// Import the mocked db after mocking
+
 import { db } from '../../database';
 
 describe('dashboardService', () => {
@@ -51,7 +51,7 @@ describe('dashboardService', () => {
 
       const mockAvgAs = vi.fn().mockReturnValue('average_mood');
       const mockAvg = vi.fn().mockReturnValue({ as: mockAvgAs });
-      (mockDb.fn.avg as any) = mockAvg;
+      mockDb.fn.avg = mockAvg;
 
       const result = await dashboardService.getSummary(userId);
 
