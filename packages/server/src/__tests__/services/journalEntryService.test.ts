@@ -2,14 +2,14 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mockKysely } from '../mocks/databaseMock';
 import { sentimentService } from '../../services/sentimentService';
 
-// Mock the database module
+
 vi.mock('../../database', () => ({
   db: mockKysely
 }));
 
 vi.mock('../../services/sentimentService');
 
-// Import journalEntryService after mocking the database
+
 const journalEntryServiceModule = await vi.importActual('../../services/journalEntryService');
 const { journalEntryService } = journalEntryServiceModule as typeof import('../../services/journalEntryService');
 

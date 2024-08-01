@@ -31,7 +31,7 @@ export async function migrate<T extends Database>(db: Kysely<T>) {
 
 // This part makes the script runnable from the command line
 if (import.meta.url === `file://${process.argv[1]}`) {
-  // Ensure DATABASE_URL is set in your environment variables
+
   if (!process.env.DATABASE_URL) {
     console.error('DATABASE_URL environment variable is not set');
     process.exit(1);

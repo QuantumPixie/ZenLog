@@ -90,7 +90,7 @@ export const seed = async (recordCount = 10) => {
 
     await clearExistingData(client);
 
-    // Generate users
+    // users
     const users = Array.from({ length: recordCount }).map(() => ({
       email: chance.email(),
       password: chance.string({ length: 10 }),
@@ -108,7 +108,7 @@ export const seed = async (recordCount = 10) => {
 
       const userDates = generateUniqueDataForUser(userId, recordCount);
 
-      // Generate moods
+      // moods
       for (const { date } of userDates) {
         const mood = {
           user_id: userId,
@@ -123,7 +123,7 @@ export const seed = async (recordCount = 10) => {
         );
       }
 
-      // Generate journal entries
+      // journalEntries
       for (const { date } of userDates) {
         const journalEntry = {
           user_id: userId,
@@ -138,7 +138,7 @@ export const seed = async (recordCount = 10) => {
         );
       }
 
-      // Generate activities
+      // activities
       for (const { date } of userDates) {
         const activity = {
           user_id: userId,

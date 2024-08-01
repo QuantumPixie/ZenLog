@@ -101,13 +101,13 @@ export async function changePassword(id: number, oldPassword: string, newPasswor
 
     if (!user) {
       console.log('User not found');
-      return false; // user not found
+      return false;
     }
 
     const passwordMatch = await bcrypt.compare(oldPassword, user.password);
     if (!passwordMatch) {
       console.log('Old password is incorrect');
-      return false; // old password is incorrect
+      return false;
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);

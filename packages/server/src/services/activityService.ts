@@ -3,7 +3,7 @@ import type { ActivityTable, NewActivity, ActivityInput, RawDatabaseActivity } f
 import { isRawDatabaseActivity } from '../models/activity';
 import type { Insertable } from 'kysely';
 
-// shape of the activities table in the database
+
 interface ActivitiesTable {
   id: number;
   user_id: number;
@@ -13,7 +13,7 @@ interface ActivitiesTable {
   notes: string | null;
 }
 
-// what Kysely expects for insertion
+
 type DbInsertableActivity = Omit<ActivitiesTable, 'id'>;
 
 function mapRawActivityToActivityTable(rawActivity: RawDatabaseActivity): ActivityTable {
