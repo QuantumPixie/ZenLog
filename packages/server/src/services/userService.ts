@@ -3,6 +3,7 @@ import type { UserTable } from '../models/user';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { db } from '../database';
+import { TRPCError } from '@trpc/server';
 
 type User = Selectable<UserTable>;
 type NewUser = Insertable<UserTable>;
@@ -55,11 +56,20 @@ export async function loginUser(email: string, password: string): Promise<{ toke
     }
 
     console.log('Generating JWT');
-    const token = jwt.sign(
-      { user_id: user.id },
-      process.env.JWT_SECRET || 'default_secret',
-      { expiresIn: '1h' }
-    );
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) {
+    console.error('JWT_SECRET is not set');
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Server configuration error',
+    });
+  }
+
+  const token = jwt.sign(
+    { user_id: user.id },
+    jwtSecret,
+    { expiresIn: '1h' }
+  );
 
     const { id, email: userEmail, username } = user;
 

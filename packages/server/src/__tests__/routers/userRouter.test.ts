@@ -61,7 +61,8 @@ describe('User Router', () => {
   });
 
   it('should register a new user', async () => {
-    vi.mocked(userService.createUser).mockResolvedValue({ id: 1, email: '', username: '' });
+    const newUser = { id: 1, email: 'test@example.com', username: 'testuser' };
+    vi.mocked(userService.createUser).mockResolvedValue(newUser);
 
     const result = await client.user.signup.mutate({
       email: 'test@example.com',
@@ -69,7 +70,7 @@ describe('User Router', () => {
       password: 'password123'
     });
 
-    expect(result).toEqual({ user_id: 1 });
+    expect(result).toEqual({user: newUser });
     expect(userService.createUser).toHaveBeenCalledWith(expect.objectContaining({
       email: 'test@example.com',
       username: 'testuser',

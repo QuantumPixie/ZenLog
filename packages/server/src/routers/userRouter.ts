@@ -16,9 +16,9 @@ export const userRouter = router({
 
       try {
         const user = await createUser(newUser);
-        return { user_id: user.id };
+        return { user };
       } catch (error) {
-        throw new TRPCError({ 
+        throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to register user'
         });
