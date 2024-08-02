@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { createServer, Server } from 'http';
+import request from 'supertest';
 
 import type { MockDatabase } from '../mocks/databaseMock';
 
@@ -61,4 +62,26 @@ describe('Server', () => {
     expect(item).toEqual(mockData);
   });
 
+});
+
+describe('CORS', () => {
+  it('should allow CORS for any origin', async () => {
+    const response = await request(app)
+      .get('/api/health')
+      .set('Origin', 'http://example.com');
+
+    expect(response.headers['access-control-allow-origin']).toBe('*');
+  });
+
+  it('should handle preflight requests and include appropriate CORS headers', async () => {
+    const response = await request(app)
+      .options('/api/health')
+      .set('Origin', 'http://example.com')
+      .set('Access-Control-Request-Method', 'GET')
+      .set('Access-Control-Request-Headers', 'Content-Type');
+
+    expect(response.headers['access-control-allow-origin']).toBe('*');
+    expect(response.headers['access-control-allow-methods']).toBeDefined();
+    expect(response.headers['access-control-allow-headers']).toBeDefined();
+  });
 });

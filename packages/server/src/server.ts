@@ -8,7 +8,6 @@ import { moodRouter } from './routers/moodRouter';
 import { userRouter } from './routers/userRouter';
 import { dashboardRouter } from './routers/dashboardRouter';
 import { authenticateJWT } from './middleware/auth';
-import config from './config';
 import type { CustomRequest } from './types/customRequest';
 
 export const appRouter = router({
@@ -48,16 +47,32 @@ app.use(
   })
 );
 
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Error in server middleware:', err);
-  res.status(500).send('Something went wrong!');
+app.use('*', (req, res) => {
+  res.status(404).json({ error: 'Not Found' });
 });
 
-const port = config.port || 3000;
-if (process.env.NODE_ENV !== 'test') {
-  app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+app.use((err: Error, req: express.Request, res: express.Response) => {
+  console.error('Error in server middleware:', err);
+
+  if (err instanceof SyntaxError && 'body' in err) {
+    return res.status(400).json({ error: 'Invalid JSON in request body' });
+  }
+
+  if (err.name === 'UnauthorizedError') {
+    return res.status(401).json({ error: 'Authentication failed' });
+  }
+
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({ error: 'Validation error', details: err.message });
+  }
+
+
+  res.status(500).json({
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'production'
+      ? 'An unexpected error occurred'
+      : err.message
   });
-}
+});
 
 export default app;
