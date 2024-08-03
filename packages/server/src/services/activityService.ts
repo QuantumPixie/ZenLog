@@ -1,38 +1,12 @@
 import { db } from '../database';
-import type { ActivityTable, NewActivity, ActivityInput, RawDatabaseActivity } from '../models/activity';
-import { isRawDatabaseActivity } from '../models/activity';
+import type { ActivityTable, NewActivity, ActivityInput } from '../models/activity';
 import type { Insertable } from 'kysely';
+import { isValidDateString } from '../schemas/activitySchema';
 
+type DbInsertableActivity = Omit<ActivityTable, 'id'>;
 
-interface ActivitiesTable {
-  id: number;
-  user_id: number;
-  date: Date;
-  activity: string;
-  duration: number | null;
-  notes: string | null;
-}
-
-
-type DbInsertableActivity = Omit<ActivitiesTable, 'id'>;
-
-function mapRawActivityToActivityTable(rawActivity: RawDatabaseActivity): ActivityTable {
-  return {
-    id: rawActivity.id,
-    user_id: rawActivity.user_id,
-    date: rawActivity.date instanceof Date ? rawActivity.date : new Date(rawActivity.date),
-    activity: rawActivity.activity,
-    duration: rawActivity.duration,
-    notes: rawActivity.notes,
-  };
-}
-
-// function to convert NewActivity to DbInsertableActivity
 function toDbInsertableActivity(newActivity: NewActivity): DbInsertableActivity {
-  return {
-    ...newActivity,
-    date: new Date(newActivity.date), 
-  };
+  return newActivity;
 }
 
 export const activityService = {
@@ -43,19 +17,23 @@ export const activityService = {
       .where('user_id', '=', userId)
       .execute();
 
-    return activities.filter(isRawDatabaseActivity).map(mapRawActivityToActivityTable);
+    return activities.filter(activity =>
+      typeof activity.id === 'number' &&
+      typeof activity.user_id === 'number' &&
+      typeof activity.date === 'string' &&
+      isValidDateString(activity.date) &&
+      typeof activity.activity === 'string' &&
+      (activity.duration === undefined || typeof activity.duration === 'number') &&
+      (activity.notes === undefined || typeof activity.notes === 'string')
+    );
   },
 
   async getActivityById(id: number): Promise<ActivityTable | undefined> {
-    const activity = await db
+    return db
       .selectFrom('activities')
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst();
-
-    return activity && isRawDatabaseActivity(activity)
-      ? mapRawActivityToActivityTable(activity)
-      : undefined;
   },
 
   async createActivity(userId: number, activityData: ActivityInput): Promise<ActivityTable> {
@@ -68,26 +46,24 @@ export const activityService = {
 
     const insertedActivity = await db
       .insertInto('activities')
-      .values(dbInsertableActivity as Insertable<ActivitiesTable>)
+      .values(dbInsertableActivity as Insertable<ActivityTable>)
       .returning(['id', 'user_id', 'date', 'activity', 'duration', 'notes'])
       .executeTakeFirst();
 
-    if (!insertedActivity || !isRawDatabaseActivity(insertedActivity)) {
+    if (!insertedActivity) {
       throw new Error('Failed to create activity');
     }
 
-    return mapRawActivityToActivityTable(insertedActivity);
+    return insertedActivity;
   },
 
   async getActivitiesByDateRange(userId: number, startDate: string, endDate: string): Promise<ActivityTable[]> {
-    const activities = await db
+    return db
       .selectFrom('activities')
       .selectAll()
       .where('user_id', '=', userId)
-      .where('date', '>=', new Date(startDate))
-      .where('date', '<=', new Date(endDate))
+      .where('date', '>=', startDate)
+      .where('date', '<=', endDate)
       .execute();
-
-    return activities.filter(isRawDatabaseActivity).map(mapRawActivityToActivityTable);
   },
 };
