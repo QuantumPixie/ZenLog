@@ -1,5 +1,5 @@
 import { db } from '../database';
-import type {  NewJournalEntry } from '../models/journalEntry';
+import type { NewJournalEntry } from '../models/journalEntry';
 import { sentimentService } from './sentimentService';
 
 export const journalEntryService = {
@@ -32,8 +32,8 @@ export const journalEntryService = {
       .selectFrom('journal_entries')
       .select(['id', 'date', 'entry', 'sentiment'])
       .where('user_id', '=', userId)
-      .where('date', '>=', new Date(startDate))
-      .where('date', '<=', new Date(endDate))
+      .where('date', '>=', startDate)
+      .where('date', '<=', endDate)
       .orderBy('date', 'asc')
       .execute();
   },

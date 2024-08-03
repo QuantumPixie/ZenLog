@@ -1,6 +1,6 @@
-import { router, procedure, protectedProcedure } from '../trpc';
+import { router, procedure, authedProcedure } from '../trpc';
 import { createUser, loginUser, changePassword, getUserById } from '../services/userService';
-import { signupSchema, loginSchema, changePasswordSchema, getUserByIdSchema } from '../schemas/userSchema';
+import { signupSchema, loginSchema, changePasswordSchema } from '../schemas/userSchema';
 import bcrypt from 'bcrypt';
 import { TRPCError } from '@trpc/server';
 
@@ -25,7 +25,7 @@ export const userRouter = router({
       }
     }),
 
-    login: procedure
+  login: procedure
     .input(loginSchema)
     .mutation(async ({ input }) => {
       const { email, password } = input;
@@ -49,7 +49,7 @@ export const userRouter = router({
       }
     }),
 
-  changePassword: protectedProcedure
+  changePassword: authedProcedure
     .input(changePasswordSchema)
     .mutation(async ({ ctx, input }) => {
       const { oldPassword, newPassword } = input;
@@ -72,10 +72,9 @@ export const userRouter = router({
       }
     }),
 
-  getUser: protectedProcedure
-    .input(getUserByIdSchema)
-    .query(async ({ input }) => {
-      const user = await getUserById(input.id);
+  getUser: authedProcedure
+    .query(async ({ ctx }) => {
+      const user = await getUserById(ctx.user.id);
       if (user) {
         return user;
       } else {

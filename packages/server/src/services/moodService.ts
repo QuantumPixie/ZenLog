@@ -19,14 +19,13 @@ export const moodService = {
       .executeTakeFirst();
   },
 
-
   async getMoodsByDateRange(userId: number, startDate: string, endDate: string) {
     return db
       .selectFrom('moods')
       .select(['id', 'date', 'mood_score', 'emotions'])
       .where('user_id', '=', userId)
-      .where('date', '>=', new Date(startDate))
-      .where('date', '<=', new Date(endDate))
+      .where('date', '>=', startDate)
+      .where('date', '<=', endDate)
       .orderBy('date', 'asc')
       .execute();
   },

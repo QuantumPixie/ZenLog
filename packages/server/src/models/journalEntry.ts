@@ -5,13 +5,12 @@ export type Generated<T> =
     ? ColumnType<S, I | undefined, U>
     : ColumnType<T, T | undefined, T>
 
-
 export interface JournalEntryTable {
-  id:Generated<number>;
+  id: Generated<number>;
   user_id: number;
-  date: Date;
+  date: string;
   entry: string;
-  sentiment: number; 
+  sentiment: number;
 }
 
 export type NewJournalEntry = Omit<JournalEntryTable, 'id'>;

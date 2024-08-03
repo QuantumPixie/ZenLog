@@ -1,4 +1,4 @@
-import { router, procedure } from '../trpc';
+import { router, authedProcedure } from '../trpc';
 import { z } from 'zod';
 import { moodService } from '../services/moodService';
 import { moodSchema } from '../schemas/moodSchema';
@@ -13,26 +13,23 @@ const dateRangeSchema = z.object({
 });
 
 export const moodRouter = router({
-  getMoods: procedure
-    .input(z.object({ user_id: z.number().int() }))
-    .query(async ({ input }) => {
-      const moods = await moodService.getMoods(input.user_id);
+  getMoods: authedProcedure
+    .query(async ({ ctx }) => {
+      const moods = await moodService.getMoods(ctx.user.id);
       return moods;
     }),
 
-  createMood: procedure
-    .input(moodSchema.omit({ id: true, user_id: true }).extend({
-      user_id: z.number()
-    }))
-    .mutation(async ({ input }) => {
-      const mood = await moodService.createMood(input.user_id, input);
+  createMood: authedProcedure
+    .input(moodSchema.omit({ id: true, user_id: true }))
+    .mutation(async ({ ctx, input }) => {
+      const mood = await moodService.createMood(ctx.user.id, input);
       return mood;
     }),
 
-  getMoodsByDateRange: procedure
-    .input(dateRangeSchema.extend({ user_id: z.number().int() }))
-    .query(async ({ input }) => {
-      const moods = await moodService.getMoodsByDateRange(input.user_id, input.startDate, input.endDate);
+  getMoodsByDateRange: authedProcedure
+    .input(dateRangeSchema)
+    .query(async ({ ctx, input }) => {
+      const moods = await moodService.getMoodsByDateRange(ctx.user.id, input.startDate, input.endDate);
       return moods;
     }),
 });

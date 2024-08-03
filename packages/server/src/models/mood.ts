@@ -8,7 +8,7 @@ export type Generated<T> =
 export interface MoodTable {
   id: Generated<number>;
   user_id: number;
-  date: Date;
+  date: string;
   mood_score: number;
   emotions: string[];
 }

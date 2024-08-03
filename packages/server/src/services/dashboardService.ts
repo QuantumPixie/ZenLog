@@ -20,7 +20,7 @@ export const dashboardService = {
 
     const recentActivities = await db
       .selectFrom('activities')
-      .select(['date', 'activity', 'duration'])
+      .select(['date', 'activity', 'duration', 'notes'])
       .where('user_id', '=', userId)
       .orderBy('date', 'desc')
       .limit(5)
@@ -30,11 +30,13 @@ export const dashboardService = {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
+    const sevenDaysAgoString = sevenDaysAgo.toISOString().split('T')[0];
+
     const averageMoodScore = await db
       .selectFrom('moods')
       .select(db.fn.avg('mood_score').as('average_mood'))
       .where('user_id', '=', userId)
-      .where('date', '>=', sevenDaysAgo)
+      .where('date', '>=', sevenDaysAgoString)
       .executeTakeFirst();
 
     return {

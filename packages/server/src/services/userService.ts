@@ -1,4 +1,4 @@
-import type {Selectable, Insertable } from 'kysely';
+import type { Selectable, Insertable } from 'kysely';
 import type { UserTable } from '../models/user';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -56,20 +56,20 @@ export async function loginUser(email: string, password: string): Promise<{ toke
     }
 
     console.log('Generating JWT');
-  const jwtSecret = process.env.JWT_SECRET;
-  if (!jwtSecret) {
-    console.error('JWT_SECRET is not set');
-    throw new TRPCError({
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'Server configuration error',
-    });
-  }
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      console.error('JWT_SECRET is not set');
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Server configuration error',
+      });
+    }
 
-  const token = jwt.sign(
-    { user_id: user.id },
-    jwtSecret,
-    { expiresIn: '1h' }
-  );
+    const token = jwt.sign(
+      { user_id: user.id },
+      jwtSecret,
+      { expiresIn: '1h' }
+    );
 
     const { id, email: userEmail, username } = user;
 
@@ -81,13 +81,13 @@ export async function loginUser(email: string, password: string): Promise<{ toke
   }
 }
 
-export async function getUserById(id: number): Promise<SafeUser | undefined> {
-  console.log('getUserById called with id:', id);
+export async function getUserById(userId: number): Promise<SafeUser | undefined> {
+  console.log('getUserById called with id:', userId);
   try {
     const [user] = await db
       .selectFrom('users')
       .select(['id', 'email', 'username'])
-      .where('id', '=', id)
+      .where('id', '=', userId)
       .limit(1)
       .execute();
 

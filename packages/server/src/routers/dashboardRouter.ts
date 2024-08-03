@@ -1,12 +1,10 @@
-import { router, procedure } from '../trpc';
-import { z } from 'zod';
+import { router, authedProcedure } from '../trpc';
 import { dashboardService } from '../services/dashboardService';
 
 export const dashboardRouter = router({
-  getSummary: procedure
-    .input(z.object({ user_id: z.number().int() }))
-    .query(async ({ input }) => {
-      const summary = await dashboardService.getSummary(input.user_id);
+  getSummary: authedProcedure
+    .query(async ({ ctx }) => {
+      const summary = await dashboardService.getSummary(ctx.user.id);
       return summary;
     }),
 });

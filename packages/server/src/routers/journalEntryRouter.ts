@@ -1,4 +1,4 @@
-import { router, procedure } from '../trpc';
+import { router, authedProcedure } from '../trpc';
 import { z } from 'zod';
 import { journalEntryService } from '../services/journalEntryService';
 import { journalEntrySchema } from '../schemas/journalEntrySchema';
@@ -13,26 +13,23 @@ const dateRangeSchema = z.object({
 });
 
 export const journalEntryRouter = router({
-  getJournalEntries: procedure
-    .input(z.object({ user_id: z.number().int() }))
-    .query(async ({ input }) => {
-      const entries = await journalEntryService.getJournalEntries(input.user_id);
+  getJournalEntries: authedProcedure
+    .query(async ({ ctx }) => {
+      const entries = await journalEntryService.getJournalEntries(ctx.user.id);
       return entries;
     }),
 
-  createJournalEntry: procedure
-    .input(journalEntrySchema.omit({ id: true }).extend({
-      user_id: z.number()
-    }))
-    .mutation(async ({ input }) => {
-      const entry = await journalEntryService.createJournalEntry(input.user_id, input);
+  createJournalEntry: authedProcedure
+    .input(journalEntrySchema.omit({ id: true, user_id: true }))
+    .mutation(async ({ ctx, input }) => {
+      const entry = await journalEntryService.createJournalEntry(ctx.user.id, input);
       return entry;
     }),
 
-  getJournalEntriesByDateRange: procedure
-    .input(dateRangeSchema.extend({ user_id: z.number().int() }))
-    .query(async ({ input }) => {
-      const entries = await journalEntryService.getJournalEntriesByDateRange(input.user_id, input.startDate, input.endDate);
+  getJournalEntriesByDateRange: authedProcedure
+    .input(dateRangeSchema)
+    .query(async ({ ctx, input }) => {
+      const entries = await journalEntryService.getJournalEntriesByDateRange(ctx.user.id, input.startDate, input.endDate);
       return entries;
     }),
 });

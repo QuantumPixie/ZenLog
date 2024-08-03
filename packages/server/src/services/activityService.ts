@@ -28,11 +28,12 @@ export const activityService = {
     );
   },
 
-  async getActivityById(id: number): Promise<ActivityTable | undefined> {
+  async getActivityById(userId: number, id: number): Promise<ActivityTable | undefined> {
     return db
       .selectFrom('activities')
       .selectAll()
       .where('id', '=', id)
+      .where('user_id', '=', userId)
       .executeTakeFirst();
   },
 
