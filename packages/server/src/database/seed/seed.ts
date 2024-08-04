@@ -8,6 +8,7 @@ import { moodSchema } from '../../schemas/moodSchema';
 import { signupSchema } from '../../schemas/userSchema';
 import { activityInputSchema } from '../../schemas/activitySchema';
 import { fileURLToPath } from 'url';
+import bcrypt from 'bcrypt';
 
 export const { Pool } = pg;
 
@@ -90,6 +91,8 @@ export const seed = async (recordCount = 10) => {
 
     await clearExistingData(client);
 
+    await client.query('BEGIN');
+
     // users
     const users = Array.from({ length: recordCount }).map(() => ({
       email: chance.email(),
@@ -99,9 +102,10 @@ export const seed = async (recordCount = 10) => {
 
     for (const user of users) {
       const validatedUser = signupSchema.parse(user);
+      const hashedPassword = await bcrypt.hash(validatedUser.password, 10);
       const result = await client.query(
-        'INSERT INTO users (email, password, username, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING id',
-        [validatedUser.email, validatedUser.password, validatedUser.username]
+        'INSERT INTO users (email, password, username) VALUES ($1, $2, $3) RETURNING id',
+        [validatedUser.email, hashedPassword, validatedUser.username]
       );
       const userId = result.rows[0].id;
       console.log(`Created user with id: ${userId}`);
@@ -112,13 +116,13 @@ export const seed = async (recordCount = 10) => {
       for (const { date } of userDates) {
         const mood = {
           user_id: userId,
-          date: new Date(date),
+          date,
           mood_score: chance.integer({ min: 1, max: 10 }),
-          emotions: chance.pickset(['happy', 'sad', 'angry', 'excited', 'nervous', 'calm'], 2),
+          emotions: chance.pickset(['happy', 'sad', 'angry', 'excited', 'nervous', 'calm'], chance.integer({ min: 1, max: 3 })),
         };
         const validatedMood = moodSchema.omit({ id: true }).parse(mood);
         await client.query(
-          'INSERT INTO moods (user_id, date, mood_score, emotions, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW())',
+          'INSERT INTO moods (user_id, date, mood_score, emotions) VALUES ($1, $2, $3, $4)',
           [validatedMood.user_id, validatedMood.date, validatedMood.mood_score, validatedMood.emotions]
         );
       }
@@ -127,41 +131,45 @@ export const seed = async (recordCount = 10) => {
       for (const { date } of userDates) {
         const journalEntry = {
           user_id: userId,
-          date: new Date(date),
+          date,
           entry: chance.paragraph(),
-          sentiment: chance.integer({ min: 1, max: 10 }),
+          sentiment: chance.floating({ min: 1, max: 10, fixed: 1 }),
         };
         const validatedJournalEntry = journalEntrySchema.omit({ id: true }).parse(journalEntry);
         await client.query(
-          'INSERT INTO journal_entries (user_id, date, entry, sentiment, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW())',
+          'INSERT INTO journal_entries (user_id, date, entry, sentiment) VALUES ($1, $2, $3, $4)',
           [validatedJournalEntry.user_id, validatedJournalEntry.date, validatedJournalEntry.entry, validatedJournalEntry.sentiment]
         );
       }
 
       // activities
       for (const { date } of userDates) {
-        const activity = {
-          user_id: userId,
-          date: new Date(date),
+        const activityInput = {
+          date,
           activity: chance.pickone(activityList),
           duration: chance.integer({ min: 10, max: 120 }),
           notes: chance.sentence(),
         };
-        const validatedActivity = activityInputSchema.parse(activity);
+        const validatedActivity = activityInputSchema.parse(activityInput);
         await client.query(
-          'INSERT INTO activities (user_id, date, activity, duration, notes, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, NOW(), NOW())',
-          [validatedActivity.user_id, validatedActivity.date, validatedActivity.activity, validatedActivity.duration, validatedActivity.notes]
+          'INSERT INTO activities (user_id, date, activity, duration, notes) VALUES ($1, $2, $3, $4, $5)',
+          [userId, validatedActivity.date, validatedActivity.activity, validatedActivity.duration, validatedActivity.notes]
         );
       }
     }
 
+    await client.query('COMMIT');
     console.log('Database seeding completed successfully');
   } catch (error) {
+    if (client) {
+      await client.query('ROLLBACK');
+    }
     console.error('Error seeding database:', error);
     if (error instanceof Error) {
       console.error('Error message:', error.message);
       console.error('Error stack:', error.stack);
     }
+    throw error;
   } finally {
     if (client) {
       client.release();
