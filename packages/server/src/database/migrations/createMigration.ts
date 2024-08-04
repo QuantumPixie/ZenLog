@@ -12,10 +12,10 @@ if (!fs.existsSync(migrationDir)) {
   fs.mkdirSync(migrationDir);
 }
 
-// Get the current timestamp in the format YYYYMMDDHHMMSS
+// current timestamp in the format YYYYMMDDHHMMSS
 const timestamp = new Date().toISOString().replace(/[-T:.Z]/g, '').slice(0, 14);
 
-// Get the migration name from the command line arguments, default to 'migration'
+// migration name from the command line arguments, default to 'migration'
 const migrationName = process.argv[2] || 'migration';
 const migrationFileName = `${timestamp}_${migrationName}.ts`;
 const migrationFilePath = path.join(migrationDir, migrationFileName);

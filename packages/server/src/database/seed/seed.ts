@@ -16,9 +16,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..', '..', '..', '..', '..');
 
-console.log('Current working directory:', process.cwd());
-console.log('Root directory:', rootDir);
-
 const result = dotenv.config({ path: path.join(rootDir, '.env') });
 if (result.error) {
   console.log('Error loading .env file:', result.error);
@@ -26,8 +23,6 @@ if (result.error) {
   console.log('.env file loaded successfully');
 }
 
-console.log('Environment variables loaded:', process.env.DATABASE_URL ? 'Yes' : 'No');
-console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'Set (not shown for security)' : 'Not set');
 
 if (!process.env.DATABASE_URL) {
   console.error('DATABASE_URL is not set in the environment variables.');
@@ -51,7 +46,6 @@ export const clearExistingData = async (client: PoolClient) => {
     );
   `);
   const tableExists = tableExistsQuery.rows[0].exists;
-  console.log('Users table exists:', tableExists);
 
   if (tableExists) {
     await client.query('TRUNCATE public.users, public.moods, public.journal_entries, public.activities CASCADE');

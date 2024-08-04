@@ -36,7 +36,7 @@ type CustomContext = {
   user: User;
 };
 
-// Define a more flexible type for testing invalid inputs
+// flexible type for testing invalid inputs
 type TestActivityInput = {
   date: string;
   activity: string;

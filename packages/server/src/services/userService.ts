@@ -40,10 +40,8 @@ export async function loginUser(email: string, password: string): Promise<{ toke
       .limit(1)
       .execute();
 
-    console.log('User found:', user ? 'Yes' : 'No');
 
     if (!user) {
-      console.log(">>>> no user!")
       return null; // user not found
     }
 
@@ -55,7 +53,6 @@ export async function loginUser(email: string, password: string): Promise<{ toke
       return null; // invalid password
     }
 
-    console.log('Generating JWT');
     const jwtSecret = process.env.JWT_SECRET;
     if (!jwtSecret) {
       console.error('JWT_SECRET is not set');

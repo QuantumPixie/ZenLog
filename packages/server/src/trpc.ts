@@ -11,8 +11,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'default_secret';
 export const createContext = ({
   req,
   res,
-}: CreateExpressContextOptions & { req: CustomRequest }): { req: CustomRequest; res: CreateExpressContextOptions['res']; user: User | null } => {
-  const authHeader = req.header('Authorization');
+}: CreateExpressContextOptions): { req: CustomRequest; res: CreateExpressContextOptions['res']; user: User | null } => {
+  const customReq = req as CustomRequest;
+  const authHeader = customReq.header ? customReq.header('Authorization') : null;
   let user: User | null = null;
 
   if (authHeader) {
@@ -33,7 +34,7 @@ export const createContext = ({
           message: 'Invalid token payload',
         });
       }
-      user = getUserFromToken(decoded as JwtPayload);
+      user = getUserFromToken(decoded as JwtPayload) as User | null;
       if (!user) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
@@ -59,7 +60,7 @@ export const createContext = ({
     }
   }
 
-  return { req, res, user };
+  return { req: customReq, res, user };
 };
 
 export type Context = inferAsyncReturnType<typeof createContext>;

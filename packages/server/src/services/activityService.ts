@@ -39,7 +39,6 @@ export const activityService = {
   },
 
   async createActivity(userId: number, activityData: ActivityInput): Promise<ActivityTable> {
-    // Minimal validation
     if (!isValidDateString(activityData.date)) {
       throw new Error('Invalid date format');
     }

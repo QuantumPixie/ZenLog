@@ -32,7 +32,6 @@ describe('dashboardService', () => {
       const mockActivities = [{ date: '2023-08-01', activity: 'Running', duration: 30, notes: 'Good run' }];
       const mockAverageMood = { average_mood: 6.5 };
 
-      // Mock the chain of method calls
       const mockChain = {
         select: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),

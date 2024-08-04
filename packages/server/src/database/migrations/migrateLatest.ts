@@ -29,7 +29,7 @@ export async function migrate<T extends Database>(db: Kysely<T>) {
   console.log('All migrations have been run.');
 }
 
-// This part makes the script runnable from the command line
+// script runnable from the command line
 if (import.meta.url === `file://${process.argv[1]}`) {
 
   if (!process.env.DATABASE_URL) {

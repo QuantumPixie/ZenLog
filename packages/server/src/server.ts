@@ -30,7 +30,6 @@ app.use('/api/health', (_, res) => {
 });
 
 app.use('/api/trpc/*', (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.log('Applying authenticateJWT middleware');
   authenticateJWT(req as CustomRequest, res, next);
 });
 
@@ -39,9 +38,7 @@ app.use(
   trpcExpress.createExpressMiddleware({
     router: appRouter,
     createContext: ({ req, res }: trpcExpress.CreateExpressContextOptions) => {
-      console.log('Creating context in tRPC middleware');
       const context = createContext({ req: req as CustomRequest, res });
-      console.log('Context created:', context);
       return context;
     },
   })
