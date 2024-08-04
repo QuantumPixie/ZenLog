@@ -2,6 +2,7 @@ import { Kysely, sql } from 'kysely';
 import type { Database } from '../../../models/database';
 
 export async function up(db: Kysely<Database>): Promise<void> {
+
   await db.schema
     .createTable('users')
     .addColumn('id', 'serial', col => col.primaryKey())
@@ -32,7 +33,9 @@ export async function up(db: Kysely<Database>): Promise<void> {
     .addColumn('user_id', 'integer', col => col.references('users.id').onDelete('cascade').notNull())
     .addColumn('date', 'date', col => col.notNull())
     .addColumn('entry', 'text', col => col.notNull())
-    .addColumn('sentiment', 'integer', col => col.notNull())
+    .addColumn('sentiment', sql`numeric(3,1)`, col => 
+      col.notNull().check(sql`sentiment >= 1 AND sentiment <= 10`)
+    )
     .addColumn('created_at', 'timestamp', col => col.defaultTo(sql`now()`).notNull())
     .addColumn('updated_at', 'timestamp', col => col.defaultTo(sql`now()`).notNull())
     .addColumn('deleted_at', 'timestamp')
@@ -59,6 +62,11 @@ export async function up(db: Kysely<Database>): Promise<void> {
 }
 
 export async function down(db: Kysely<Database>): Promise<void> {
+
+  await db.schema.dropIndex('activities_user_id_date_index').execute();
+  await db.schema.dropIndex('journal_entries_user_id_date_index').execute();
+  await db.schema.dropIndex('moods_user_id_date_index').execute();
+
   await db.schema.dropTable('activities').execute();
   await db.schema.dropTable('journal_entries').execute();
   await db.schema.dropTable('moods').execute();
