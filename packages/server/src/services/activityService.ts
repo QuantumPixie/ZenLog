@@ -17,6 +17,7 @@ export const activityService = {
       .where('user_id', '=', userId)
       .execute();
 
+    // Filter out invalid activities
     return activities.filter(activity =>
       typeof activity.id === 'number' &&
       typeof activity.user_id === 'number' &&
@@ -28,7 +29,7 @@ export const activityService = {
     );
   },
 
-  async getActivityById(userId: number, id: number): Promise<ActivityTable | undefined> {
+  async getActivityById(id: number, userId: number): Promise<ActivityTable | undefined> {
     return db
       .selectFrom('activities')
       .selectAll()
@@ -38,6 +39,11 @@ export const activityService = {
   },
 
   async createActivity(userId: number, activityData: ActivityInput): Promise<ActivityTable> {
+    // Minimal validation
+    if (!isValidDateString(activityData.date)) {
+      throw new Error('Invalid date format');
+    }
+
     const newActivity: NewActivity = {
       ...activityData,
       user_id: userId,

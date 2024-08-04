@@ -40,24 +40,28 @@ describe('activityService', () => {
   describe('getActivityById', () => {
     it('should return an activity by id', async () => {
       const activityId = 1;
+      const userId = 1;
       const mockActivity = { id: 1, user_id: 1, date: '2024-08-02', activity: 'Running', duration: 30, notes: 'Good run' };
 
+      const mockWhere = vi.fn().mockReturnThis();
       mockKysely.selectFrom = vi.fn().mockReturnValue({
         selectAll: vi.fn().mockReturnThis(),
-        where: vi.fn().mockReturnThis(),
+        where: mockWhere,
         executeTakeFirst: vi.fn().mockResolvedValue(mockActivity)
       });
 
-      const result = await activityService.getActivityById(activityId);
+      const result = await activityService.getActivityById(activityId, userId);
 
       expect(result).toEqual(mockActivity);
       expect(mockKysely.selectFrom).toHaveBeenCalledWith('activities');
       expect(mockKysely.selectFrom('activities').selectAll).toHaveBeenCalled();
-      expect(mockKysely.selectFrom('activities').selectAll().where).toHaveBeenCalledWith('id', '=', activityId);
+      expect(mockWhere).toHaveBeenCalledWith('id', '=', activityId);
+      expect(mockWhere).toHaveBeenCalledWith('user_id', '=', userId);
     });
 
     it('should return undefined for non-existent activity', async () => {
       const activityId = 999;
+      const userId = 1;
 
       mockKysely.selectFrom = vi.fn().mockReturnValue({
         selectAll: vi.fn().mockReturnThis(),
@@ -65,7 +69,7 @@ describe('activityService', () => {
         executeTakeFirst: vi.fn().mockResolvedValue(undefined)
       });
 
-      const result = await activityService.getActivityById(activityId);
+      const result = await activityService.getActivityById(activityId, userId);
 
       expect(result).toBeUndefined();
     });
