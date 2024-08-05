@@ -8,6 +8,18 @@ import * as trpcExpress from '@trpc/server/adapters/express';
 import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
 import { TRPCClientError } from '@trpc/client';
 
+// simplified types for testing
+type SimplifiedUser = {
+  id: number;
+  email: string;
+  username: string;
+};
+
+type SimplifiedLoginResult = {
+  token: string;
+  user: SimplifiedUser;
+};
+
 vi.mock('../../services/userService', () => ({
   createUser: vi.fn(),
   loginUser: vi.fn(),
@@ -66,7 +78,7 @@ describe('User Router', () => {
   });
 
   it('should register a new user', async () => {
-    const newUser = { id: 1, email: 'test@example.com', username: 'testuser' };
+    const newUser: SimplifiedUser = { id: 1, email: 'test@example.com', username: 'testuser' };
     vi.mocked(userService.createUser).mockResolvedValue(newUser);
 
     const result = await client.user.signup.mutate({
@@ -84,20 +96,18 @@ describe('User Router', () => {
   });
 
   it('should login a user', async () => {
-    vi.mocked(userService.loginUser).mockResolvedValue({
+    const loginResult: SimplifiedLoginResult = {
       token: 'mocktoken',
       user: { id: 1, email: 'test@example.com', username: 'testuser' }
-    });
+    };
+    vi.mocked(userService.loginUser).mockResolvedValue(loginResult);
 
     const result = await client.user.login.mutate({
       email: 'test@example.com',
       password: 'password123'
     });
 
-    expect(result).toEqual({
-      token: 'mocktoken',
-      user: { id: 1, email: 'test@example.com', username: 'testuser' }
-    });
+    expect(result).toEqual(loginResult);
     expect(userService.loginUser).toHaveBeenCalledWith('test@example.com', 'password123');
   });
 
@@ -114,19 +124,16 @@ describe('User Router', () => {
   });
 
   it('should get user details', async () => {
-    vi.mocked(userService.getUserById).mockResolvedValue({
+    const user: SimplifiedUser = {
       id: 1,
       email: 'test@example.com',
       username: 'testuser'
-    });
+    };
+    vi.mocked(userService.getUserById).mockResolvedValue(user);
 
     const result = await client.user.getUser.query();
 
-    expect(result).toEqual({
-      id: 1,
-      email: 'test@example.com',
-      username: 'testuser'
-    });
+    expect(result).toEqual(user);
     expect(userService.getUserById).toHaveBeenCalledWith(1);
   });
 
