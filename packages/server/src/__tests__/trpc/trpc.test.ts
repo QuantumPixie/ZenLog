@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createContext, authedProcedure, t } from '../../trpc';
+import { createContext, authedProcedure } from '../../trpc';
 import { TRPCError } from '@trpc/server';
 import jwt from 'jsonwebtoken';
 import { getUserFromToken } from '../../utils/tokenUtils';
@@ -7,9 +7,12 @@ import type { CreateExpressContextOptions } from '@trpc/server/adapters/express'
 import type { inferAsyncReturnType } from '@trpc/server';
 import type { CustomRequest, User } from '../../types/customRequest';
 import type { Response } from 'express';
+import type { JwtPayload } from 'jsonwebtoken';
 
 vi.mock('jsonwebtoken');
-vi.mock('../../utils/tokenUtils');
+vi.mock('../../utils/tokenUtils', () => ({
+  getUserFromToken: vi.fn(),
+}));
 
 type Context = inferAsyncReturnType<typeof createContext>;
 
@@ -34,7 +37,7 @@ describe('tRPC Setup', () => {
       const res = {} as Response;
       const mockUser: User = { id: 1 };
 
-      vi.mocked(jwt.verify).mockReturnValue({ user_id: 1 });
+      vi.mocked(jwt.verify).mockImplementation(() => ({ user_id: 1 } as JwtPayload));
       vi.mocked(getUserFromToken).mockReturnValue(mockUser);
 
       const context = await createContext({ req, res } as CreateExpressContextOptions);
@@ -42,7 +45,7 @@ describe('tRPC Setup', () => {
       expect(context).toEqual({ req, res, user: mockUser });
       expect(req.header).toHaveBeenCalledWith('Authorization');
       expect(jwt.verify).toHaveBeenCalledWith('validtoken', expect.any(String));
-      expect(getUserFromToken).toHaveBeenCalledWith(expect.objectContaining({ user_id: 1 }));
+      expect(getUserFromToken).toHaveBeenCalledWith({ user_id: 1 });
     });
 
     it('should throw UNAUTHORIZED error when token verification fails', async () => {
@@ -60,6 +63,22 @@ describe('tRPC Setup', () => {
       await expect(async () => {
         await createContext({ req, res } as CreateExpressContextOptions);
       }).rejects.toThrow('Invalid token');
+    });
+
+    it('should throw UNAUTHORIZED error when token payload is invalid', async () => {
+      const req = { header: vi.fn().mockReturnValue('Bearer validtoken') } as unknown as CustomRequest;
+      const res = {} as Response;
+
+      vi.mocked(jwt.verify).mockImplementation(() => ({} as JwtPayload));
+      vi.mocked(getUserFromToken).mockReturnValue(null);
+
+      await expect(async () => {
+        await createContext({ req, res } as CreateExpressContextOptions);
+      }).rejects.toThrow(TRPCError);
+
+      await expect(async () => {
+        await createContext({ req, res } as CreateExpressContextOptions);
+      }).rejects.toThrow('Invalid token payload');
     });
   });
 
@@ -79,6 +98,8 @@ describe('tRPC Setup', () => {
         ctx: mockContext,
         next: mockNext,
         path: '',
+        type: "query",
+        input: undefined,
         rawInput: undefined,
         meta: undefined,
       });
@@ -104,6 +125,8 @@ describe('tRPC Setup', () => {
           ctx: mockContext,
           next: mockNext,
           path: '',
+          type: "query",
+          input: undefined,
           rawInput: undefined,
           meta: undefined,
         });
@@ -114,6 +137,8 @@ describe('tRPC Setup', () => {
           ctx: mockContext,
           next: mockNext,
           path: '',
+          type: "query",
+          input: undefined,
           rawInput: undefined,
           meta: undefined,
         });
