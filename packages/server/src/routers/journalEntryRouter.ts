@@ -19,8 +19,8 @@ export const journalEntryRouter = router({
       return entries;
     }),
 
-  createJournalEntry: authedProcedure
-    .input(journalEntrySchema.omit({ id: true, user_id: true }))
+    createJournalEntry: authedProcedure
+    .input(journalEntrySchema.omit({ id: true, user_id: true, sentiment: true }))
     .mutation(async ({ ctx, input }) => {
       const entry = await journalEntryService.createJournalEntry(ctx.user.id, input);
       return entry;

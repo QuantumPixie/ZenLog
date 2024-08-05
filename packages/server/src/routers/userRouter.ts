@@ -72,7 +72,7 @@ export const userRouter = router({
       }
     }),
 
-  getUser: authedProcedure
+    getUser: authedProcedure
     .query(async ({ ctx }) => {
       const user = await getUserById(ctx.user.id);
       if (user) {
@@ -84,4 +84,5 @@ export const userRouter = router({
         });
       }
     }),
+
 });

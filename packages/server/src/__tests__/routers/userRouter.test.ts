@@ -1,13 +1,12 @@
-import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from 'vitest';
 import { createTRPCProxyClient, httpBatchLink } from '@trpc/client';
 import type { AppRouter } from '../../server';
-import * as userService from '../../services/userService';
 import { createServer, Server } from 'http';
 import express from 'express';
 import { appRouter } from '../../server';
 import * as trpcExpress from '@trpc/server/adapters/express';
 import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
-
+import { TRPCClientError } from '@trpc/client';
 
 vi.mock('../../services/userService', () => ({
   createUser: vi.fn(),
@@ -15,6 +14,8 @@ vi.mock('../../services/userService', () => ({
   changePassword: vi.fn(),
   getUserById: vi.fn(),
 }));
+
+import * as userService from '../../services/userService';
 
 describe('User Router', () => {
   let server: Server;
@@ -60,6 +61,10 @@ describe('User Router', () => {
     });
   });
 
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
   it('should register a new user', async () => {
     const newUser = { id: 1, email: 'test@example.com', username: 'testuser' };
     vi.mocked(userService.createUser).mockResolvedValue(newUser);
@@ -70,7 +75,7 @@ describe('User Router', () => {
       password: 'password123'
     });
 
-    expect(result).toEqual({user: newUser });
+    expect(result).toEqual({ user: newUser });
     expect(userService.createUser).toHaveBeenCalledWith(expect.objectContaining({
       email: 'test@example.com',
       username: 'testuser',
@@ -115,7 +120,7 @@ describe('User Router', () => {
       username: 'testuser'
     });
 
-    const result = await client.user.getUser.query({ id: 1 });
+    const result = await client.user.getUser.query();
 
     expect(result).toEqual({
       id: 1,
@@ -128,6 +133,29 @@ describe('User Router', () => {
   it('should throw an error for non-existent user', async () => {
     vi.mocked(userService.getUserById).mockResolvedValue(undefined);
 
-    await expect(client.user.getUser.query({ id: 999 })).rejects.toThrow();
+    await expect(client.user.getUser.query()).rejects.toThrowError(TRPCClientError);
+    await expect(client.user.getUser.query()).rejects.toThrow('User not found');
+  });
+
+  it('should handle signup validation errors', async () => {
+    await expect(client.user.signup.mutate({
+      email: 'invalid-email',
+      username: 'a', // too short
+      password: 'short' // too short
+    })).rejects.toThrowError(TRPCClientError);
+  });
+
+  it('should handle login validation errors', async () => {
+    await expect(client.user.login.mutate({
+      email: 'invalid-email',
+      password: '' // empty password
+    })).rejects.toThrowError(TRPCClientError);
+  });
+
+  it('should handle change password validation errors', async () => {
+    await expect(client.user.changePassword.mutate({
+      oldPassword: 'short',
+      newPassword: 'short'
+    })).rejects.toThrowError(TRPCClientError);
   });
 });
