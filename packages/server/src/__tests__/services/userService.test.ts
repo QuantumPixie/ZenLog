@@ -36,6 +36,8 @@ describe('userService', () => {
       const newUser: NewUser = { email: 'test@example.com', username: 'testuser', password: 'password' };
       const createdUser: Omit<User, 'password'> = { id: 1, email: newUser.email, username: newUser.username };
 
+      vi.mocked(bcrypt.hash).mockResolvedValue('hashedpassword' as never);
+
       vi.mocked(db.insertInto).mockReturnValue({
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockReturnValue({
@@ -48,8 +50,26 @@ describe('userService', () => {
 
       expect(result).toEqual(createdUser);
       expect(db.insertInto).toHaveBeenCalledWith('users');
-      expect(vi.mocked(db.insertInto('users').values)).toHaveBeenCalledWith(newUser);
-      expect(vi.mocked(db.insertInto('users').values(newUser).returning)).toHaveBeenCalledWith(['id', 'email', 'username']);
+      expect(vi.mocked(db.insertInto('users').values)).toHaveBeenCalledWith({
+        ...newUser,
+        password: 'hashedpassword'
+      });
+      expect(vi.mocked(db.insertInto('users').values({...newUser, password: 'hashedpassword'}).returning)).toHaveBeenCalledWith(['id', 'email', 'username']);    });
+
+    it('should throw an error if user creation fails', async () => {
+      const newUser: NewUser = { email: 'test@example.com', username: 'testuser', password: 'password' };
+
+      vi.mocked(bcrypt.hash).mockResolvedValue('hashedpassword' as never);
+
+      vi.mocked(db.insertInto).mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockReturnValue({
+            execute: vi.fn().mockResolvedValue([])
+          })
+        })
+      } as unknown as ReturnType<typeof db.insertInto>);
+
+      await expect(createUser(newUser)).rejects.toThrow('Failed to create user');
     });
   });
 
@@ -174,7 +194,7 @@ describe('userService', () => {
       vi.mocked(db.updateTable).mockReturnValue({
         set: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
-            execute: vi.fn().mockResolvedValue([{ affected: 1 }])
+            execute: vi.fn().mockResolvedValue([{ numUpdatedRows: 1 }])
           })
         })
       } as unknown as ReturnType<typeof db.updateTable>);
