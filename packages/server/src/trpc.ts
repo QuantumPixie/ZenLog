@@ -13,12 +13,19 @@ export const createContext = ({
   res,
 }: CreateExpressContextOptions): { req: CustomRequest; res: CreateExpressContextOptions['res']; user: User | null } => {
   const customReq = req as CustomRequest;
+
+  // Skip authentication for signup and login
+  if (req.url && (req.url.includes('user.signup') || req.url.includes('user.login'))) {
+    return { req: customReq, res, user: null };
+  }
+
   const authHeader = customReq.header ? customReq.header('Authorization') : null;
+
   let user: User | null = null;
 
   if (authHeader) {
     const [bearer, token] = authHeader.split(' ');
-    
+
     if (bearer !== 'Bearer' || !token) {
       throw new TRPCError({
         code: 'UNAUTHORIZED',

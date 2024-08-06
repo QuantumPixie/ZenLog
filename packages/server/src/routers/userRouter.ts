@@ -1,53 +1,48 @@
 import { router, procedure, authedProcedure } from '../trpc';
-import { createUser, loginUser, changePassword, getUserById } from '../services/userService';
 import { signupSchema, loginSchema, changePasswordSchema } from '../schemas/userSchema';
-import bcrypt from 'bcrypt';
+import { changePassword, createUser, getUserById, loginUser } from '../services/userService';
 import { TRPCError } from '@trpc/server';
 
-export const userRouter = router({
-  signup: procedure
-    .input(signupSchema)
-    .mutation(async ({ input }) => {
-      console.log('Signup procedure called with input:', input);
-      const { email, username, password } = input;
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const newUser = { email, username, password: hashedPassword };
-      console.log('Signup procedure completed');
+  export const userRouter = router({
+    signup: procedure
+      .input(signupSchema)
+      .mutation(async ({ input }) => {
+        try {
+          const user = await createUser(input);
+          return { user };
+        } catch (error) {
+          console.error('Error in signup:', error);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to register user',
+            cause: error
+          });
+        }
+      }),
 
-      try {
-        const user = await createUser(newUser);
-        return { user };
-      } catch (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to register user'
-        });
-      }
-    }),
-
-  login: procedure
-    .input(loginSchema)
-    .mutation(async ({ input }) => {
-      const { email, password } = input;
-      try {
-        const result = await loginUser(email, password);
-        if (result) {
+    login: procedure
+      .input(loginSchema)
+      .mutation(async ({ input }) => {
+        try {
+          const result = await loginUser(input.email, input.password);
+          if (!result) {
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: 'Invalid credentials'
+            });
+          }
           return result;
-        } else {
+        } catch (error) {
+          console.error('Error in login:', error);
+          if (error instanceof TRPCError) {
+            throw error;
+          }
           throw new TRPCError({
-            code: 'UNAUTHORIZED',
-            message: 'Invalid credentials'
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'An unexpected error occurred'
           });
         }
-      } catch (error) {
-        if (error instanceof TRPCError) {
-          throw new TRPCError({
-            code: error.code,
-            message: error.message
-          });
-        }
-      }
-    }),
+      }),
 
   changePassword: authedProcedure
     .input(changePasswordSchema)
@@ -84,5 +79,4 @@ export const userRouter = router({
         });
       }
     }),
-
 });

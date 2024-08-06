@@ -21,15 +21,45 @@ if (!process.env.DATABASE_URL) {
 }
 
 export function createDatabase(options: pg.PoolConfig): Kysely<Database> {
+  const pool = new pg.Pool(options);
+
+  pool.on('error', (err) => {
+    console.error('Unexpected error on idle client', err);
+    process.exit(-1);
+  });
+
+  pool.on('connect', () => {
+    console.log('Connected to the database');
+  });
+
+  // Test the connection
+  pool.query('SELECT NOW()', (err, res) => {
+    if (err) {
+      console.error('Error connecting to the database', err);
+    } else {
+      console.log('Database connection successful. Current time:', res.rows[0].now);
+    }
+  });
+
   return new Kysely<Database>({
-    dialect: new PostgresDialect({
-      pool: new pg.Pool(options),
-    }),
+    dialect: new PostgresDialect({ pool }),
     plugins: [new CamelCasePlugin(), new ParseJSONResultsPlugin()],
   });
 }
 
 const db = createDatabase({ connectionString: process.env.DATABASE_URL });
+
+db.selectFrom('users')
+  .select('id')
+  .limit(1)
+  .execute()
+  .then(() => console.log('Successfully queried users table'))
+  .catch((error) => {
+    console.error('Error querying users table:', error);
+    if (error.message.includes('relation "users" does not exist')) {
+      console.error('The users table does not exist. Make sure you have run your migrations.');
+    }
+  });
 
 export type DatabasePartial<T> = Kysely<T>;
 export { db };

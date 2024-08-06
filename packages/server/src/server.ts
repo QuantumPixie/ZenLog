@@ -1,21 +1,23 @@
 import express from 'express';
 import cors from 'cors';
 import * as trpcExpress from '@trpc/server/adapters/express';
+import { renderTrpcPanel } from 'trpc-panel';
 import { router, createContext } from './trpc';
+import { userRouter } from './routers/userRouter';
 import { activityRouter } from './routers/activityRouter';
 import { journalEntryRouter } from './routers/journalEntryRouter';
 import { moodRouter } from './routers/moodRouter';
-import { userRouter } from './routers/userRouter';
 import { dashboardRouter } from './routers/dashboardRouter';
-import { authenticateJWT } from './middleware/auth';
 import type { CustomRequest } from './types/customRequest';
+import { db } from './database';
+import { authenticateJWT } from './middleware/auth';
 
 export const appRouter = router({
+  user: userRouter,
   activity: activityRouter,
-  dashboard: dashboardRouter,
   journalEntry: journalEntryRouter,
   mood: moodRouter,
-  user: userRouter,
+  dashboard: dashboardRouter,
 });
 
 export type AppRouter = typeof appRouter;
@@ -29,8 +31,19 @@ app.use('/api/health', (_, res) => {
   res.status(200).send('OK');
 });
 
-app.use('/api/trpc/*', (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  authenticateJWT(req as CustomRequest, res, next);
+app.use('/panel', (_, res) => {
+  return res.send(
+    renderTrpcPanel(appRouter, { 
+      url: 'http://localhost:3005/api/trpc',
+    })
+  );
+});
+
+app.use('/api/trpc/:path', (req, res, next) => {
+  if (req.params.path !== 'user.signup' && req.params.path !== 'user.login') {
+    return authenticateJWT(req as CustomRequest, res, next);
+  }
+  next();
 });
 
 app.use(
@@ -38,8 +51,7 @@ app.use(
   trpcExpress.createExpressMiddleware({
     router: appRouter,
     createContext: ({ req, res }: trpcExpress.CreateExpressContextOptions) => {
-      const context = createContext({ req: req as CustomRequest, res });
-      return context;
+      return createContext({ req: req as CustomRequest, res });
     },
   })
 );
@@ -48,28 +60,32 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Not Found' });
 });
 
-app.use((err: Error, req: express.Request, res: express.Response) => {
-  console.error('Error in server middleware:', err);
+// app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+//   console.error('Global error handler caught an error:', err);
+//   res.status(err.code === 'BAD_REQUEST' ? 400 : 500).json({
+//     error: err.message || 'An unexpected error occurred',
+//     details: err.cause
+//   });
+//   next(err)
+// });
 
-  if (err instanceof SyntaxError && 'body' in err) {
-    return res.status(400).json({ error: 'Invalid JSON in request body' });
+const PORT = process.env.PORT || 3005;
+
+const startServer = async () => {
+  try {
+    await db.selectFrom('users').select('id').limit(1).execute();
+    console.log('Database connection successful');
+
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+      console.log(`tRPC Panel available at http://localhost:${PORT}/panel`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
   }
+};
 
-  if (err.name === 'UnauthorizedError') {
-    return res.status(401).json({ error: 'Authentication failed' });
-  }
-
-  if (err.name === 'ValidationError') {
-    return res.status(400).json({ error: 'Validation error', details: err.message });
-  }
-
-
-  res.status(500).json({
-    error: 'Internal server error',
-    message: process.env.NODE_ENV === 'production'
-      ? 'An unexpected error occurred'
-      : err.message
-  });
-});
+startServer();
 
 export default app;

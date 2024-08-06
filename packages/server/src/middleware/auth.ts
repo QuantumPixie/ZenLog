@@ -1,10 +1,16 @@
+import { TRPCError } from '@trpc/server';
 import type { Response, NextFunction } from 'express';
 import type { CustomRequest } from '../types/customRequest';
 import { getUserFromToken } from '../utils/tokenUtils';
 import jwt from 'jsonwebtoken';
 import type { JwtPayload } from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'default_secret';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  console.error('JWT_SECRET is not set in environment variables');
+  process.exit(1);
+}
 
 interface TokenPayload extends JwtPayload {
   user_id: number;
@@ -19,14 +25,20 @@ export const authenticateJWT = (req: CustomRequest, res: Response, next: NextFun
   const token = authHeader?.split(' ')[1];
 
   if (!token) {
-    return res.status(401).json({ error: 'No token provided' });
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: 'No token provided'
+    });
   }
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
 
     if (!isTokenPayload(decoded)) {
-      return res.status(403).json({ error: 'Invalid token payload' });
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'Invalid token payload'
+      });
     }
 
     const user = getUserFromToken(decoded);
@@ -34,9 +46,18 @@ export const authenticateJWT = (req: CustomRequest, res: Response, next: NextFun
       req.user = user;
       next();
     } else {
-      return res.status(403).json({ error: 'Invalid user data in token' });
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'Invalid user data in token'
+      });
     }
   } catch (error) {
-    return res.status(403).json({ error: 'Invalid token' });
+    if (error instanceof jwt.JsonWebTokenError) {
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'Invalid token'
+      });
+    }
+    throw error;
   }
 };
