@@ -8,9 +8,11 @@ import { z } from 'zod';
  */
 export const isValidDateString = (dateString: string) => {
   const regex = /^\d{4}-\d{2}-\d{2}$/;
-  if (!regex.test(dateString)) return false;
+  const regexTest = regex.test(dateString);
+  if (!regexTest) return false;
   const date = new Date(dateString);
-  return date instanceof Date && !isNaN(date.getTime());
+  const isValid = date instanceof Date && !isNaN(date.getTime());
+  return isValid;
 };
 
 export const activityInputSchema = z.object({

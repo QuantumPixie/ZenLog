@@ -67,7 +67,20 @@ import { TRPCError } from '@trpc/server';
       }
     }),
 
-    getUser: authedProcedure
+    // getUser: authedProcedure
+    // .query(async ({ ctx }) => {
+    //   const user = await getUserById(ctx.user.id);
+    //   if (user) {
+    //     return user;
+    //   } else {
+    //     throw new TRPCError({
+    //       code: 'NOT_FOUND',
+    //       message: 'User not found'
+    //     });
+    //   }
+    // }),
+
+    getCurrentUser: authedProcedure
     .query(async ({ ctx }) => {
       const user = await getUserById(ctx.user.id);
       if (user) {

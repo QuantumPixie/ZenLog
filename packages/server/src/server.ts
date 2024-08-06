@@ -74,7 +74,6 @@ const PORT = process.env.PORT || 3005;
 const startServer = async () => {
   try {
     await db.selectFrom('users').select('id').limit(1).execute();
-    console.log('Database connection successful');
 
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);

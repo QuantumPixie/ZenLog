@@ -10,11 +10,14 @@ type NewUser = Insertable<UserTable>;
 type SafeUser = Omit<User, 'password'>;
 
 export async function createUser(newUser: NewUser): Promise<SafeUser> {
-  console.log('createUser called with:', newUser);
+  console.log('createUser called with:', { ...newUser, password: '[REDACTED]' });
   try {
+    const hashedPassword = await bcrypt.hash(newUser.password, 10);
+    const userToInsert = { ...newUser, password: hashedPassword };
+
     const [createdUser] = await db
       .insertInto('users')
-      .values(newUser)
+      .values(userToInsert)
       .returning(['id', 'email', 'username'])
       .execute();
 
@@ -31,7 +34,6 @@ export async function createUser(newUser: NewUser): Promise<SafeUser> {
 }
 
 export async function loginUser(email: string, password: string): Promise<{ token: string; user: SafeUser } | null> {
-  console.log('loginUser called with email:', email);
   try {
     const [user] = await db
       .selectFrom('users')
@@ -40,14 +42,11 @@ export async function loginUser(email: string, password: string): Promise<{ toke
       .limit(1)
       .execute();
 
-
     if (!user) {
       return null; // user not found
     }
 
-    console.log('Comparing passwords');
     const passwordMatch = await bcrypt.compare(password, user.password);
-    console.log('Password match:', passwordMatch);
 
     if (!passwordMatch) {
       return null; // invalid password
@@ -55,7 +54,6 @@ export async function loginUser(email: string, password: string): Promise<{ toke
 
     const jwtSecret = process.env.JWT_SECRET;
     if (!jwtSecret) {
-      console.error('JWT_SECRET is not set');
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Server configuration error',
@@ -70,7 +68,6 @@ export async function loginUser(email: string, password: string): Promise<{ toke
 
     const { id, email: userEmail, username } = user;
 
-    console.log('Login successful');
     return { token, user: { id, email: userEmail, username } };
   } catch (error) {
     console.error('Error in loginUser:', error);
@@ -79,7 +76,6 @@ export async function loginUser(email: string, password: string): Promise<{ toke
 }
 
 export async function getUserById(userId: number): Promise<SafeUser | undefined> {
-  console.log('getUserById called with id:', userId);
   try {
     const [user] = await db
       .selectFrom('users')
@@ -88,7 +84,6 @@ export async function getUserById(userId: number): Promise<SafeUser | undefined>
       .limit(1)
       .execute();
 
-    console.log('User found:', user ? 'Yes' : 'No');
     return user;
   } catch (error) {
     console.error('Error in getUserById:', error);
@@ -97,7 +92,6 @@ export async function getUserById(userId: number): Promise<SafeUser | undefined>
 }
 
 export async function changePassword(id: number, oldPassword: string, newPassword: string): Promise<boolean> {
-  console.log('changePassword called for user id:', id);
   try {
     const [user] = await db
       .selectFrom('users')
@@ -107,13 +101,11 @@ export async function changePassword(id: number, oldPassword: string, newPasswor
       .execute();
 
     if (!user) {
-      console.log('User not found');
       return false;
     }
 
     const passwordMatch = await bcrypt.compare(oldPassword, user.password);
     if (!passwordMatch) {
-      console.log('Old password is incorrect');
       return false;
     }
 

@@ -20,7 +20,7 @@ export const activityRouter = router({
       return activity;
     }),
 
-  createActivity: authedProcedure
+    createActivity: authedProcedure
     .input(activityInputSchema)
     .mutation(async ({ ctx, input }) => {
       const createdActivity = await activityService.createActivity(ctx.user.id, input);
