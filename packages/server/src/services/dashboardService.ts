@@ -6,7 +6,7 @@ export const dashboardService = {
   async getSummary(userId: number) {
     const recentMoods = await db
       .selectFrom('moods')
-      .select(['date', 'mood_score as moodScore', 'emotions'])
+      .select(['date', 'mood_score', 'emotions'])
       .where('user_id', '=', userId)
       .orderBy('date', 'desc')
       .limit(5)
@@ -32,7 +32,6 @@ export const dashboardService = {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const sevenDaysAgoString = sevenDaysAgo.toISOString().split('T')[0];
-    console.log('Seven days ago:', sevenDaysAgoString);
 
     const averageMoodScore = await db
       .selectFrom('moods')
@@ -41,17 +40,13 @@ export const dashboardService = {
       .where('date', '>=', sevenDaysAgoString)
       .executeTakeFirst() as AverageMoodResult | undefined;
 
-    console.log('Average mood score query result:', averageMoodScore);
-
     const moodScores = await db
       .selectFrom('moods')
-      .select(['date', 'mood_score as moodScore'])
+      .select(['date', 'mood_score'])
       .where('user_id', '=', userId)
       .where('date', '>=', sevenDaysAgoString)
       .orderBy('date', 'asc')
       .execute();
-
-    console.log('Mood scores for last 7 days:', moodScores);
 
     const result = {
       recentMoods,
@@ -61,8 +56,7 @@ export const dashboardService = {
         ? Number(averageMoodScore.averageMood)
         : null,
     };
-
-    console.log('Dashboard summary:', JSON.stringify(result, null, 2));
+    console.log(moodScores);
 
     return result;
   },

@@ -1,13 +1,6 @@
-import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from 'vitest';
-import { createTRPCProxyClient, httpBatchLink } from '@trpc/client';
-import type { AppRouter } from '../../server';
-import { createServer, Server } from 'http';
-import express from 'express';
-import { appRouter } from '../../server';
-import * as trpcExpress from '@trpc/server/adapters/express';
-import cors from 'cors';
-import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
-import type { User } from '@server/types/customRequest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { router, authedProcedure, createCallerFactory } from '../mocks/trpcMock';
+import { dashboardService } from '../../services/dashboardService';
 import type { DashboardSummary } from '../../types/dashboard';
 
 vi.mock('../../services/dashboardService', () => ({
@@ -16,70 +9,36 @@ vi.mock('../../services/dashboardService', () => ({
   },
 }));
 
-vi.mock('../../middleware/auth', () => ({
-  authenticateJWT: (_req: Request, _res: Response, next: () => void) => next(),
-}));
+// Type guard for DashboardSummary
+function isDashboardSummary(obj: unknown): obj is DashboardSummary {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'recentMoods' in obj &&
+    'recentEntries' in obj &&
+    'recentActivities' in obj &&
+    'averageMoodLastWeek' in obj &&
+    Array.isArray((obj as DashboardSummary).recentMoods) &&
+    Array.isArray((obj as DashboardSummary).recentEntries) &&
+    Array.isArray((obj as DashboardSummary).recentActivities) &&
+    (typeof (obj as DashboardSummary).averageMoodLastWeek === 'number' ||
+      (obj as DashboardSummary).averageMoodLastWeek === null) &&
+    (obj as DashboardSummary).recentMoods.every(
+      (mood) => 'mood_score' in mood && typeof mood.mood_score === 'number'
+    )
+  );
+}
 
-import { dashboardService } from '../../services/dashboardService';
+const mockDashboardRouter = router({
+  getSummary: authedProcedure.query(async ({ ctx }) => {
+    return dashboardService.getSummary(ctx.user.id);
+  }),
+});
 
-// Constants
-const TEST_USER_ID = 1;
-const TEST_PORT = 0;
+const createCaller = createCallerFactory(mockDashboardRouter);
 
-type CustomContext = {
-  req: express.Request;
-  res: express.Response;
-  user: User;
-};
-
-describe('Dashboard Router', () => {
-  let server: Server;
-  let client: ReturnType<typeof createTRPCProxyClient<AppRouter>>;
-
-  const setupServer = () => {
-    return new Promise<void>((resolve) => {
-      const app = express();
-      app.use(cors());
-      app.use(express.json());
-
-      app.use(
-        '/api/trpc',
-        trpcExpress.createExpressMiddleware({
-          router: appRouter,
-          createContext: (_: CreateExpressContextOptions): CustomContext => {
-            console.log(_);
-            return {
-              req: {} as express.Request,
-              res: {} as express.Response,
-              user: { id: TEST_USER_ID, email: 'test@example.com' },
-            };
-          }
-        })
-      );
-
-      server = createServer(app);
-      server.listen(TEST_PORT, () => {
-        const address = server.address() as { port: number };
-        const port = address.port;
-        client = createTRPCProxyClient<AppRouter>({
-          links: [
-            httpBatchLink({
-              url: `http://localhost:${port}/api/trpc`,
-            }),
-          ],
-        });
-        resolve();
-      });
-    });
-  };
-
-  beforeAll(async () => {
-    await setupServer();
-  });
-
-  afterAll(() => {
-    server.close();
-  });
+describe('dashboardRouter', () => {
+  const mockUserId = 1;
 
   beforeEach(() => {
     vi.resetAllMocks();
@@ -104,10 +63,12 @@ describe('Dashboard Router', () => {
 
     vi.mocked(dashboardService.getSummary).mockResolvedValue(mockSummary);
 
-    const result = await client.dashboard.getSummary.query();
+    const caller = createCaller({ user: { id: mockUserId } });
+    const result = await caller.getSummary();
 
+    expect(isDashboardSummary(result)).toBe(true);
     expect(result).toEqual(mockSummary);
-    expect(dashboardService.getSummary).toHaveBeenCalledWith(TEST_USER_ID);
+    expect(dashboardService.getSummary).toHaveBeenCalledWith(mockUserId);
   });
 
   it('should handle null average mood', async () => {
@@ -120,31 +81,45 @@ describe('Dashboard Router', () => {
 
     vi.mocked(dashboardService.getSummary).mockResolvedValue(mockSummary);
 
-    const result = await client.dashboard.getSummary.query();
+    const caller = createCaller({ user: { id: mockUserId } });
+    const result = await caller.getSummary();
 
+    expect(isDashboardSummary(result)).toBe(true);
     expect(result).toEqual(mockSummary);
-    expect(dashboardService.getSummary).toHaveBeenCalledWith(TEST_USER_ID);
+    expect(dashboardService.getSummary).toHaveBeenCalledWith(mockUserId);
   });
 
   it('should handle empty recent data', async () => {
     const mockSummary: DashboardSummary = {
-      recentMoods: [],
-      recentEntries: [],
-      recentActivities: [],
-      averageMoodLastWeek: 7,
+      recentMoods: [
+        { date: '2024-08-02', mood_score: 7, emotions: ['happy', 'energetic'] },
+        { date: '2024-08-01', mood_score: 6, emotions: ['calm'] },
+      ],
+      recentEntries: [
+        { date: '2024-08-02', entry: 'Had a great day!' },
+        { date: '2024-08-01', entry: 'Feeling reflective today.' },
+      ],
+      recentActivities: [
+        { date: '2024-08-02', activity: 'Running', duration: 30, notes: 'Felt energized' },
+        { date: '2024-08-01', activity: 'Meditation', duration: 15, notes: 'Very relaxing' },
+      ],
+      averageMoodLastWeek: 6.5,
     };
 
     vi.mocked(dashboardService.getSummary).mockResolvedValue(mockSummary);
 
-    const result = await client.dashboard.getSummary.query();
+    const caller = createCaller({ user: { id: mockUserId } });
+    const result = await caller.getSummary();
 
+    expect(isDashboardSummary(result)).toBe(true);
     expect(result).toEqual(mockSummary);
-    expect(dashboardService.getSummary).toHaveBeenCalledWith(TEST_USER_ID);
+    expect(dashboardService.getSummary).toHaveBeenCalledWith(mockUserId);
   });
 
   it('should handle database errors', async () => {
     vi.mocked(dashboardService.getSummary).mockRejectedValue(new Error('Database error'));
 
-    await expect(client.dashboard.getSummary.query()).rejects.toThrow('Database error');
+    const caller = createCaller({ user: { id: mockUserId } });
+    await expect(caller.getSummary()).rejects.toThrow('Database error');
   });
 });
