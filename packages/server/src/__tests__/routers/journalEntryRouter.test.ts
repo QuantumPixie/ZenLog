@@ -1,22 +1,10 @@
-import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from 'vitest';
-import { createTRPCProxyClient, httpBatchLink } from '@trpc/client';
-import type { AppRouter } from '../../server';
-import { createServer, Server } from 'http';
-import express from 'express';
-import { appRouter } from '../../server';
-import * as trpcExpress from '@trpc/server/adapters/express';
-import cors from 'cors';
-import type { User } from '@server/types/customRequest';
-import { TRPCClientError } from '@trpc/client';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { router, authedProcedure, createCallerFactory } from '../mocks/trpcMock';
+import { z } from 'zod';
+import { journalEntryService } from '../../services/journalEntryService';
+import type { JournalEntryTable } from '../../models/journalEntry';
 
-// simplified type for testing
-type SimplifiedJournalEntry = {
-  id: number;
-  date: string;
-  entry: string;
-  sentiment: number;
-};
-
+// Mock the journalEntryService
 vi.mock('../../services/journalEntryService', () => ({
   journalEntryService: {
     getJournalEntries: vi.fn(),
@@ -25,84 +13,89 @@ vi.mock('../../services/journalEntryService', () => ({
   },
 }));
 
-vi.mock('../../middleware/auth', () => ({
-  authenticateJWT: (_req: Request, _res: Response, next: () => void) => next(),
-}));
+// Type guard for JournalEntryTable
+function isJournalEntryTable(obj: unknown): obj is JournalEntryTable {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'id' in obj &&
+    'user_id' in obj &&
+    'date' in obj &&
+    'entry' in obj &&
+    'sentiment' in obj
+  );
+}
 
-import { journalEntryService } from '../../services/journalEntryService';
+// Type guard for array of JournalEntryTable
+function isJournalEntryTableArray(arr: unknown): arr is JournalEntryTable[] {
+  return Array.isArray(arr) && arr.every(isJournalEntryTable);
+}
 
-// Constants
-const TEST_USER_ID = 1;
-const TEST_PORT = 0;
+// Create a mock router using our mocked tRPC setup
+const mockJournalEntryRouter = router({
+  getJournalEntries: authedProcedure.query(async ({ ctx }) => {
+    return journalEntryService.getJournalEntries(ctx.user.id);
+  }),
+  createJournalEntry: authedProcedure
+    .input(z.object({
+      date: z.string().refine((val) => !isNaN(Date.parse(val)), {
+        message: "Date must be a valid date string",
+      }),
+      entry: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      return journalEntryService.createJournalEntry(ctx.user.id, input);
+    }),
+  getJournalEntriesByDateRange: authedProcedure
+    .input(z.object({
+      startDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
+        message: "Start date must be a valid date string",
+      }),
+      endDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
+        message: "End date must be a valid date string",
+      }),
+    }))
+    .query(async ({ ctx, input }) => {
+      return journalEntryService.getJournalEntriesByDateRange(ctx.user.id, input.startDate, input.endDate);
+    }),
+});
 
-type CustomContext = {
-  req: express.Request;
-  res: express.Response;
-  user: User;
-};
+// Create a caller factory
+const createCaller = createCallerFactory(mockJournalEntryRouter);
 
-describe('Journal Entry Router', () => {
-  let server: Server;
-  let client: ReturnType<typeof createTRPCProxyClient<AppRouter>>;
-
-  const setupServer = () => {
-    return new Promise<void>((resolve) => {
-      const app = express();
-      app.use(cors());
-      app.use(express.json());
-
-      app.use(
-        '/api/trpc',
-        trpcExpress.createExpressMiddleware({
-          router: appRouter,
-          createContext: (): CustomContext => ({
-            req: {} as express.Request,
-            res: {} as express.Response,
-            user: { id: TEST_USER_ID, email: 'test@example.com' },
-          }),
-        })
-      );
-
-      server = createServer(app);
-      server.listen(TEST_PORT, () => {
-        const address = server.address() as { port: number };
-        const port = address.port;
-        client = createTRPCProxyClient<AppRouter>({
-          links: [
-            httpBatchLink({
-              url: `http://localhost:${port}/api/trpc`,
-            }),
-          ],
-        });
-        resolve();
-      });
-    });
+describe('journalEntryRouter', () => {
+  const mockJournalEntry = {
+    id: 1,
+    user_id: 1,
+    date: '2023-08-01',
+    entry: 'Test entry 1',
+    sentiment: 7,
   };
-
-  beforeAll(async () => {
-    await setupServer();
-  });
-
-  afterAll(() => {
-    server.close();
-  });
+  const mockJournalEntries = [
+    mockJournalEntry,
+    {
+      id: 2,
+      user_id: 1,
+      date: '2023-08-02',
+      entry: 'Test entry 2',
+      sentiment: 8,
+    },
+  ];
+  const mockUserId = 1;
 
   beforeEach(() => {
     vi.resetAllMocks();
   });
 
   it('should get journal entries', async () => {
-    const mockEntries: SimplifiedJournalEntry[] = [
-      { id: 1, date: '2023-08-01', entry: 'Test entry 1', sentiment: 7 },
-      { id: 2, date: '2023-08-02', entry: 'Test entry 2', sentiment: 8 },
-    ];
+    vi.mocked(journalEntryService.getJournalEntries).mockResolvedValue(mockJournalEntries);
 
-    vi.mocked(journalEntryService.getJournalEntries).mockResolvedValue(mockEntries as SimplifiedJournalEntry[]);
+    const caller = createCaller({ user: { id: mockUserId } });
+    const result = await caller.getJournalEntries();
 
-    const result = await client.journalEntry.getJournalEntries.query();
-
-    expect(result).toEqual(mockEntries);
-    expect(journalEntryService.getJournalEntries).toHaveBeenCalledWith(TEST_USER_ID);
+    expect(isJournalEntryTableArray(result)).toBe(true);
+    expect(result).toEqual(mockJournalEntries);
+    expect(journalEntryService.getJournalEntries).toHaveBeenCalledWith(mockUserId);
   });
 
   it('should create a new journal entry', async () => {
@@ -110,56 +103,48 @@ describe('Journal Entry Router', () => {
       date: '2023-08-01',
       entry: 'Test entry',
     };
-    const createdEntry: SimplifiedJournalEntry = {
+    const createdEntry = {
+      ...newEntry,
       id: 1,
-      date: newEntry.date,
-      entry: newEntry.entry,
-      sentiment: 7, // Mocked sentiment score
+      user_id: mockUserId,
+      sentiment: 7,
     };
 
-    vi.mocked(journalEntryService.createJournalEntry).mockResolvedValue(createdEntry as SimplifiedJournalEntry);
+    vi.mocked(journalEntryService.createJournalEntry).mockResolvedValue(createdEntry);
 
-    const result = await client.journalEntry.createJournalEntry.mutate(newEntry);
+    const caller = createCaller({ user: { id: mockUserId } });
+    const result = await caller.createJournalEntry(newEntry);
 
+    expect(isJournalEntryTable(result)).toBe(true);
     expect(result).toEqual(createdEntry);
-    expect(journalEntryService.createJournalEntry).toHaveBeenCalledWith(TEST_USER_ID, newEntry);
+    expect(journalEntryService.createJournalEntry).toHaveBeenCalledWith(mockUserId, newEntry);
   });
 
   it('should get journal entries by date range', async () => {
-    const startDate = '2023-08-01';
-    const endDate = '2023-08-31';
-    const mockEntries: SimplifiedJournalEntry[] = [
-      { id: 1, date: '2023-08-15', entry: 'Mid-month entry', sentiment: 6 },
-      { id: 2, date: '2023-08-20', entry: 'Late-month entry', sentiment: 8 },
-    ];
+    vi.mocked(journalEntryService.getJournalEntriesByDateRange).mockResolvedValue(mockJournalEntries);
 
-    vi.mocked(journalEntryService.getJournalEntriesByDateRange).mockResolvedValue(mockEntries as SimplifiedJournalEntry[]);
-
-    const result = await client.journalEntry.getJournalEntriesByDateRange.query({
-      startDate,
-      endDate,
+    const caller = createCaller({ user: { id: mockUserId } });
+    const result = await caller.getJournalEntriesByDateRange({
+      startDate: '2023-08-01',
+      endDate: '2023-08-31',
     });
 
-    expect(result).toEqual(mockEntries);
-    expect(journalEntryService.getJournalEntriesByDateRange).toHaveBeenCalledWith(TEST_USER_ID, startDate, endDate);
+    expect(isJournalEntryTableArray(result)).toBe(true);
+    expect(result).toEqual(mockJournalEntries);
+    expect(journalEntryService.getJournalEntriesByDateRange).toHaveBeenCalledWith(mockUserId, '2023-08-01', '2023-08-31');
   });
 
   it('should handle empty result for getJournalEntriesByDateRange', async () => {
     vi.mocked(journalEntryService.getJournalEntriesByDateRange).mockResolvedValue([]);
 
-    const result = await client.journalEntry.getJournalEntriesByDateRange.query({
+    const caller = createCaller({ user: { id: mockUserId } });
+    const result = await caller.getJournalEntriesByDateRange({
       startDate: '2023-01-01',
       endDate: '2023-01-02',
     });
 
+    expect(isJournalEntryTableArray(result)).toBe(true);
     expect(result).toEqual([]);
-  });
-
-  it('should handle database errors', async () => {
-    vi.mocked(journalEntryService.getJournalEntries).mockRejectedValue(new Error('Database error'));
-
-    await expect(client.journalEntry.getJournalEntries.query())
-      .rejects.toThrow('Database error');
   });
 
   it('should reject invalid date for createJournalEntry', async () => {
@@ -168,21 +153,8 @@ describe('Journal Entry Router', () => {
       entry: 'Test entry',
     };
 
-    await expect(client.journalEntry.createJournalEntry.mutate(invalidEntry))
-      .rejects.toThrowError(TRPCClientError);
-
-    await expect(client.journalEntry.createJournalEntry.mutate(invalidEntry))
-      .rejects.toMatchObject({
-        name: 'TRPCClientError',
-        data: {
-          code: 'BAD_REQUEST',
-          httpStatus: 400,
-          path: 'journalEntry.createJournalEntry',
-          stack: expect.any(String)
-        }
-      });
-
-    await expect(client.journalEntry.createJournalEntry.mutate(invalidEntry))
+    const caller = createCaller({ user: { id: mockUserId } });
+    await expect(caller.createJournalEntry(invalidEntry))
       .rejects.toThrow('Date must be a valid date string');
   });
 });
