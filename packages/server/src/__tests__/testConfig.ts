@@ -1,8 +1,9 @@
-import config from '../config';
-
-process.env.JWT_SECRET = 'test_secret';
-
 export const testConfig = {
-  ...config,
-  port: 3001
+  JWT_SECRET: 'test_secret',
+  PORT: '3001',
+  DATABASE_URL: 'mock://database',
 };
+
+export function setupTestEnv() {
+  Object.assign(process.env, testConfig);
+}

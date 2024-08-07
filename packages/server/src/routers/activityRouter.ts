@@ -40,4 +40,4 @@ export const activityRouter = router({
       );
       return activities;
     }),
-});
+  });
