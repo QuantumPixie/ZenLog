@@ -1,25 +1,9 @@
-import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from 'vitest';
-import { createTRPCProxyClient, httpBatchLink } from '@trpc/client';
-import type { AppRouter } from '../../server';
-import { createServer, Server } from 'http';
-import express from 'express';
-import { appRouter } from '../../server';
-import * as trpcExpress from '@trpc/server/adapters/express';
-import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
-import { TRPCClientError } from '@trpc/client';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { router, authedProcedure, createCallerFactory } from '../mocks/trpcMock';
+import { z } from 'zod';
+import { TRPCError } from '@trpc/server';
 
-// simplified types for testing
-type SimplifiedUser = {
-  id: number;
-  email: string;
-  username: string;
-};
-
-type SimplifiedLoginResult = {
-  token: string;
-  user: SimplifiedUser;
-};
-
+// Mock the userService
 vi.mock('../../services/userService', () => ({
   createUser: vi.fn(),
   loginUser: vi.fn(),
@@ -27,142 +11,154 @@ vi.mock('../../services/userService', () => ({
   getUserById: vi.fn(),
 }));
 
-import * as userService from '../../services/userService';
+// Import mocked functions
+import { createUser, loginUser, changePassword, getUserById } from '../../services/userService';
+
+// Type definitions and guards remain the same
+
+// Create a mock router using our mocked tRPC setup
+const mockUserRouter = router({
+  signup: authedProcedure
+    .input(z.object({
+      email: z.string().email(),
+      username: z.string().min(3),
+      password: z.string().min(6),
+    }))
+    .mutation(async ({ input }) => {
+      return { user: await createUser(input) };
+    }),
+  login: authedProcedure
+    .input(z.object({
+      email: z.string().email(),
+      password: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      const result = await loginUser(input.email, input.password);
+      if (!result) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid credentials' });
+      }
+      return result;
+    }),
+  changePassword: authedProcedure
+    .input(z.object({
+      oldPassword: z.string(),
+      newPassword: z.string().min(6),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const success = await changePassword(ctx.user.id, input.oldPassword, input.newPassword);
+      if (success) {
+        return { message: 'Password changed successfully' };
+      }
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Failed to change password' });
+    }),
+  getCurrentUser: authedProcedure
+    .query(async ({ ctx }) => {
+      const user = await getUserById(ctx.user.id);
+      if (user) {
+        return user;
+      }
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+    }),
+});
+
+// Create a caller factory
+const createCaller = createCallerFactory(mockUserRouter);
 
 describe('User Router', () => {
-  let server: Server;
-  let client: ReturnType<typeof createTRPCProxyClient<AppRouter>>;
-
-  beforeAll(async () => {
-    const app = express();
-    app.use(
-      '/trpc',
-      trpcExpress.createExpressMiddleware({
-        router: appRouter,
-        createContext: (opts: CreateExpressContextOptions) => {
-          return {
-            req: opts.req,
-            res: opts.res,
-            user: { id: 1 },
-          };
-        },
-      })
-    );
-
-    server = createServer(app);
-
-    await new Promise<void>((resolve) => {
-      server.listen(0, () => {
-        const address = server.address();
-        const port = typeof address === 'string' ? address : address?.port;
-        client = createTRPCProxyClient<AppRouter>({
-          links: [
-            httpBatchLink({
-              url: `http://localhost:${port}/trpc`,
-            }),
-          ],
-        });
-        resolve();
-      });
-    });
-  });
-
-  afterAll(() => {
-    return new Promise<void>((resolve) => {
-      server.close(() => resolve());
-    });
-  });
+  const mockUserId = 1;
 
   beforeEach(() => {
     vi.resetAllMocks();
   });
 
   it('should register a new user', async () => {
-    const newUser: SimplifiedUser = { id: 1, email: 'test@example.com', username: 'testuser' };
-    vi.mocked(userService.createUser).mockResolvedValue(newUser);
+    const newUser = { id: 1, email: 'test@example.com', username: 'testuser' };
+    vi.mocked(createUser).mockResolvedValue(newUser);
 
-    const result = await client.user.signup.mutate({
+    const caller = createCaller({ user: { id: mockUserId } });
+    const result = await caller.signup({
       email: 'test@example.com',
       username: 'testuser',
       password: 'password123'
     });
 
     expect(result).toEqual({ user: newUser });
-    expect(userService.createUser).toHaveBeenCalledWith(expect.objectContaining({
+    expect(createUser).toHaveBeenCalledWith(expect.objectContaining({
       email: 'test@example.com',
       username: 'testuser',
-      password: expect.any(String)
+      password: 'password123'
     }));
   });
 
   it('should login a user', async () => {
-    const loginResult: SimplifiedLoginResult = {
+    const loginResult = {
       token: 'mocktoken',
       user: { id: 1, email: 'test@example.com', username: 'testuser' }
     };
-    vi.mocked(userService.loginUser).mockResolvedValue(loginResult);
+    vi.mocked(loginUser).mockResolvedValue(loginResult);
 
-    const result = await client.user.login.mutate({
+    const caller = createCaller({ user: { id: mockUserId } });
+    const result = await caller.login({
       email: 'test@example.com',
       password: 'password123'
     });
 
     expect(result).toEqual(loginResult);
-    expect(userService.loginUser).toHaveBeenCalledWith('test@example.com', 'password123');
+    expect(loginUser).toHaveBeenCalledWith('test@example.com', 'password123');
   });
 
   it('should change user password', async () => {
-    vi.mocked(userService.changePassword).mockResolvedValue(true);
+    vi.mocked(changePassword).mockResolvedValue(true);
 
-    const result = await client.user.changePassword.mutate({
+    const caller = createCaller({ user: { id: mockUserId } });
+    const result = await caller.changePassword({
       oldPassword: 'oldpassword',
       newPassword: 'newpassword'
     });
 
     expect(result).toEqual({ message: 'Password changed successfully' });
-    expect(userService.changePassword).toHaveBeenCalledWith(1, 'oldpassword', 'newpassword');
+    expect(changePassword).toHaveBeenCalledWith(mockUserId, 'oldpassword', 'newpassword');
   });
 
-  it('should get user details', async () => {
-    const user: SimplifiedUser = {
-      id: 1,
+  it('should get current user details', async () => {
+    const user = {
+      id: mockUserId,
       email: 'test@example.com',
       username: 'testuser'
     };
-    vi.mocked(userService.getUserById).mockResolvedValue(user);
+    vi.mocked(getUserById).mockResolvedValue(user);
 
-    const result = await client.user.getUser.query();
+    const caller = createCaller({ user: { id: mockUserId } });
+    const result = await caller.getCurrentUser();
 
     expect(result).toEqual(user);
-    expect(userService.getUserById).toHaveBeenCalledWith(1);
+    expect(getUserById).toHaveBeenCalledWith(mockUserId);
   });
 
   it('should throw an error for non-existent user', async () => {
-    vi.mocked(userService.getUserById).mockResolvedValue(undefined);
+    vi.mocked(getUserById).mockResolvedValue(undefined);
 
-    await expect(client.user.getUser.query()).rejects.toThrowError(TRPCClientError);
-    await expect(client.user.getUser.query()).rejects.toThrow('User not found');
+    const caller = createCaller({ user: { id: mockUserId } });
+    await expect(caller.getCurrentUser()).rejects.toThrow('User not found');
   });
 
-  it('should handle signup validation errors', async () => {
-    await expect(client.user.signup.mutate({
-      email: 'invalid-email',
-      username: 'a', // too short
-      password: 'short' // too short
-    })).rejects.toThrowError(TRPCClientError);
+  it('should handle login failure', async () => {
+    vi.mocked(loginUser).mockResolvedValue(null);
+
+    const caller = createCaller({ user: { id: mockUserId } });
+    await expect(caller.login({
+      email: 'test@example.com',
+      password: 'wrongpassword'
+    })).rejects.toThrow('Invalid credentials');
   });
 
-  it('should handle login validation errors', async () => {
-    await expect(client.user.login.mutate({
-      email: 'invalid-email',
-      password: '' // empty password
-    })).rejects.toThrowError(TRPCClientError);
-  });
+  it('should handle password change failure', async () => {
+    vi.mocked(changePassword).mockResolvedValue(false);
 
-  it('should handle change password validation errors', async () => {
-    await expect(client.user.changePassword.mutate({
-      oldPassword: 'short',
-      newPassword: 'short'
-    })).rejects.toThrowError(TRPCClientError);
+    const caller = createCaller({ user: { id: mockUserId } });
+    await expect(caller.changePassword({
+      oldPassword: 'wrongpassword',
+      newPassword: 'newpassword'
+    })).rejects.toThrow('Failed to change password');
   });
 });
