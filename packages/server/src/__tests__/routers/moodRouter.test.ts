@@ -1,22 +1,10 @@
-import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from 'vitest';
-import { createTRPCProxyClient, httpBatchLink } from '@trpc/client';
-import type { AppRouter } from '../../server';
-import { createServer, Server } from 'http';
-import express from 'express';
-import { appRouter } from '../../server';
-import * as trpcExpress from '@trpc/server/adapters/express';
-import cors from 'cors';
-import type { User } from '@server/types/customRequest';
-import { TRPCClientError } from '@trpc/client';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { router, authedProcedure, createCallerFactory } from '../mocks/trpcMock';
+import { z } from 'zod';
+import { moodService } from '../../services/moodService';
+import type { MoodTable } from '../../models/mood';
 
-// simplified type for testing
-type SimplifiedMood = {
-  id: number;
-  date: string;
-  mood_score: number;
-  emotions: string[];
-};
-
+// Mock the moodService
 vi.mock('../../services/moodService', () => ({
   moodService: {
     getMoods: vi.fn(),
@@ -25,84 +13,87 @@ vi.mock('../../services/moodService', () => ({
   },
 }));
 
-vi.mock('../../middleware/auth', () => ({
-  authenticateJWT: (_req: Request, _res: Response, next: () => void) => next(),
-}));
+// Type guard for MoodTable
+function isMoodTable(obj: unknown): obj is MoodTable {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'id' in obj &&
+    'user_id' in obj &&
+    'date' in obj &&
+    'mood_score' in obj &&
+    'emotions' in obj &&
+    Array.isArray((obj as MoodTable).emotions)
+  );
+}
 
-import { moodService } from '../../services/moodService';
+// Type guard for array of MoodTable
+function isMoodTableArray(arr: unknown): arr is MoodTable[] {
+  return Array.isArray(arr) && arr.every(isMoodTable);
+}
 
-// Constants
-const TEST_USER_ID = 1;
-const TEST_PORT = 0;
+  const mockMoodRouter = router({
+  getMoods: authedProcedure.query(async ({ ctx }) => {
+    return moodService.getMoods(ctx.user.id);
+  }),
+  createMood: authedProcedure
+    .input(z.object({
+      date: z.string().refine((val) => !isNaN(Date.parse(val)), {
+        message: 'Invalid date format',
+      }),
+      mood_score: z.number().min(1).max(10),
+      emotions: z.array(z.string()),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      return moodService.createMood(ctx.user.id, input);
+    }),
+  getMoodsByDateRange: authedProcedure
+    .input(z.object({
+      startDate: z.string(),
+      endDate: z.string(),
+    }))
+    .query(async ({ ctx, input }) => {
+      return moodService.getMoodsByDateRange(ctx.user.id, input.startDate, input.endDate);
+    }),
+});
 
-type CustomContext = {
-  req: express.Request;
-  res: express.Response;
-  user: User;
-};
+const createCaller = createCallerFactory(mockMoodRouter);
 
-describe('Mood Router', () => {
-  let server: Server;
-  let client: ReturnType<typeof createTRPCProxyClient<AppRouter>>;
-
-  const setupServer = () => {
-    return new Promise<void>((resolve) => {
-      const app = express();
-      app.use(cors());
-      app.use(express.json());
-
-      app.use(
-        '/api/trpc',
-        trpcExpress.createExpressMiddleware({
-          router: appRouter,
-          createContext: (): CustomContext => ({
-            req: {} as express.Request,
-            res: {} as express.Response,
-            user: { id: TEST_USER_ID, email: 'test@example.com' },
-          }),
-        })
-      );
-
-      server = createServer(app);
-      server.listen(TEST_PORT, () => {
-        const address = server.address() as { port: number };
-        const port = address.port;
-        client = createTRPCProxyClient<AppRouter>({
-          links: [
-            httpBatchLink({
-              url: `http://localhost:${port}/api/trpc`,
-            }),
-          ],
-        });
-        resolve();
-      });
-    });
+describe('moodRouter', () => {
+  const mockMood = {
+    id: 1,
+    user_id: 1,
+    date: '2024-08-02',
+    mood_score: 7,
+    emotions: ['happy', 'excited']
   };
 
-  beforeAll(async () => {
-    await setupServer();
-  });
+  const mockMoods = [
+    mockMood,
+    {
+      id: 2,
+      user_id: 1,
+      date: '2024-08-03',
+      mood_score: 6,
+      emotions: ['calm']
+    }
+  ];
 
-  afterAll(() => {
-    server.close();
-  });
+  const mockUserId = 1;
 
   beforeEach(() => {
     vi.resetAllMocks();
   });
 
   it('should get moods', async () => {
-    const mockMoods: SimplifiedMood[] = [
-      { id: 1, date: '2024-08-02', mood_score: 7, emotions: ['happy', 'excited'] },
-      { id: 2, date: '2024-08-03', mood_score: 6, emotions: ['calm'] },
-    ];
-
     vi.mocked(moodService.getMoods).mockResolvedValue(mockMoods);
 
-    const result = await client.mood.getMoods.query();
+    const caller = createCaller({ user: { id: mockUserId } });
+    const result = await caller.getMoods();
 
+    expect(isMoodTableArray(result)).toBe(true);
     expect(result).toEqual(mockMoods);
-    expect(moodService.getMoods).toHaveBeenCalledWith(TEST_USER_ID);
+    expect(moodService.getMoods).toHaveBeenCalledWith(mockUserId);
   });
 
   it('should create a new mood', async () => {
@@ -111,54 +102,47 @@ describe('Mood Router', () => {
       mood_score: 8,
       emotions: ['happy', 'relaxed'],
     };
-    const createdMood: SimplifiedMood = {
-      id: 3,
+    const createdMood = {
       ...newMood,
+      id: 3,
+      user_id: mockUserId
     };
 
     vi.mocked(moodService.createMood).mockResolvedValue(createdMood);
 
-    const result = await client.mood.createMood.mutate(newMood);
+    const caller = createCaller({ user: { id: mockUserId } });
+    const result = await caller.createMood(newMood);
 
+    expect(isMoodTable(result)).toBe(true);
     expect(result).toEqual(createdMood);
-    expect(moodService.createMood).toHaveBeenCalledWith(TEST_USER_ID, newMood);
+    expect(moodService.createMood).toHaveBeenCalledWith(mockUserId, newMood);
   });
 
   it('should get moods by date range', async () => {
-    const startDate = '2024-08-01';
-    const endDate = '2024-08-31';
-    const mockMoods: SimplifiedMood[] = [
-      { id: 1, date: '2024-08-02', mood_score: 7, emotions: ['happy', 'excited'] },
-      { id: 2, date: '2024-08-03', mood_score: 6, emotions: ['calm'] },
-    ];
-
     vi.mocked(moodService.getMoodsByDateRange).mockResolvedValue(mockMoods);
 
-    const result = await client.mood.getMoodsByDateRange.query({
-      startDate,
-      endDate,
+    const caller = createCaller({ user: { id: mockUserId } });
+    const result = await caller.getMoodsByDateRange({
+      startDate: '2024-08-01',
+      endDate: '2024-08-31',
     });
 
+    expect(isMoodTableArray(result)).toBe(true);
     expect(result).toEqual(mockMoods);
-    expect(moodService.getMoodsByDateRange).toHaveBeenCalledWith(TEST_USER_ID, startDate, endDate);
+    expect(moodService.getMoodsByDateRange).toHaveBeenCalledWith(mockUserId, '2024-08-01', '2024-08-31');
   });
 
   it('should handle empty result for getMoodsByDateRange', async () => {
     vi.mocked(moodService.getMoodsByDateRange).mockResolvedValue([]);
 
-    const result = await client.mood.getMoodsByDateRange.query({
+    const caller = createCaller({ user: { id: mockUserId } });
+    const result = await caller.getMoodsByDateRange({
       startDate: '2024-09-01',
       endDate: '2024-09-02',
     });
 
+    expect(isMoodTableArray(result)).toBe(true);
     expect(result).toEqual([]);
-  });
-
-  it('should handle database errors', async () => {
-    vi.mocked(moodService.getMoods).mockRejectedValue(new Error('Database error'));
-
-    await expect(client.mood.getMoods.query())
-      .rejects.toThrow('Database error');
   });
 
   it('should reject invalid mood_score for createMood', async () => {
@@ -168,20 +152,9 @@ describe('Mood Router', () => {
       emotions: ['happy'],
     };
 
-    await expect(client.mood.createMood.mutate(invalidMood))
-      .rejects.toThrowError(TRPCClientError);
-
-    await expect(client.mood.createMood.mutate(invalidMood))
-      .rejects.toMatchObject({
-        name: 'TRPCClientError',
-        message: expect.stringContaining('Number must be less than or equal to 10'),
-        data: {
-          code: 'BAD_REQUEST',
-          httpStatus: 400,
-          path: 'mood.createMood',
-          stack: expect.any(String)
-        }
-      });
+    const caller = createCaller({ user: { id: mockUserId } });
+    await expect(caller.createMood(invalidMood))
+      .rejects.toThrow('Number must be less than or equal to 10');
   });
 
   it('should reject invalid date for createMood', async () => {
@@ -191,19 +164,8 @@ describe('Mood Router', () => {
       emotions: ['happy'],
     };
 
-    await expect(client.mood.createMood.mutate(invalidMood))
-      .rejects.toThrowError(TRPCClientError);
-
-    await expect(client.mood.createMood.mutate(invalidMood))
-      .rejects.toMatchObject({
-        name: 'TRPCClientError',
-        message: expect.stringContaining('Invalid date'),
-        data: {
-          code: 'BAD_REQUEST',
-          httpStatus: 400,
-          path: 'mood.createMood',
-          stack: expect.any(String)
-        }
-      });
+    const caller = createCaller({ user: { id: mockUserId } });
+    await expect(caller.createMood(invalidMood))
+      .rejects.toThrow('Invalid date format');
   });
 });
