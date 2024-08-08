@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { journalEntryService } from '../../services/journalEntryService';
 import type { JournalEntryTable } from '../../models/journalEntry';
 
-// Mock the journalEntryService
+
 vi.mock('../../services/journalEntryService', () => ({
   journalEntryService: {
     getJournalEntries: vi.fn(),
@@ -13,7 +13,7 @@ vi.mock('../../services/journalEntryService', () => ({
   },
 }));
 
-// Type guard for JournalEntryTable
+// type guard
 function isJournalEntryTable(obj: unknown): obj is JournalEntryTable {
   return (
     typeof obj === 'object' &&
@@ -31,7 +31,7 @@ function isJournalEntryTableArray(arr: unknown): arr is JournalEntryTable[] {
   return Array.isArray(arr) && arr.every(isJournalEntryTable);
 }
 
-// Create a mock router using our mocked tRPC setup
+// create a mock router
 const mockJournalEntryRouter = router({
   getJournalEntries: authedProcedure.query(async ({ ctx }) => {
     return journalEntryService.getJournalEntries(ctx.user.id);
@@ -60,7 +60,7 @@ const mockJournalEntryRouter = router({
     }),
 });
 
-// Create a caller factory
+// caller factory
 const createCaller = createCallerFactory(mockJournalEntryRouter);
 
 describe('journalEntryRouter', () => {
