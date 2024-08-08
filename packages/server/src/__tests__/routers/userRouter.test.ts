@@ -3,7 +3,7 @@ import { router, authedProcedure, createCallerFactory } from '../mocks/trpcMock'
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 
-// Mock the userService
+
 vi.mock('../../services/userService', () => ({
   createUser: vi.fn(),
   loginUser: vi.fn(),
@@ -11,12 +11,11 @@ vi.mock('../../services/userService', () => ({
   getUserById: vi.fn(),
 }));
 
-// Import mocked functions
+
 import { createUser, loginUser, changePassword, getUserById } from '../../services/userService';
 
-// Type definitions and guards remain the same
 
-// Create a mock router using our mocked tRPC setup
+// create mock router 
 const mockUserRouter = router({
   signup: authedProcedure
     .input(z.object({
@@ -61,7 +60,7 @@ const mockUserRouter = router({
     }),
 });
 
-// Create a caller factory
+// create caller factory
 const createCaller = createCallerFactory(mockUserRouter);
 
 describe('User Router', () => {
