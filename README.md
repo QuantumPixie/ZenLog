@@ -47,25 +47,33 @@ DATABASE_URL=postgres://username:password@localhost:5432/database_name
 JWT_SECRET=secretpassword
 ```
 
-4. Run migrations
+4. Run migrations:
 ``` npm run migrate:latest
 ```
 
-5. (Optional) Seed Database
+5. (Optional) Seed Database:
 ```
  npm run seed
 ```
 
-6. Run production
+6. Run Server:
+
+```
+npm run Dev
+```
+
+7. Run production:
+
 ```
 npm run build
 ```
 
-7. Test backend
+8. Test server:
 ``` npm run test
 ```
 
-8. Run test coverage
+8. Run test coverage:
+
 ``` npm run coverage
 ```
 
