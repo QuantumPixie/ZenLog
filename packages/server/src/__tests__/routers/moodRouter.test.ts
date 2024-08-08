@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { moodService } from '../../services/moodService';
 import type { MoodTable } from '../../models/mood';
 
-// Mock the moodService
+
 vi.mock('../../services/moodService', () => ({
   moodService: {
     getMoods: vi.fn(),
@@ -13,7 +13,7 @@ vi.mock('../../services/moodService', () => ({
   },
 }));
 
-// Type guard for MoodTable
+// type guard
 function isMoodTable(obj: unknown): obj is MoodTable {
   return (
     typeof obj === 'object' &&
@@ -27,7 +27,7 @@ function isMoodTable(obj: unknown): obj is MoodTable {
   );
 }
 
-// Type guard for array of MoodTable
+// type guard for array of MoodTable
 function isMoodTableArray(arr: unknown): arr is MoodTable[] {
   return Array.isArray(arr) && arr.every(isMoodTable);
 }
