@@ -14,7 +14,7 @@ vi.mock('../../services/activityService', () => ({
   },
 }));
 
-// Create a mock router using our mocked tRPC setup
+// create mock router 
 const mockActivityRouter = router({
   getActivities: authedProcedure.query(async ({ ctx }) => {
     return activityService.getActivities(ctx.user.id);
@@ -48,7 +48,7 @@ const mockActivityRouter = router({
     }),
 });
 
-// Create a caller factory
+// caller factory
 const createCaller = createCallerFactory(mockActivityRouter);
 
 describe('activityRouter', () => {
