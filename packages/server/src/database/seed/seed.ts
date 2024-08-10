@@ -92,13 +92,13 @@ export const seed = async (recordCount = 10) => {
         const mood = {
           user_id: userId,
           date,
-          mood_score: chance.integer({ min: 1, max: 10 }),
+          moodScore: chance.integer({ min: 1, max: 10 }),
           emotions: chance.pickset(['happy', 'sad', 'angry', 'excited', 'nervous', 'calm'], chance.integer({ min: 1, max: 3 })),
         };
         const validatedMood = moodSchema.omit({ id: true }).parse(mood);
         await client.query(
           'INSERT INTO moods (user_id, date, mood_score, emotions) VALUES ($1, $2, $3, $4)',
-          [validatedMood.user_id, validatedMood.date, validatedMood.mood_score, validatedMood.emotions]
+          [validatedMood.user_id, validatedMood.date, validatedMood.moodScore, validatedMood.emotions]
         );
       }
 

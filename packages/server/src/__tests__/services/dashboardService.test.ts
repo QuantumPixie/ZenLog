@@ -25,7 +25,7 @@ describe('dashboardService', () => {
   describe('getSummary', () => {
     it('should return a summary for a user', async () => {
       const userId = 1;
-      const mockMoods = [{ date: '2023-08-01', mood_score: 7, emotions: ['happy'] }];
+      const mockMoods = [{ id: 1, user_id: 1, date: '2023-08-01', moodScore: 7, emotions: ['happy'] }];
       const mockEntries = [{ date: '2023-08-01', entry: 'Test entry', sentiment: 6.5 }];
       const mockActivities = [{ date: '2023-08-01', activity: 'Running', duration: 30, notes: 'Good run' }];
       const mockAverageMood = { averageMood: '6.5' };
@@ -63,7 +63,7 @@ describe('dashboardService', () => {
       });
 
       expect(mockDb.selectFrom).toHaveBeenCalledTimes(5);
-      expect(mockChain.select).toHaveBeenNthCalledWith(1, ['date', 'mood_score as moodScore', 'emotions']);
+      expect(mockChain.select).toHaveBeenNthCalledWith(1, ['id', 'user_id', 'date', 'moodScore', 'emotions']);
       expect(mockChain.select).toHaveBeenNthCalledWith(2, ['date', 'entry', 'sentiment']);
       expect(mockChain.select).toHaveBeenNthCalledWith(3, ['date', 'activity', 'duration', 'notes']);
       expect(mockChain.select).toHaveBeenCalledWith(expect.any(Object)); // average mood
@@ -75,7 +75,7 @@ describe('dashboardService', () => {
 
       expect(mockChain.where).toHaveBeenCalledWith('date', '>=', expect.any(String));
 
-      expect(mockAvg).toHaveBeenCalledWith('mood_score');
+      expect(mockAvg).toHaveBeenCalledWith('moodScore');
       expect(mockAvg).toHaveBeenCalledWith('sentiment');
     });
   });
