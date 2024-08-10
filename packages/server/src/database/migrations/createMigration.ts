@@ -20,7 +20,7 @@ const migrationName = process.argv[2] || 'migration';
 const migrationFileName = `${timestamp}_${migrationName}.ts`;
 const migrationFilePath = path.join(migrationDir, migrationFileName);
 
-// template
+
 const migrationTemplate = `import db from '../config/database';
 import { sql } from 'kysely';
 

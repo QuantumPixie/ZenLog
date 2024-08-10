@@ -9,7 +9,7 @@ vi.mock('../../services/dashboardService', () => ({
   },
 }));
 
-// Type guard for DashboardSummary
+// type guard 
 function isDashboardSummary(obj: unknown): obj is DashboardSummary {
   return (
     typeof obj === 'object' &&
