@@ -1,12 +1,15 @@
 export interface DashboardSummary {
   recentMoods: Array<{
+    id: number;
+    user_id: number;
     date: string;
-    mood_score: number;
+    moodScore: number;
     emotions: string[];
   }>;
   recentEntries: Array<{
     date: string;
     entry: string;
+    sentiment: number;
   }>;
   recentActivities: Array<{
     date: string;

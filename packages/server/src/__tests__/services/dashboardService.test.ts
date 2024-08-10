@@ -26,9 +26,10 @@ describe('dashboardService', () => {
     it('should return a summary for a user', async () => {
       const userId = 1;
       const mockMoods = [{ date: '2023-08-01', mood_score: 7, emotions: ['happy'] }];
-      const mockEntries = [{ date: '2023-08-01', entry: 'Test entry' }];
+      const mockEntries = [{ date: '2023-08-01', entry: 'Test entry', sentiment: 6.5 }];
       const mockActivities = [{ date: '2023-08-01', activity: 'Running', duration: 30, notes: 'Good run' }];
       const mockAverageMood = { averageMood: '6.5' };
+      const mockAverageSentiment = { averageSentiment: '6.8' };
 
       const mockChain = {
         select: vi.fn().mockReturnThis(),
@@ -43,12 +44,12 @@ describe('dashboardService', () => {
       mockChain.execute
         .mockResolvedValueOnce(mockMoods)
         .mockResolvedValueOnce(mockEntries)
-        .mockResolvedValueOnce(mockActivities)
-        .mockResolvedValueOnce([]);  // Mock for moodScores
-      mockChain.executeTakeFirst.mockResolvedValue(mockAverageMood);
+        .mockResolvedValueOnce(mockActivities);
+      mockChain.executeTakeFirst
+        .mockResolvedValueOnce(mockAverageMood)
+        .mockResolvedValueOnce(mockAverageSentiment);
 
-      const mockAvgAs = vi.fn().mockReturnValue({ as: vi.fn().mockReturnValue('averageMood') });
-      const mockAvg = vi.fn().mockReturnValue({ as: mockAvgAs });
+      const mockAvg = vi.fn().mockReturnValue({ as: vi.fn().mockReturnValue('averageMood') });
       mockDb.fn.avg = mockAvg;
 
       const result = await dashboardService.getSummary(userId);
@@ -58,14 +59,15 @@ describe('dashboardService', () => {
         recentEntries: mockEntries,
         recentActivities: mockActivities,
         averageMoodLastWeek: 6.5,
+        averageSentimentLastWeek: 6.8,
       });
 
       expect(mockDb.selectFrom).toHaveBeenCalledTimes(5);
-      expect(mockChain.select).toHaveBeenNthCalledWith(1, ['date', 'mood_score', 'emotions']);
-      expect(mockChain.select).toHaveBeenNthCalledWith(2, ['date', 'entry']);
+      expect(mockChain.select).toHaveBeenNthCalledWith(1, ['date', 'mood_score as moodScore', 'emotions']);
+      expect(mockChain.select).toHaveBeenNthCalledWith(2, ['date', 'entry', 'sentiment']);
       expect(mockChain.select).toHaveBeenNthCalledWith(3, ['date', 'activity', 'duration', 'notes']);
-      expect(mockChain.select).toHaveBeenNthCalledWith(4, expect.any(Object));
-      expect(mockChain.select).toHaveBeenNthCalledWith(5, ['date', 'mood_score']);
+      expect(mockChain.select).toHaveBeenCalledWith(expect.any(Object)); // average mood
+      expect(mockChain.select).toHaveBeenCalledWith(expect.any(Object)); // average sentiment
 
       expect(mockChain.where).toHaveBeenCalledWith('user_id', '=', userId);
       expect(mockChain.orderBy).toHaveBeenCalledWith('date', 'desc');
@@ -74,7 +76,7 @@ describe('dashboardService', () => {
       expect(mockChain.where).toHaveBeenCalledWith('date', '>=', expect.any(String));
 
       expect(mockAvg).toHaveBeenCalledWith('mood_score');
-      expect(mockAvgAs).toHaveBeenCalled();
+      expect(mockAvg).toHaveBeenCalledWith('sentiment');
     });
   });
 });

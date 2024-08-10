@@ -9,7 +9,7 @@ vi.mock('../../services/dashboardService', () => ({
   },
 }));
 
-// type guard 
+// type guard
 function isDashboardSummary(obj: unknown): obj is DashboardSummary {
   return (
     typeof obj === 'object' &&
@@ -18,20 +18,37 @@ function isDashboardSummary(obj: unknown): obj is DashboardSummary {
     'recentEntries' in obj &&
     'recentActivities' in obj &&
     'averageMoodLastWeek' in obj &&
+    'averageSentimentLastWeek' in obj &&
     Array.isArray((obj as DashboardSummary).recentMoods) &&
     Array.isArray((obj as DashboardSummary).recentEntries) &&
     Array.isArray((obj as DashboardSummary).recentActivities) &&
     (typeof (obj as DashboardSummary).averageMoodLastWeek === 'number' ||
       (obj as DashboardSummary).averageMoodLastWeek === null) &&
+    (typeof (obj as DashboardSummary).averageSentimentLastWeek === 'number' ||
+      (obj as DashboardSummary).averageSentimentLastWeek === null) &&
     (obj as DashboardSummary).recentMoods.every(
-      (mood) => 'mood_score' in mood && typeof mood.mood_score === 'number'
+      (mood) => 'moodScore' in mood && typeof mood.moodScore === 'number'
+    ) &&
+    (obj as DashboardSummary).recentEntries.every(
+      (entry) => 'sentiment' in entry && typeof entry.sentiment === 'number'
     )
   );
 }
 
 const mockDashboardRouter = router({
   getSummary: authedProcedure.query(async ({ ctx }) => {
-    return dashboardService.getSummary(ctx.user.id);
+    const summary = await dashboardService.getSummary(ctx.user.id);
+    return {
+      ...summary,
+      recentEntries: summary.recentEntries.map(entry => ({
+        ...entry,
+        sentiment: Number(entry.sentiment)
+      })),
+      recentMoods: summary.recentMoods.map(mood => ({
+        ...mood,
+        moodScore: Number(mood.moodScore)
+      }))
+    };
   }),
 });
 
@@ -47,18 +64,19 @@ describe('dashboardRouter', () => {
   it('should get dashboard summary', async () => {
     const mockSummary: DashboardSummary = {
       recentMoods: [
-        { date: '2024-08-02', mood_score: 7, emotions: ['happy', 'energetic'] },
-        { date: '2024-08-01', mood_score: 6, emotions: ['calm'] },
+        { id: 1, user_id: mockUserId, date: '2024-08-02', moodScore: 7, emotions: ['happy', 'energetic'] },
+        { id: 2, user_id: mockUserId, date: '2024-08-01', moodScore: 6, emotions: ['calm'] },
       ],
       recentEntries: [
-        { date: '2024-08-02', entry: 'Had a great day!' },
-        { date: '2024-08-01', entry: 'Feeling reflective today.' },
+        { date: '2024-08-02', entry: 'Had a great day!', sentiment: 8 },
+        { date: '2024-08-01', entry: 'Feeling reflective today.', sentiment: 6 },
       ],
       recentActivities: [
         { date: '2024-08-02', activity: 'Running', duration: 30, notes: 'Felt energized' },
         { date: '2024-08-01', activity: 'Meditation', duration: 15, notes: 'Very relaxing' },
       ],
       averageMoodLastWeek: 6.5,
+      averageSentimentLastWeek: 7.0,
     };
 
     vi.mocked(dashboardService.getSummary).mockResolvedValue(mockSummary);
@@ -71,12 +89,13 @@ describe('dashboardRouter', () => {
     expect(dashboardService.getSummary).toHaveBeenCalledWith(mockUserId);
   });
 
-  it('should handle null average mood', async () => {
+  it('should handle null average mood and sentiment', async () => {
     const mockSummary: DashboardSummary = {
       recentMoods: [],
       recentEntries: [],
       recentActivities: [],
       averageMoodLastWeek: null,
+      averageSentimentLastWeek: null,
     };
 
     vi.mocked(dashboardService.getSummary).mockResolvedValue(mockSummary);
@@ -91,19 +110,11 @@ describe('dashboardRouter', () => {
 
   it('should handle empty recent data', async () => {
     const mockSummary: DashboardSummary = {
-      recentMoods: [
-        { date: '2024-08-02', mood_score: 7, emotions: ['happy', 'energetic'] },
-        { date: '2024-08-01', mood_score: 6, emotions: ['calm'] },
-      ],
-      recentEntries: [
-        { date: '2024-08-02', entry: 'Had a great day!' },
-        { date: '2024-08-01', entry: 'Feeling reflective today.' },
-      ],
-      recentActivities: [
-        { date: '2024-08-02', activity: 'Running', duration: 30, notes: 'Felt energized' },
-        { date: '2024-08-01', activity: 'Meditation', duration: 15, notes: 'Very relaxing' },
-      ],
+      recentMoods: [],
+      recentEntries: [],
+      recentActivities: [],
       averageMoodLastWeek: 6.5,
+      averageSentimentLastWeek: 7.0,
     };
 
     vi.mocked(dashboardService.getSummary).mockResolvedValue(mockSummary);

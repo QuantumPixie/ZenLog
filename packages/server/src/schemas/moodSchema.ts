@@ -5,6 +5,6 @@ export const moodSchema = z.object({
     user_id: z.number().int(),
     date: z.string().refine((val) => !isNaN(Date.parse(val)), {
         message: 'Invalid date format',
-    }),    mood_score: z.number().min(1).max(10),
+    }),    moodScore: z.number().min(1).max(10),
     emotions: z.array(z.string()),
 });

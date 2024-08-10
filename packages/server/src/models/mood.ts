@@ -9,6 +9,6 @@ export interface MoodTable {
   id: Generated<number>;
   user_id: number;
   date: string;
-  mood_score: number;
+  moodScore: number;
   emotions: string[];
 }
