@@ -15,4 +15,5 @@ export interface DashboardSummary {
     notes: string | undefined;
   }>;
   averageMoodLastWeek: number | null;
+  averageSentimentLastWeek: number | null;
 }

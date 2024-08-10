@@ -31,7 +31,7 @@ The backend is built using Node.js, Express, TRPC, TypeScript, and PostgreSQL.
 
 ```bash
 git clone https://github.com/TuringCollegeSubmissions/thuppe-WD.3.3.5.git
-cd mental-health-tracker
+
 npm install
 
 cd packages/server

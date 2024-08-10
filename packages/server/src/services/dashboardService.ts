@@ -1,12 +1,13 @@
 import { db } from '../database';
 
 type AverageMoodResult = { averageMood: string | null };
+type AverageSentimentResult = { averageSentiment: string | null };
 
 export const dashboardService = {
   async getSummary(userId: number) {
     const recentMoods = await db
       .selectFrom('moods')
-      .select(['date', 'mood_score', 'emotions'])
+      .select(['date', 'mood_score as moodScore', 'emotions'])
       .where('user_id', '=', userId)
       .orderBy('date', 'desc')
       .limit(5)
@@ -14,7 +15,7 @@ export const dashboardService = {
 
     const recentEntries = await db
       .selectFrom('journal_entries')
-      .select(['date', 'entry'])
+      .select(['date', 'entry', 'sentiment'])
       .where('user_id', '=', userId)
       .orderBy('date', 'desc')
       .limit(5)
@@ -40,13 +41,12 @@ export const dashboardService = {
       .where('date', '>=', sevenDaysAgoString)
       .executeTakeFirst() as AverageMoodResult | undefined;
 
-    const moodScores = await db
-      .selectFrom('moods')
-      .select(['date', 'mood_score'])
+    const averageSentimentScore = await db
+      .selectFrom('journal_entries')
+      .select(db.fn.avg('sentiment').as('averageSentiment'))
       .where('user_id', '=', userId)
       .where('date', '>=', sevenDaysAgoString)
-      .orderBy('date', 'asc')
-      .execute();
+      .executeTakeFirst() as AverageSentimentResult | undefined;
 
     const result = {
       recentMoods,
@@ -55,8 +55,12 @@ export const dashboardService = {
       averageMoodLastWeek: averageMoodScore && averageMoodScore.averageMood !== null
         ? Number(averageMoodScore.averageMood)
         : null,
+      averageSentimentLastWeek: averageSentimentScore && averageSentimentScore.averageSentiment !== null
+        ? Number(averageSentimentScore.averageSentiment)
+        : null,
     };
-    console.log(moodScores);
+
+    console.log('Dashboard summary:', JSON.stringify(result, null, 2));
 
     return result;
   },

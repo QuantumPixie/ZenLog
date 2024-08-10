@@ -10,7 +10,6 @@ type NewUser = Insertable<UserTable>;
 type SafeUser = Omit<User, 'password'>;
 
 export async function createUser(newUser: NewUser): Promise<SafeUser> {
-  console.log('createUser called with:', { ...newUser, password: '[REDACTED]' });
   try {
     const hashedPassword = await bcrypt.hash(newUser.password, 10);
     const userToInsert = { ...newUser, password: hashedPassword };
@@ -25,7 +24,6 @@ export async function createUser(newUser: NewUser): Promise<SafeUser> {
       throw new Error('Failed to create user');
     }
 
-    console.log('User created successfully:', createdUser);
     return createdUser;
   } catch (error) {
     console.error('Error in createUser:', error);
@@ -117,7 +115,6 @@ export async function changePassword(id: number, oldPassword: string, newPasswor
       .where('id', '=', id)
       .execute();
 
-    console.log('Password change result:', result.length > 0 ? 'Success' : 'Failure');
     return result.length > 0;
   } catch (error) {
     console.error('Error in changePassword:', error);

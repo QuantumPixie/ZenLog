@@ -5,6 +5,12 @@ export const dashboardRouter = router({
   getSummary: authedProcedure
     .query(async ({ ctx }) => {
       const summary = await dashboardService.getSummary(ctx.user.id);
-      return summary;
+      return {
+        ...summary,
+        recentEntries: summary.recentEntries.map(entry => ({
+          ...entry,
+          sentiment: Number(entry.sentiment)
+        }))
+      };
     }),
 });

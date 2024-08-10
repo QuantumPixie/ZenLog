@@ -18,11 +18,9 @@ const rootDir = path.resolve(__dirname, '..', '..', '..', '..', '..');
 
 const result = dotenv.config({ path: path.join(rootDir, '.env') });
 if (result.error) {
-  console.log('Error loading .env file:', result.error);
-} else {
-  console.log('.env file loaded successfully');
+  console.error('Error loading .env file:', result.error);
+  process.exit(1);
 }
-
 
 if (!process.env.DATABASE_URL) {
   console.error('DATABASE_URL is not set in the environment variables.');
@@ -49,9 +47,6 @@ export const clearExistingData = async (client: PoolClient) => {
 
   if (tableExists) {
     await client.query('TRUNCATE public.users, public.moods, public.journal_entries, public.activities CASCADE');
-    console.log('Existing data cleared');
-  } else {
-    console.log('Tables do not exist, skipping truncate');
   }
 };
 
@@ -69,19 +64,6 @@ export const seed = async (recordCount = 10) => {
   let client: PoolClient | null = null;
   try {
     client = await pool.connect();
-
-    // Diagnostic queries
-    const dbResult = await client.query('SELECT current_database()');
-    console.log('Connected to database:', dbResult.rows[0].current_database);
-
-    const schemaResult = await client.query('SHOW search_path');
-    console.log('Current schema search path:', schemaResult.rows[0].search_path);
-
-    const userResult = await client.query('SELECT current_user');
-    console.log('Connected as user:', userResult.rows[0].current_user);
-
-    const allDbsResult = await client.query('SELECT datname FROM pg_database');
-    console.log('All databases:', allDbsResult.rows.map(row => row.datname));
 
     await clearExistingData(client);
 
@@ -102,7 +84,6 @@ export const seed = async (recordCount = 10) => {
         [validatedUser.email, hashedPassword, validatedUser.username]
       );
       const userId = result.rows[0].id;
-      console.log(`Created user with id: ${userId}`);
 
       const userDates = generateUniqueDataForUser(userId, recordCount);
 
@@ -159,10 +140,6 @@ export const seed = async (recordCount = 10) => {
       await client.query('ROLLBACK');
     }
     console.error('Error seeding database:', error);
-    if (error instanceof Error) {
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-    }
     throw error;
   } finally {
     if (client) {
