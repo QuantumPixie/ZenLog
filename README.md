@@ -48,25 +48,18 @@ JWT_SECRET=secretpassword
 ```
 
 4. Run migrations
-``` npm run migrate:latest
+```
+ npm run migrate:latest
 ```
 
-5. (Optional) Seed Database
+5. Test backend
 ```
- npm run seed
-```
-
-6. Run production
-```
-npm run build
+ npm run test
 ```
 
-7. Test backend
-``` npm run test
+6. Run test coverage
 ```
-
-8. Run test coverage
-``` npm run coverage
+ npm run coverage
 ```
 
 
