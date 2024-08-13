@@ -133,7 +133,7 @@ export const seed = async (recordCount = 10) => {
         const validatedMood = moodSchema.omit({ id: true }).parse(mood);
         await client.query(
           'INSERT INTO moods (user_id, date, mood_score, emotions) VALUES ($1, $2, $3, $4)',
-          [validatedMood.user_id, validatedMood.date, validatedMood.mood_score, validatedMood.emotions]
+          [validatedMood.user_id, validatedMood.date, validatedMood.moodScore, validatedMood.emotions]
         );
       }
       console.log(`Moods created for user ${userId}`);
