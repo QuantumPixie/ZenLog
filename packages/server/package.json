@@ -17,9 +17,9 @@
     "type-check": "tsc --noEmit",
     "type-check:tests": "tsc --noEmit -p tsconfig.test.json",
     "lint": "eslint . --ext .ts",
-    "test": "vitest",
+    "test": "NODE_ENV=test vitest",
     "coverage": "vitest run --coverage"
-  },
+    },
   "keywords": [],
   "author": "",
   "license": "ISC",

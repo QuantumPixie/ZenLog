@@ -15,10 +15,15 @@ const __dirname = dirname(__filename);
 
 dotenv.config({ path: resolve(__dirname, '../../../../.env') });
 
-if (!process.env.DATABASE_URL) {
-  console.error('DATABASE_URL environment variable is not set');
+// const isTest = process.env.NODE_ENV === 'test';
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  console.error('Database URL environment variable is not set');
   process.exit(1);
 }
+
+console.log('Connecting to database:', databaseUrl.replace(/\/\/.*@/, '//[REDACTED]@'));
 
 export function createDatabase(options: pg.PoolConfig): Kysely<Database> {
   const pool = new pg.Pool(options);
@@ -28,11 +33,8 @@ export function createDatabase(options: pg.PoolConfig): Kysely<Database> {
     process.exit(-1);
   });
 
-  // Test the connection
-  pool.query('SELECT NOW()', (err) => {
-    if (err) {
-      console.error('Error connecting to the database', err);
-    }
+  pool.on('connect', () => {
+    console.log('Connected to the database');
   });
 
   return new Kysely<Database>({
@@ -41,19 +43,7 @@ export function createDatabase(options: pg.PoolConfig): Kysely<Database> {
   });
 }
 
-const db = createDatabase({ connectionString: process.env.DATABASE_URL });
+const db = createDatabase({ connectionString: databaseUrl });
 
-// db.selectFrom('users')
-//   .select('id')
-//   .limit(1)
-//   .execute()
-//   .catch((error) => {
-//     console.error('Error querying users table:', error);
-//     if (error.message.includes('relation "users" does not exist')) {
-//       console.error('The users table does not exist. Make sure you have run your migrations.');
-//     }
-//   });
-
-export type DatabasePartial<T> = Kysely<T>;
 export { db };
 export * from '../models/database';

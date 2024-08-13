@@ -14,14 +14,14 @@ export function createMockDatabase(): MockDatabase {
     selectFrom: vi.fn().mockReturnValue({
       select: vi.fn().mockReturnThis(),
       where: vi.fn().mockReturnThis(),
-      execute: vi.fn(),
-      executeTakeFirst: vi.fn(),
+      orderBy: vi.fn().mockReturnThis(),
+      execute: vi.fn().mockResolvedValue([]),
+      executeTakeFirst: vi.fn().mockResolvedValue({}),
     }),
     insertInto: vi.fn().mockReturnValue({
       values: vi.fn().mockReturnThis(),
       returning: vi.fn().mockReturnThis(),
-      execute: vi.fn(),
-      executeTakeFirst: vi.fn(),
+      executeTakeFirstOrThrow: vi.fn().mockResolvedValue({}),
     }),
     updateTable: vi.fn().mockReturnValue({
       set: vi.fn().mockReturnThis(),

@@ -36,17 +36,26 @@ const activityList = [
 ];
 
 export const clearExistingData = async (client: PoolClient) => {
-  const tableExistsQuery = await client.query(`
-    SELECT EXISTS (
-      SELECT FROM information_schema.tables
-      WHERE  table_schema = 'public'
-      AND    table_name   = 'users'
-    );
-  `);
-  const tableExists = tableExistsQuery.rows[0].exists;
+  console.log('Clearing existing data...');
+  try {
+    const tableExistsQuery = await client.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE  table_schema = 'public'
+        AND    table_name   = 'users'
+      );
+    `);
+    const tableExists = tableExistsQuery.rows[0].exists;
 
-  if (tableExists) {
-    await client.query('TRUNCATE public.users, public.moods, public.journal_entries, public.activities CASCADE');
+    if (tableExists) {
+      await client.query('TRUNCATE public.users, public.moods, public.journal_entries, public.activities CASCADE');
+      console.log('Existing data cleared successfully');
+    } else {
+      console.log('No existing tables found, skipping clear');
+    }
+  } catch (error) {
+    console.error('Error clearing existing data:', error);
+    throw error;
   }
 };
 
@@ -60,14 +69,39 @@ export const generateUniqueDataForUser = (userId: number, count: number) => {
   return Array.from(dates).map(date => ({ userId, date }));
 };
 
+const checkTableExists = async (client: PoolClient, tableName: string) => {
+  const result = await client.query(`
+    SELECT EXISTS (
+      SELECT FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_name = $1
+    );
+  `, [tableName]);
+  return result.rows[0].exists;
+};
+
 export const seed = async (recordCount = 10) => {
   let client: PoolClient | null = null;
   try {
     client = await pool.connect();
+    console.log('Connected to database');
 
     await clearExistingData(client);
 
     await client.query('BEGIN');
+    console.log('Transaction begun');
+
+    // Check if tables exist
+    const tablesExist = await Promise.all([
+      checkTableExists(client, 'users'),
+      checkTableExists(client, 'moods'),
+      checkTableExists(client, 'journal_entries'),
+      checkTableExists(client, 'activities')
+    ]);
+
+    if (!tablesExist.every(Boolean)) {
+      throw new Error('One or more required tables do not exist');
+    }
 
     // users
     const users = Array.from({ length: recordCount }).map(() => ({
@@ -84,6 +118,7 @@ export const seed = async (recordCount = 10) => {
         [validatedUser.email, hashedPassword, validatedUser.username]
       );
       const userId = result.rows[0].id;
+      console.log(`User created with ID: ${userId}`);
 
       const userDates = generateUniqueDataForUser(userId, recordCount);
 
@@ -92,15 +127,16 @@ export const seed = async (recordCount = 10) => {
         const mood = {
           user_id: userId,
           date,
-          moodScore: chance.integer({ min: 1, max: 10 }),
+          mood_score: chance.integer({ min: 1, max: 10 }),
           emotions: chance.pickset(['happy', 'sad', 'angry', 'excited', 'nervous', 'calm'], chance.integer({ min: 1, max: 3 })),
         };
         const validatedMood = moodSchema.omit({ id: true }).parse(mood);
         await client.query(
           'INSERT INTO moods (user_id, date, mood_score, emotions) VALUES ($1, $2, $3, $4)',
-          [validatedMood.user_id, validatedMood.date, validatedMood.moodScore, validatedMood.emotions]
+          [validatedMood.user_id, validatedMood.date, validatedMood.mood_score, validatedMood.emotions]
         );
       }
+      console.log(`Moods created for user ${userId}`);
 
       // journalEntries
       for (const { date } of userDates) {
@@ -116,6 +152,7 @@ export const seed = async (recordCount = 10) => {
           [validatedJournalEntry.user_id, validatedJournalEntry.date, validatedJournalEntry.entry, validatedJournalEntry.sentiment]
         );
       }
+      console.log(`Journal entries created for user ${userId}`);
 
       // activities
       for (const { date } of userDates) {
@@ -131,6 +168,7 @@ export const seed = async (recordCount = 10) => {
           [userId, validatedActivity.date, validatedActivity.activity, validatedActivity.duration, validatedActivity.notes]
         );
       }
+      console.log(`Activities created for user ${userId}`);
     }
 
     await client.query('COMMIT');
@@ -138,16 +176,26 @@ export const seed = async (recordCount = 10) => {
   } catch (error) {
     if (client) {
       await client.query('ROLLBACK');
+      console.log('Transaction rolled back due to error');
     }
     console.error('Error seeding database:', error);
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
     throw error;
   } finally {
     if (client) {
       client.release();
+      console.log('Database client released');
     }
-    await pool.end();
   }
 };
 
-const recordCount = process.argv[2] ? parseInt(process.argv[2], 10) : 10;
-seed(recordCount);
+if (require.main === module) {
+  const recordCount = process.argv[2] ? parseInt(process.argv[2], 10) : 10;
+  seed(recordCount).catch(error => {
+    console.error('Seeding failed:', error);
+    process.exit(1);
+  });
+}

@@ -7,4 +7,4 @@ export const journalEntrySchema = z.object({
     message: "Date must be a valid date string",
   }),
   entry: z.string(),
-  sentiment: z.number().int().min(1).max(10),});
+  sentiment: z.number().min(1).max(10),});
