@@ -127,21 +127,6 @@ export const seed = async (recordCount = 10) => {
       username: chance.word({ length: 8 }),
     }))
 
-<<<<<<<<<<<<<<  ✨ Codeium Command 🌟 >>>>>>>>>>>>>>>>
-    const values = users.map((user) => [
-      user.email,
-      bcrypt.hashSync(user.password, 10),
-      user.username,
-    ])
-    await client.query(
-      `INSERT INTO users (email, password, username) VALUES ${values
-        .map(() => '($1, $2, $3)')
-        .join(',')} RETURNING id`,
-      values.flat()
-    )
-    const userIds = (
-      await client.query<{ id: number }>(
-        `SELECT id FROM users ORDER BY id ASC LIMIT ${values.length}`
     for (const user of users) {
       const validatedUser = signupSchema.parse(user)
       const hashedPassword = await bcrypt.hash(validatedUser.password, 10)
@@ -149,28 +134,11 @@ export const seed = async (recordCount = 10) => {
         'INSERT INTO users (email, password, username) VALUES ($1, $2, $3) RETURNING id',
         [validatedUser.email, hashedPassword, validatedUser.username]
       )
-    ).rows.map((row) => row.id)
-    console.log('User created')
       const userId = result.rows[0].id
       console.log(`User created with ID: ${userId}`)
 
-    const userDates = generateUniqueDataForUser(null, recordCount * userIds.length)
       const userDates = generateUniqueDataForUser(userId, recordCount)
 
-    // moods
-    const moodValues = userDates.map((data) => [
-      data.date,
-      chance.integer({ min: 1, max: 10 }),
-      JSON.stringify(chance.pickset(emotions, chance.integer({ min: 1, max: 3 }))),
-      ...userIds,
-    ])
-    await client.query(
-      `INSERT INTO moods (date, mood_score, emotions, user_id) VALUES ${moodValues
-        .map(() => '($1, $2, $3, $4)')
-        .join(',')}`,
-      moodValues.flat()
-    )
-    console.log('Moods created')
       // moods
       for (const { date } of userDates) {
         const mood = {
@@ -195,20 +163,6 @@ export const seed = async (recordCount = 10) => {
       }
       console.log(`Moods created for user ${userId}`)
 
-    // journalEntries
-    const journalEntryValues = userDates.map((data) => [
-      data.date,
-      chance.paragraph(),
-      chance.floating({ min: 1, max: 10, fixed: 1 }),
-      ...userIds,
-    ])
-    await client.query(
-      `INSERT INTO journal_entries (date, entry, sentiment, user_id) VALUES ${journalEntryValues
-        .map(() => '($1, $2, $3, $4)')
-        .join(',')}`,
-      journalEntryValues.flat()
-    )
-    console.log('Journal entries created')
       // journalEntries
       for (const { date } of userDates) {
         const journalEntry = {
@@ -232,23 +186,6 @@ export const seed = async (recordCount = 10) => {
       }
       console.log(`Journal entries created for user ${userId}`)
 
-    // activities
-    const activityValues = userDates.flatMap((data) =>
-      userIds.map((userId) => [
-        data.date,
-        chance.pickone(activityList),
-        chance.integer({ min: 10, max: 120 }),
-        chance.sentence(),
-        userId,
-      ])
-    )
-    await client.query(
-      `INSERT INTO activities (date, activity, duration, notes, user_id) VALUES ${activityValues
-        .map(() => '($1, $2, $3, $4, $5)')
-        .join(',')}`,
-      activityValues.flat()
-    )
-    console.log('Activities created')
       // activities
       for (const { date } of userDates) {
         const activityInput = {
@@ -271,7 +208,6 @@ export const seed = async (recordCount = 10) => {
       }
       console.log(`Activities created for user ${userId}`)
     }
-<<<<<<<  2fe5acb7-987a-49a7-82bd-d839b70dc0b6  >>>>>>>
 
     await client.query('COMMIT')
     console.log('Database seeding completed successfully')
