@@ -1,4 +1,4 @@
-import type { ColumnType } from 'kysely';
+import type { ColumnType } from 'kysely'
 
 export type Generated<T> =
   T extends ColumnType<infer S, infer I, infer U>
@@ -6,10 +6,10 @@ export type Generated<T> =
     : ColumnType<T, T | undefined, T>
 
 export interface UserTable {
-  id: Generated<number>;
-  email: string;
-  username: string;
-  password: string;
+  id: Generated<number>
+  email: string
+  username: string
+  password: string
 }
 
-export type NewUser = Omit<UserTable, 'id'>;
+export type NewUser = Omit<UserTable, 'id'>

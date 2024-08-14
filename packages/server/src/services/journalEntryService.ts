@@ -1,21 +1,24 @@
-import { db } from '../database';
-import type { NewJournalEntry } from '../models/journalEntry';
-import { sentimentService } from './sentimentService';
+import { db } from '../database'
+import type { NewJournalEntry } from '../models/journalEntry'
+import { sentimentService } from './sentimentService'
 
 export const journalEntryService = {
-  async createJournalEntry(userId: number, entryData: Omit<NewJournalEntry, 'user_id' | 'sentiment'>) {
-    const sentimentResult = sentimentService.analyze(entryData.entry);
+  async createJournalEntry(
+    userId: number,
+    entryData: Omit<NewJournalEntry, 'user_id' | 'sentiment'>
+  ) {
+    const sentimentResult = sentimentService.analyze(entryData.entry)
     const newEntry: NewJournalEntry = {
       ...entryData,
       user_id: userId,
       sentiment: sentimentResult.score,
-    };
+    }
 
     return db
       .insertInto('journal_entries')
       .values(newEntry)
       .returning(['id', 'date', 'entry', 'sentiment'])
-      .executeTakeFirst();
+      .executeTakeFirst()
   },
 
   async getJournalEntries(userId: number) {
@@ -24,10 +27,14 @@ export const journalEntryService = {
       .select(['id', 'date', 'entry', 'sentiment'])
       .where('user_id', '=', userId)
       .orderBy('date', 'desc')
-      .execute();
+      .execute()
   },
 
-  async getJournalEntriesByDateRange(userId: number, startDate: string, endDate: string) {
+  async getJournalEntriesByDateRange(
+    userId: number,
+    startDate: string,
+    endDate: string
+  ) {
     return db
       .selectFrom('journal_entries')
       .select(['id', 'date', 'entry', 'sentiment'])
@@ -35,6 +42,6 @@ export const journalEntryService = {
       .where('date', '>=', startDate)
       .where('date', '<=', endDate)
       .orderBy('date', 'asc')
-      .execute();
+      .execute()
   },
-};
+}

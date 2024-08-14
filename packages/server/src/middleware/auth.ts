@@ -1,63 +1,67 @@
-import { TRPCError } from '@trpc/server';
-import type { Response, NextFunction } from 'express';
-import type { CustomRequest } from '../types/customRequest';
-import { getUserFromToken } from '../utils/tokenUtils';
-import jwt from 'jsonwebtoken';
-import type { JwtPayload } from 'jsonwebtoken';
+import { TRPCError } from '@trpc/server'
+import type { Response, NextFunction } from 'express'
+import jwt from 'jsonwebtoken'
+import type { JwtPayload } from 'jsonwebtoken'
+import type { CustomRequest } from '../types/customRequest'
+import { getUserFromToken } from '../utils/tokenUtils'
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const {JWT_SECRET} = process.env
 
 if (!JWT_SECRET) {
-  console.error('JWT_SECRET is not set in environment variables');
-  process.exit(1);
+  console.error('JWT_SECRET is not set in environment variables')
+  process.exit(1)
 }
 
 interface TokenPayload extends JwtPayload {
-  user_id: number;
+  user_id: number
 }
 
 function isTokenPayload(payload: string | JwtPayload): payload is TokenPayload {
-  return typeof payload === 'object' && payload !== null && 'user_id' in payload;
+  return typeof payload === 'object' && payload !== null && 'user_id' in payload
 }
 
-export const authenticateJWT = (req: CustomRequest, res: Response, next: NextFunction) => {
-  const authHeader = req.header('Authorization');
-  const token = authHeader?.split(' ')[1];
+export const authenticateJWT = (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const authHeader = req.header('Authorization')
+  const token = authHeader?.split(' ')[1]
 
   if (!token) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
-      message: 'No token provided'
-    });
+      message: 'No token provided',
+    })
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET)
 
     if (!isTokenPayload(decoded)) {
       throw new TRPCError({
         code: 'UNAUTHORIZED',
-        message: 'Invalid token payload'
-      });
+        message: 'Invalid token payload',
+      })
     }
 
-    const user = getUserFromToken(decoded);
+    const user = getUserFromToken(decoded)
     if (user) {
-      req.user = user;
-      next();
+      req.user = user
+      next()
     } else {
       throw new TRPCError({
         code: 'UNAUTHORIZED',
-        message: 'Invalid user data in token'
-      });
+        message: 'Invalid user data in token',
+      })
     }
   } catch (error) {
     if (error instanceof jwt.JsonWebTokenError) {
       throw new TRPCError({
         code: 'UNAUTHORIZED',
-        message: 'Invalid token'
-      });
+        message: 'Invalid token',
+      })
     }
-    throw error;
+    throw error
   }
-};
+}

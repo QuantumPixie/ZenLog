@@ -1,14 +1,14 @@
-import { vi } from 'vitest';
-import type { Kysely } from 'kysely';
-import type { Database } from '../../models/database';
+import { vi } from 'vitest'
+import type { Kysely } from 'kysely'
+import type { Database } from '../../models/database'
 
 export type MockDatabase = Partial<Kysely<Database>> & {
-  insert: (data: { id: number }) => void;
-  find: (id: number) => object | undefined;
+  insert: (data: { id: number }) => void
+  find: (id: number) => object | undefined
 }
 
 export function createMockDatabase(): MockDatabase {
-  let insertedData: { id: number} | undefined;
+  let insertedData: { id: number } | undefined
 
   return {
     selectFrom: vi.fn().mockReturnValue({
@@ -34,15 +34,15 @@ export function createMockDatabase(): MockDatabase {
     }),
     transaction: vi.fn(),
     insert: (data: { id: number }) => {
-      insertedData = data;
+      insertedData = data
     },
     find: (id: number) => {
       if (insertedData && insertedData.id === id) {
-        return insertedData;
+        return insertedData
       }
-      return undefined;
-    }
-  };
+      return undefined
+    },
+  }
 }
 
-export const mockKysely: MockDatabase = createMockDatabase();
+export const mockKysely: MockDatabase = createMockDatabase()

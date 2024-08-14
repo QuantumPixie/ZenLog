@@ -1,12 +1,18 @@
-import { db } from '../database';
-import type { ActivityTable, NewActivity, ActivityInput } from '../models/activity';
-import type { Insertable } from 'kysely';
-import { isValidDateString } from '../schemas/activitySchema';
+import type { Insertable } from 'kysely'
+import { db } from '../database'
+import type {
+  ActivityTable,
+  NewActivity,
+  ActivityInput,
+} from '../models/activity'
+import { isValidDateString } from '../schemas/activitySchema'
 
-type DbInsertableActivity = Omit<ActivityTable, 'id'>;
+type DbInsertableActivity = Omit<ActivityTable, 'id'>
 
-function toDbInsertableActivity(newActivity: NewActivity): DbInsertableActivity {
-  return newActivity;
+function toDbInsertableActivity(
+  newActivity: NewActivity
+): DbInsertableActivity {
+  return newActivity
 }
 
 export const activityService = {
@@ -15,61 +21,73 @@ export const activityService = {
       .selectFrom('activities')
       .selectAll()
       .where('user_id', '=', userId)
-      .execute();
+      .execute()
 
     // Filter out invalid activities
-    return activities.filter(activity =>
-      typeof activity.id === 'number' &&
-      typeof activity.user_id === 'number' &&
-      typeof activity.date === 'string' &&
-      isValidDateString(activity.date) &&
-      typeof activity.activity === 'string' &&
-      (activity.duration === undefined || typeof activity.duration === 'number') &&
-      (activity.notes === undefined || typeof activity.notes === 'string')
-    );
+    return activities.filter(
+      (activity) =>
+        typeof activity.id === 'number' &&
+        typeof activity.user_id === 'number' &&
+        typeof activity.date === 'string' &&
+        isValidDateString(activity.date) &&
+        typeof activity.activity === 'string' &&
+        (activity.duration === undefined ||
+          typeof activity.duration === 'number') &&
+        (activity.notes === undefined || typeof activity.notes === 'string')
+    )
   },
 
-  async getActivityById(id: number, userId: number): Promise<ActivityTable | undefined> {
+  async getActivityById(
+    id: number,
+    userId: number
+  ): Promise<ActivityTable | undefined> {
     return db
       .selectFrom('activities')
       .selectAll()
       .where('id', '=', id)
       .where('user_id', '=', userId)
-      .executeTakeFirst();
+      .executeTakeFirst()
   },
 
-  async createActivity(userId: number, activityData: ActivityInput): Promise<ActivityTable> {
+  async createActivity(
+    userId: number,
+    activityData: ActivityInput
+  ): Promise<ActivityTable> {
     if (!isValidDateString(activityData.date)) {
-      throw new Error('Invalid date format');
+      throw new Error('Invalid date format')
     }
 
     const newActivity: NewActivity = {
       ...activityData,
       user_id: userId,
-    };
+    }
 
-    const dbInsertableActivity = toDbInsertableActivity(newActivity);
+    const dbInsertableActivity = toDbInsertableActivity(newActivity)
 
     const insertedActivity = await db
       .insertInto('activities')
       .values(dbInsertableActivity as Insertable<ActivityTable>)
       .returning(['id', 'user_id', 'date', 'activity', 'duration', 'notes'])
-      .executeTakeFirst();
+      .executeTakeFirst()
 
     if (!insertedActivity) {
-      throw new Error('Failed to create activity');
+      throw new Error('Failed to create activity')
     }
 
-    return insertedActivity;
+    return insertedActivity
   },
 
-  async getActivitiesByDateRange(userId: number, startDate: string, endDate: string): Promise<ActivityTable[]> {
+  async getActivitiesByDateRange(
+    userId: number,
+    startDate: string,
+    endDate: string
+  ): Promise<ActivityTable[]> {
     return db
       .selectFrom('activities')
       .selectAll()
       .where('user_id', '=', userId)
       .where('date', '>=', startDate)
       .where('date', '<=', endDate)
-      .execute();
+      .execute()
   },
-};
+}

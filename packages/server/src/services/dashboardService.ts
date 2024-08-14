@@ -1,7 +1,7 @@
-import { db } from '../database';
+import { db } from '../database'
 
-type AverageMoodResult = { averageMood: string | null };
-type AverageSentimentResult = { averageSentiment: string | null };
+type AverageMoodResult = { averageMood: string | null }
+type AverageSentimentResult = { averageSentiment: string | null }
 
 export const dashboardService = {
   async getSummary(userId: number) {
@@ -11,7 +11,7 @@ export const dashboardService = {
       .where('user_id', '=', userId)
       .orderBy('date', 'desc')
       .limit(5)
-      .execute();
+      .execute()
 
     const recentEntries = await db
       .selectFrom('journal_entries')
@@ -19,7 +19,7 @@ export const dashboardService = {
       .where('user_id', '=', userId)
       .orderBy('date', 'desc')
       .limit(5)
-      .execute();
+      .execute()
 
     const recentActivities = await db
       .selectFrom('activities')
@@ -27,41 +27,43 @@ export const dashboardService = {
       .where('user_id', '=', userId)
       .orderBy('date', 'desc')
       .limit(5)
-      .execute();
+      .execute()
 
     // Calculate average score for the last 7 days
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const sevenDaysAgoString = sevenDaysAgo.toISOString().split('T')[0];
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+    const sevenDaysAgoString = sevenDaysAgo.toISOString().split('T')[0]
 
-    const averageMoodScore = await db
+    const averageMoodScore = (await db
       .selectFrom('moods')
       .select(db.fn.avg('moodScore').as('averageMood'))
       .where('user_id', '=', userId)
       .where('date', '>=', sevenDaysAgoString)
-      .executeTakeFirst() as AverageMoodResult | undefined;
+      .executeTakeFirst()) as AverageMoodResult | undefined
 
-    const averageSentimentScore = await db
+    const averageSentimentScore = (await db
       .selectFrom('journal_entries')
       .select(db.fn.avg('sentiment').as('averageSentiment'))
       .where('user_id', '=', userId)
       .where('date', '>=', sevenDaysAgoString)
-      .executeTakeFirst() as AverageSentimentResult | undefined;
+      .executeTakeFirst()) as AverageSentimentResult | undefined
 
     const result = {
       recentMoods,
       recentEntries,
       recentActivities,
-      averageMoodLastWeek: averageMoodScore && averageMoodScore.averageMood !== null
-        ? Number(averageMoodScore.averageMood)
-        : null,
-      averageSentimentLastWeek: averageSentimentScore && averageSentimentScore.averageSentiment !== null
-        ? Number(averageSentimentScore.averageSentiment)
-        : null,
-    };
+      averageMoodLastWeek:
+        averageMoodScore && averageMoodScore.averageMood !== null
+          ? Number(averageMoodScore.averageMood)
+          : null,
+      averageSentimentLastWeek:
+        averageSentimentScore && averageSentimentScore.averageSentiment !== null
+          ? Number(averageSentimentScore.averageSentiment)
+          : null,
+    }
 
-    console.log('Dashboard summary:', JSON.stringify(result, null, 2));
+    console.log('Dashboard summary:', JSON.stringify(result, null, 2))
 
-    return result;
+    return result
   },
-};
+}

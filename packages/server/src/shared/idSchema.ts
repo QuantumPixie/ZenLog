@@ -1,3 +1,3 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
-export const idSchema = z.number().int();
+export const idSchema = z.number().int()

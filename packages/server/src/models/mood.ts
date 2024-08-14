@@ -1,4 +1,4 @@
-import type { ColumnType } from 'kysely';
+import type { ColumnType } from 'kysely'
 
 export type Generated<T> =
   T extends ColumnType<infer S, infer I, infer U>
@@ -6,9 +6,9 @@ export type Generated<T> =
     : ColumnType<T, T | undefined, T>
 
 export interface MoodTable {
-  id: Generated<number>;
-  user_id: number;
-  date: string;
-  moodScore: number;
-  emotions: string[];
+  id: Generated<number>
+  user_id: number
+  date: string
+  moodScore: number
+  emotions: string[]
 }
