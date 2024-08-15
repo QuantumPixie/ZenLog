@@ -5,7 +5,7 @@ import type { JwtPayload } from 'jsonwebtoken'
 import type { CustomRequest } from '../types/customRequest'
 import { getUserFromToken } from '../utils/tokenUtils'
 
-const {JWT_SECRET} = process.env
+const { JWT_SECRET } = process.env
 
 if (!JWT_SECRET) {
   console.error('JWT_SECRET is not set in environment variables')

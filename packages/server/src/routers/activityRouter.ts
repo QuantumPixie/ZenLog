@@ -38,16 +38,12 @@ export const activityRouter = router({
   getActivitiesByDateRange: authedProcedure
     .input(
       z.object({
-        startDate: z
-          .string()
-          .refine(isValidDateString, {
-            message: 'Invalid start date format. Use YYYY-MM-DD',
-          }),
-        endDate: z
-          .string()
-          .refine(isValidDateString, {
-            message: 'Invalid end date format. Use YYYY-MM-DD',
-          }),
+        startDate: z.string().refine(isValidDateString, {
+          message: 'Invalid start date format. Use YYYY-MM-DD',
+        }),
+        endDate: z.string().refine(isValidDateString, {
+          message: 'Invalid end date format. Use YYYY-MM-DD',
+        }),
       })
     )
     .query(async ({ ctx, input }) => {

@@ -16,18 +16,18 @@ export async function migrate<T extends Database>(db: Kysely<T>) {
     .filter((file) => file.endsWith('.ts'))
     .sort()
 
-    sortedMigrationFiles.forEach(async (file) => {
-      console.log(`Running migration: ${file}`)
-      const migrationPath = path.join(migrationsDir, file)
-      const migration = await import(migrationPath)
-      if (migration.up && typeof migration.up === 'function') {
-        await migration.up(db)
-      } else {
-        console.warn(
-          `Migration file ${file} does not export a valid 'up' function.`
-        )
-      }
-    })
+  sortedMigrationFiles.forEach(async (file) => {
+    console.log(`Running migration: ${file}`)
+    const migrationPath = path.join(migrationsDir, file)
+    const migration = await import(migrationPath)
+    if (migration.up && typeof migration.up === 'function') {
+      await migration.up(db)
+    } else {
+      console.warn(
+        `Migration file ${file} does not export a valid 'up' function.`
+      )
+    }
+  })
   console.log('All migrations have been run.')
 }
 

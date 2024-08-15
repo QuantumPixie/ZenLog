@@ -1,8 +1,8 @@
-import path from 'path';
-import { defineConfig } from 'vitest/config';
-import dotenv from 'dotenv';
+import path from 'path'
+import { defineConfig } from 'vitest/config'
+import dotenv from 'dotenv'
 
-dotenv.config({ path: '.env.test' });
+dotenv.config({ path: '.env.test' })
 
 export default defineConfig({
   test: {
@@ -15,7 +15,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     setupFiles: [path.resolve(__dirname, './testSetup.ts')],
-    include: [ 'src/**/*.test.ts', 'src/tests/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'src/tests/**/*.test.ts'],
     alias: {
       '@server': path.resolve(__dirname, './src'),
       '@tests': path.resolve(__dirname, './tests'),
@@ -25,4 +25,4 @@ export default defineConfig({
       NODE_ENV: 'test',
     },
   },
-});
+})

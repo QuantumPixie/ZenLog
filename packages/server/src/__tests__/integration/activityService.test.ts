@@ -96,9 +96,13 @@ describe('Activity Service Integration Tests', () => {
       { date: '2024-08-02', activity: 'Cycling', duration: 45 },
       { date: '2024-08-03', activity: 'Swimming', duration: 60 },
     ]
-  
-    await Promise.all(activities.map(activity => activityService.createActivity(userId, activity)))
-  
+
+    await Promise.all(
+      activities.map((activity) =>
+        activityService.createActivity(userId, activity)
+      )
+    )
+
     const retrievedActivities = await activityService.getActivitiesByDateRange(
       userId,
       '2024-08-01',

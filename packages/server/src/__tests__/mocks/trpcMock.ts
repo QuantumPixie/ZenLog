@@ -2,10 +2,10 @@ import { initTRPC } from '@trpc/server'
 
 const t = initTRPC.create()
 
-export const {router} = t
-export const {procedure} = t
-export const {middleware} = t
-export const {createCallerFactory} = t
+export const { router } = t
+export const { procedure } = t
+export const { middleware } = t
+export const { createCallerFactory } = t
 
 type Context = {
   user?: {

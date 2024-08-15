@@ -32,7 +32,9 @@ function isJournalEntryTableArray(arr: unknown): arr is JournalEntryTable[] {
 
 // create a mock router
 const mockJournalEntryRouter = router({
-  getJournalEntries: authedProcedure.query(async ({ ctx }) => journalEntryService.getJournalEntries(ctx.user.id)),
+  getJournalEntries: authedProcedure.query(async ({ ctx }) =>
+    journalEntryService.getJournalEntries(ctx.user.id)
+  ),
   createJournalEntry: authedProcedure
     .input(
       z.object({
@@ -42,7 +44,9 @@ const mockJournalEntryRouter = router({
         entry: z.string(),
       })
     )
-    .mutation(async ({ ctx, input }) => journalEntryService.createJournalEntry(ctx.user.id, input)),
+    .mutation(async ({ ctx, input }) =>
+      journalEntryService.createJournalEntry(ctx.user.id, input)
+    ),
   getJournalEntriesByDateRange: authedProcedure
     .input(
       z.object({
@@ -54,11 +58,13 @@ const mockJournalEntryRouter = router({
         }),
       })
     )
-    .query(async ({ ctx, input }) => journalEntryService.getJournalEntriesByDateRange(
+    .query(async ({ ctx, input }) =>
+      journalEntryService.getJournalEntriesByDateRange(
         ctx.user.id,
         input.startDate,
         input.endDate
-      )),
+      )
+    ),
 })
 
 // caller factory

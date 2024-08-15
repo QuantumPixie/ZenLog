@@ -16,11 +16,9 @@ export const isValidDateString = (dateString: string) => {
 }
 
 export const activityInputSchema = z.object({
-  date: z
-    .string()
-    .refine(isValidDateString, {
-      message: 'Invalid date format. Use YYYY-MM-DD',
-    }),
+  date: z.string().refine(isValidDateString, {
+    message: 'Invalid date format. Use YYYY-MM-DD',
+  }),
   activity: z.string(),
   duration: z.number().optional(),
   notes: z.string().optional(),

@@ -12,19 +12,22 @@ describe('Server', () => {
   let server: Server
   let baseUrl: string
 
-  beforeAll(() => new Promise<void>((resolve) => {
-      server = createServer(app)
-      server.listen(0, () => {
-        const address = server.address()
-        if (address && typeof address !== 'string') {
-          baseUrl = `http://localhost:${address.port}`
-          mockDb = createMockDatabase()
-        } else {
-          throw new Error('Server address is not valid')
-        }
-        resolve()
+  beforeAll(
+    () =>
+      new Promise<void>((resolve) => {
+        server = createServer(app)
+        server.listen(0, () => {
+          const address = server.address()
+          if (address && typeof address !== 'string') {
+            baseUrl = `http://localhost:${address.port}`
+            mockDb = createMockDatabase()
+          } else {
+            throw new Error('Server address is not valid')
+          }
+          resolve()
+        })
       })
-    }))
+  )
 
   beforeEach(() => {
     mockDb = createMockDatabase()
@@ -34,9 +37,12 @@ describe('Server', () => {
     vi.resetAllMocks()
   })
 
-  afterAll(() => new Promise<void>((resolve) => {
-      server.close(() => resolve())
-    }))
+  afterAll(
+    () =>
+      new Promise<void>((resolve) => {
+        server.close(() => resolve())
+      })
+  )
 
   it('should respond with 200 OK for health check', async () => {
     const response = await fetch(`${baseUrl}/api/health`)

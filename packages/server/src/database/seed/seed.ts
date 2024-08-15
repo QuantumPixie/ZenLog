@@ -48,7 +48,6 @@ const activityList = [
 ]
 
 export const clearExistingData = async (client: PoolClient) => {
-  console.log('Clearing existing data...')
   try {
     const tableExistsQuery = await client.query(`
       SELECT EXISTS (
@@ -63,7 +62,6 @@ export const clearExistingData = async (client: PoolClient) => {
       await client.query(
         'TRUNCATE public.users, public.moods, public.journal_entries, public.activities CASCADE'
       )
-      console.log('Existing data cleared successfully')
     } else {
       console.log('No existing tables found, skipping clear')
     }
@@ -87,8 +85,8 @@ const checkTableExists = async (client: PoolClient, tableName: string) => {
   const result = await client.query(
     `
     SELECT EXISTS (
-      SELECT FROM information_schema.tables 
-      WHERE table_schema = 'public' 
+      SELECT FROM information_schema.tables
+      WHERE table_schema = 'public'
       AND table_name = $1
     );
   `,
@@ -210,22 +208,17 @@ export const seed = async (recordCount = 10) => {
     }
 
     await client.query('COMMIT')
-    console.log('Database seeding completed successfully')
   } catch (error) {
     if (client) {
       await client.query('ROLLBACK')
-      console.log('Transaction rolled back due to error')
     }
-    console.error('Error seeding database:', error)
     if (error instanceof Error) {
-      console.error('Error message:', error.message)
       console.error('Error stack:', error.stack)
     }
     throw error
   } finally {
     if (client) {
       client.release()
-      console.log('Database client released')
     }
   }
 }

@@ -32,7 +32,9 @@ function isMoodTableArray(arr: unknown): arr is MoodTable[] {
 }
 
 const mockMoodRouter = router({
-  getMoods: authedProcedure.query(async ({ ctx }) => moodService.getMoods(ctx.user.id)),
+  getMoods: authedProcedure.query(async ({ ctx }) =>
+    moodService.getMoods(ctx.user.id)
+  ),
   createMood: authedProcedure
     .input(
       z.object({
@@ -43,7 +45,9 @@ const mockMoodRouter = router({
         emotions: z.array(z.string()),
       })
     )
-    .mutation(async ({ ctx, input }) => moodService.createMood(ctx.user.id, input)),
+    .mutation(async ({ ctx, input }) =>
+      moodService.createMood(ctx.user.id, input)
+    ),
   getMoodsByDateRange: authedProcedure
     .input(
       z.object({
@@ -51,11 +55,13 @@ const mockMoodRouter = router({
         endDate: z.string(),
       })
     )
-    .query(async ({ ctx, input }) => moodService.getMoodsByDateRange(
+    .query(async ({ ctx, input }) =>
+      moodService.getMoodsByDateRange(
         ctx.user.id,
         input.startDate,
         input.endDate
-      )),
+      )
+    ),
 })
 
 const createCaller = createCallerFactory(mockMoodRouter)

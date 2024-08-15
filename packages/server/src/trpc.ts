@@ -6,7 +6,7 @@ import type { CreateExpressContextOptions } from '@trpc/server/adapters/express'
 import type { CustomRequest, User } from './types/customRequest'
 import { getUserFromToken } from './utils/tokenUtils'
 
-const {JWT_SECRET} = process.env
+const { JWT_SECRET } = process.env
 if (!JWT_SECRET) {
   throw new Error('JWT_SECRET must be set')
 }
@@ -90,6 +90,6 @@ const isAuthenticated = t.middleware(({ ctx, next }) => {
   return next({ ctx: { ...ctx, user: ctx.user } })
 })
 
-export const {router} = t
-export const {procedure} = t
+export const { router } = t
+export const { procedure } = t
 export const authedProcedure = t.procedure.use(isAuthenticated)

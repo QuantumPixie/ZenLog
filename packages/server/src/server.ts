@@ -31,24 +31,27 @@ app.use('/api/health', (_, res) => {
   res.status(200).send('OK')
 })
 
-app.use('/panel', (_, res) => res.send(
+app.use('/panel', (_, res) =>
+  res.send(
     renderTrpcPanel(appRouter, {
       url: 'http://localhost:3005/api/trpc',
     })
-  ))
+  )
+)
 
-  app.use('/api/trpc/:path', (req, res, next) => {
-    if (req.params.path !== 'user.signup' && req.params.path !== 'user.login') {
-      return authenticateJWT(req as CustomRequest, res, next);
-    }
-    return next();
-  })
+app.use('/api/trpc/:path', (req, res, next) => {
+  if (req.params.path !== 'user.signup' && req.params.path !== 'user.login') {
+    return authenticateJWT(req as CustomRequest, res, next)
+  }
+  return next()
+})
 
 app.use(
   '/api/trpc',
   trpcExpress.createExpressMiddleware({
     router: appRouter,
-    createContext: ({ req, res }: trpcExpress.CreateExpressContextOptions) => createContext({ req: req as CustomRequest, res }),
+    createContext: ({ req, res }: trpcExpress.CreateExpressContextOptions) =>
+      createContext({ req: req as CustomRequest, res }),
   })
 )
 

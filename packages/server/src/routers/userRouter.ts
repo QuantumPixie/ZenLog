@@ -62,12 +62,11 @@ export const userRouter = router({
         )
         if (success) {
           return { message: 'Password changed successfully' }
-        } 
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: 'Failed to change password',
-          })
-
+        }
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Failed to change password',
+        })
       } catch (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -81,10 +80,9 @@ export const userRouter = router({
     if (user) {
       return user
     }
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'User not found',
-      })
-
+    throw new TRPCError({
+      code: 'NOT_FOUND',
+      message: 'User not found',
+    })
   }),
 })

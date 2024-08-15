@@ -16,7 +16,9 @@ vi.mock('../../services/activityService', () => ({
 
 // create mock router
 const mockActivityRouter = router({
-  getActivities: authedProcedure.query(async ({ ctx }) => activityService.getActivities(ctx.user.id)),
+  getActivities: authedProcedure.query(async ({ ctx }) =>
+    activityService.getActivities(ctx.user.id)
+  ),
   getActivityById: authedProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ ctx, input }) => {
@@ -38,7 +40,9 @@ const mockActivityRouter = router({
         notes: z.string().optional(),
       })
     )
-    .mutation(async ({ ctx, input }) => activityService.createActivity(ctx.user.id, input)),
+    .mutation(async ({ ctx, input }) =>
+      activityService.createActivity(ctx.user.id, input)
+    ),
   getActivitiesByDateRange: authedProcedure
     .input(
       z.object({
@@ -46,11 +50,13 @@ const mockActivityRouter = router({
         endDate: z.string(),
       })
     )
-    .query(async ({ ctx, input }) => activityService.getActivitiesByDateRange(
+    .query(async ({ ctx, input }) =>
+      activityService.getActivitiesByDateRange(
         ctx.user.id,
         input.startDate,
         input.endDate
-      )),
+      )
+    ),
 })
 
 // caller factory

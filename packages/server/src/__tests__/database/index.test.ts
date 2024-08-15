@@ -1,5 +1,9 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-import { createMockDatabase, mockKysely, type MockDatabase } from '../mocks/databaseMock'
+import {
+  createMockDatabase,
+  mockKysely,
+  type MockDatabase,
+} from '../mocks/databaseMock'
 
 import { db, createDatabase } from '../../database'
 
@@ -27,7 +31,11 @@ describe('Database', () => {
   it('should execute a query', async () => {
     const mockResult = [{ id: 1 }]
     if (mockDb) {
-      mockDb.selectFrom('users').select('id').limit(1).execute.mockResolvedValue(mockResult)
+      mockDb
+        .selectFrom('users')
+        .select('id')
+        .limit(1)
+        .execute.mockResolvedValue(mockResult)
     }
     const result = await db.selectFrom('users').select('id').limit(1).execute()
 
@@ -37,11 +45,15 @@ describe('Database', () => {
 
   it('should insert data', async () => {
     const mockResult = { id: 1, email: 'john@example.com', username: 'johndoe' }
-    mockDb.insertInto('users').values({
-      email: 'john@example.com',
-      username: 'johndoe',
-      password: 'mypassword',
-    }).returningAll().executeTakeFirstOrThrow.mockResolvedValue(mockResult)
+    mockDb
+      .insertInto('users')
+      .values({
+        email: 'john@example.com',
+        username: 'johndoe',
+        password: 'mypassword',
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow.mockResolvedValue(mockResult)
 
     const result = await db
       .insertInto('users')
@@ -59,7 +71,12 @@ describe('Database', () => {
 
   it('should update data', async () => {
     const mockResult = { id: 1, username: 'janedoe' }
-    mockDb.updateTable('users').set({ username: 'janedoe' }).where('id', '=', 1).returningAll().executeTakeFirst.mockResolvedValue(mockResult)
+    mockDb
+      .updateTable('users')
+      .set({ username: 'janedoe' })
+      .where('id', '=', 1)
+      .returningAll()
+      .executeTakeFirst.mockResolvedValue(mockResult)
 
     const result = await db
       .updateTable('users')
