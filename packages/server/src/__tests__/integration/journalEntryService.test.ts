@@ -71,9 +71,9 @@ describe('Journal Entry Service Integration Tests', () => {
       { date: '2024-08-03', entry: 'Third entry' },
     ]
 
-    entries.forEach(async (entry) => {
-      await journalEntryService.createJournalEntry(userId, entry)
-    })
+    await Promise.all(entries.map(entry =>
+      journalEntryService.createJournalEntry(userId, entry)
+    ))
 
     const retrievedEntries =
       await journalEntryService.getJournalEntriesByDateRange(

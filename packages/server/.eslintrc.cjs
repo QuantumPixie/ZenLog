@@ -15,6 +15,7 @@ module.exports = {
   },
   ignorePatterns: ['**/*.js', '**/*.cjs', '**/*.mjs'],
   rules: {
+    "no-underscore-dangle": ["error", { "allow": ["__filename", "__dirname"] }],
     // we can override some problematic import rules here
     // that can cause issues when using import aliases.
     'import/extensions': 'off',
