@@ -2,23 +2,11 @@ import express from 'express'
 import cors from 'cors'
 import * as trpcExpress from '@trpc/server/adapters/express'
 import { renderTrpcPanel } from 'trpc-panel'
-import { router, createContext } from './trpc'
-import { userRouter } from './routers/userRouter'
-import { activityRouter } from './routers/activityRouter'
-import { journalEntryRouter } from './routers/journalEntryRouter'
-import { moodRouter } from './routers/moodRouter'
-import { dashboardRouter } from './routers/dashboardRouter'
+import { createContext } from './trpc'
+import { appRouter } from './routers'
 import type { CustomRequest } from './types/customRequest'
 import { db } from './database'
 import { authenticateJWT } from './middleware/auth'
-
-export const appRouter = router({
-  user: userRouter,
-  activity: activityRouter,
-  journalEntry: journalEntryRouter,
-  mood: moodRouter,
-  dashboard: dashboardRouter,
-})
 
 export type AppRouter = typeof appRouter
 

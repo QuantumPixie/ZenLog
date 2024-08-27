@@ -28,7 +28,6 @@ export async function setupTestDatabase() {
       console.log('Tables already exist, skipping migrations.')
     }
 
-    // Clean up the test database
     await cleanupTestDatabase()
 
     try {

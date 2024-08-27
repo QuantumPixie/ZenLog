@@ -11,9 +11,8 @@ describe('User Service Integration Tests', () => {
     await setupTestDatabase()
   })
 
-  // Clean up (truncate tables) before each test
   beforeEach(async () => {
-    await cleanupTestDatabase() // Ensure a clean state before each test
+    await cleanupTestDatabase()
   })
 
   afterAll(async () => {
