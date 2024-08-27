@@ -131,14 +131,14 @@ const navigateToLogin = () => {
 
 .feature-icon {
   font-size: 2rem;
-  color: #40E0D0;  /* Turquoise color for icons */
+  color: #40E0D0;
   margin-bottom: 1rem;
 }
 
 .feature-item h3 {
   font-size: 1.2rem;
   margin-bottom: 0.5rem;
-  color: var(--primary-color);  /* Purple color for headings */
+  color: var(--primary-color);
 }
 
 .feature-item p {

@@ -26,7 +26,6 @@ const username = ref('')
 const email = ref('')
 
 const updateProfile = () => {
-  // Implement profile update logic here
   console.log('Profile updated:', username.value, email.value)
 }
 </script>

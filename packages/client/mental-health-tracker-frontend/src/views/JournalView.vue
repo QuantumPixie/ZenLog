@@ -27,7 +27,6 @@ const title = ref('')
 const content = ref('')
 
 const addEntry = () => {
-  // Implement journal entry adding logic here
   console.log('Journal entry added:', title.value, content.value)
 }
 </script>

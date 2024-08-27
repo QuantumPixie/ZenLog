@@ -35,7 +35,6 @@ const moodOptions = [
 ]
 
 const logMood = () => {
-  // Implement mood logging logic here
   console.log('Mood logged:', mood.value, notes.value)
 }
 </script>
