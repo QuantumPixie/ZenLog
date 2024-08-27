@@ -1,12 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  beforeEach,
-  afterEach,
-  afterAll,
-} from 'vitest'
+import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest'
 import {
   setupTestDatabase,
   cleanupTestDatabase,
@@ -26,6 +18,8 @@ describe('Dashboard Service Integration Tests', () => {
   })
 
   beforeEach(async () => {
+    await cleanupTestDatabase()
+
     const user = await createUser({
       email: 'test@example.com',
       username: 'testuser',
@@ -34,16 +28,11 @@ describe('Dashboard Service Integration Tests', () => {
     userId = user.id
   })
 
-  afterEach(async () => {
-    await cleanupTestDatabase()
-  })
-
   afterAll(async () => {
     await teardownTestDatabase()
   })
 
   it('should get dashboard summary', async () => {
-    // Create test data
     await moodService.createMood(userId, {
       date: '2024-08-01',
       moodScore: 7,
@@ -70,12 +59,10 @@ describe('Dashboard Service Integration Tests', () => {
     expect(summary.recentEntries).toHaveLength(1)
     expect(summary.recentActivities).toHaveLength(1)
 
-    // Check if averageMoodLastWeek is a number (could be null if not enough data)
     if (summary.averageMoodLastWeek !== null) {
       expect(summary.averageMoodLastWeek).toBeCloseTo(7, 1)
     }
 
-    // Check content of recent items
     expect(summary.recentMoods[0]).toMatchObject({
       date: expect.any(Date),
       moodScore: 7,

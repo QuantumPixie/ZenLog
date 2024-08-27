@@ -1,12 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  beforeEach,
-  afterEach,
-  afterAll,
-} from 'vitest'
+import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest'
 import {
   setupTestDatabase,
   cleanupTestDatabase,
@@ -23,16 +15,14 @@ describe('Journal Entry Service Integration Tests', () => {
   })
 
   beforeEach(async () => {
+    await cleanupTestDatabase()
+
     const user = await createUser({
       email: 'test@example.com',
       username: 'testuser',
       password: 'password123',
     })
     userId = user.id
-  })
-
-  afterEach(async () => {
-    await cleanupTestDatabase()
   })
 
   afterAll(async () => {
@@ -59,7 +49,6 @@ describe('Journal Entry Service Integration Tests', () => {
       id: createdEntry?.id,
       date: expect.any(Date),
       entry: createdEntry?.entry,
-      // Matches a string that represents a number as sentiment is returned as a string
       sentiment: expect.stringMatching(/^\d+(\.\d+)?$/),
     })
   })

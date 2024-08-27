@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest'
+import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest'
 import {
   setupTestDatabase,
   cleanupTestDatabase,
@@ -11,8 +11,9 @@ describe('User Service Integration Tests', () => {
     await setupTestDatabase()
   })
 
-  afterEach(async () => {
-    await cleanupTestDatabase()
+  // Clean up (truncate tables) before each test
+  beforeEach(async () => {
+    await cleanupTestDatabase() // Ensure a clean state before each test
   })
 
   afterAll(async () => {

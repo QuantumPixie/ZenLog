@@ -20,20 +20,17 @@ export async function setupTestDatabase() {
   console.log('Setting up test database...')
 
   try {
-    // Check if tables already exist
     const usersExist = await tableExists('users')
     if (!usersExist) {
-      // Run migrations only if tables don't exist
       await migrate(db)
       console.log('Migrations completed.')
     } else {
       console.log('Tables already exist, skipping migrations.')
     }
 
-    // Clean existing data
+    // Clean up the test database
     await cleanupTestDatabase()
 
-    // Seed the database
     try {
       await seed(5)
       console.log('Seeding completed.')
@@ -54,39 +51,29 @@ export async function setupTestDatabase() {
 }
 
 export async function cleanupTestDatabase() {
-  console.log('Cleaning up test database...')
+  console.log('Truncating test database tables...')
   const tables: (keyof Database)[] = [
     'activities',
     'journal_entries',
     'moods',
     'users',
   ]
-  tables.forEach(async (table) => {
+
+  for (const table of tables) {
     try {
-      await db.deleteFrom(table as keyof Database).execute()
+      await sql`TRUNCATE TABLE ${sql.table(table)} RESTART IDENTITY CASCADE`.execute(
+        db
+      )
     } catch (error) {
-      console.warn(`Warning: Failed to clean up table ${table}:`, error)
+      console.warn(`Warning: Failed to truncate table ${table}:`, error)
     }
-  })
-  console.log('Cleanup completed.')
+  }
+
+  console.log('Database truncation completed.')
 }
 
 export async function teardownTestDatabase() {
-  console.log('Tearing down test database...')
-  const tables: (keyof Database)[] = [
-    'activities',
-    'journal_entries',
-    'moods',
-    'users',
-  ]
-  tables.forEach(async (table) => {
-    try {
-      await db.schema.dropTable(table).ifExists().execute()
-    } catch (error) {
-      console.warn(`Warning: Failed to drop table ${table}:`, error)
-    }
-  })
-  console.log('Teardown completed.')
+  console.log('Teardown is completed.')
 }
 
 export async function verifyTables() {
@@ -96,7 +83,8 @@ export async function verifyTables() {
     'moods',
     'users',
   ]
-  requiredTables.forEach(async (table) => {
+
+  for (const table of requiredTables) {
     try {
       await db
         .selectFrom(table as keyof Database)
@@ -108,6 +96,7 @@ export async function verifyTables() {
         `Required table ${table} does not exist or is not accessible`
       )
     }
-  })
+  }
+
   console.log('All required tables exist and are accessible')
 }

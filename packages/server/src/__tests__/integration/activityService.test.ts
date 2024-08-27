@@ -1,12 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  beforeEach,
-  afterEach,
-  afterAll,
-} from 'vitest'
+import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest'
 import {
   setupTestDatabase,
   cleanupTestDatabase,
@@ -29,7 +21,7 @@ describe('Activity Service Integration Tests', () => {
 
   beforeEach(async () => {
     try {
-      // Create a new user before each test
+      await cleanupTestDatabase() // Truncate tables to clean the state
       const user = await createUser({
         email: 'test@example.com',
         username: 'testuser',
@@ -38,15 +30,6 @@ describe('Activity Service Integration Tests', () => {
       userId = user.id
     } catch (error) {
       console.error('Failed to create user:', error)
-      throw error
-    }
-  })
-
-  afterEach(async () => {
-    try {
-      await cleanupTestDatabase()
-    } catch (error) {
-      console.error('Failed to clean up test database:', error)
       throw error
     }
   })
