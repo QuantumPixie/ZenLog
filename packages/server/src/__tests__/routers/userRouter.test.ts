@@ -1,14 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { router, authedProcedure, createCallerFactory } from '../mocks/trpcMock'
-
 import {
   createUser,
   loginUser,
   changePassword,
   getUserById,
 } from '../../services/userService'
+import { z } from 'zod'
 
 vi.mock('../../services/userService', () => ({
   createUser: vi.fn(),
@@ -17,7 +16,7 @@ vi.mock('../../services/userService', () => ({
   getUserById: vi.fn(),
 }))
 
-// create mock router
+// Create mock router
 const mockUserRouter = router({
   signup: authedProcedure
     .input(
@@ -28,6 +27,7 @@ const mockUserRouter = router({
       })
     )
     .mutation(async ({ input }) => ({ user: await createUser(input) })),
+
   login: authedProcedure
     .input(
       z.object({
@@ -45,6 +45,7 @@ const mockUserRouter = router({
       }
       return result
     }),
+
   changePassword: authedProcedure
     .input(
       z.object({
@@ -66,6 +67,7 @@ const mockUserRouter = router({
         message: 'Failed to change password',
       })
     }),
+
   getCurrentUser: authedProcedure.query(async ({ ctx }) => {
     const user = await getUserById(ctx.user.id)
     if (user) {
@@ -75,7 +77,7 @@ const mockUserRouter = router({
   }),
 })
 
-// create caller factory
+// Create caller factory
 const createCaller = createCallerFactory(mockUserRouter)
 
 describe('User Router', () => {
@@ -106,6 +108,22 @@ describe('User Router', () => {
     )
   })
 
+  it('should handle signup failure', async () => {
+    const error = new Error('Failed to register user')
+    vi.mocked(createUser).mockRejectedValue(error)
+
+    const caller = createCaller({ user: { id: mockUserId } })
+    await expect(
+      caller.signup({
+        email: 'test@example.com',
+        username: 'testuser',
+        password: 'password123',
+      })
+    ).rejects.toThrow('Failed to register user')
+
+    expect(createUser).toHaveBeenCalled()
+  })
+
   it('should login a user', async () => {
     const loginResult = {
       token: 'mocktoken',
@@ -123,6 +141,18 @@ describe('User Router', () => {
     expect(loginUser).toHaveBeenCalledWith('test@example.com', 'password123')
   })
 
+  it('should handle login failure', async () => {
+    vi.mocked(loginUser).mockResolvedValue(null)
+
+    const caller = createCaller({ user: { id: mockUserId } })
+    await expect(
+      caller.login({
+        email: 'test@example.com',
+        password: 'wrongpassword',
+      })
+    ).rejects.toThrow('Invalid credentials')
+  })
+
   it('should change user password', async () => {
     vi.mocked(changePassword).mockResolvedValue(true)
 
@@ -138,6 +168,18 @@ describe('User Router', () => {
       'oldpassword',
       'newpassword'
     )
+  })
+
+  it('should handle password change failure', async () => {
+    vi.mocked(changePassword).mockResolvedValue(false)
+
+    const caller = createCaller({ user: { id: mockUserId } })
+    await expect(
+      caller.changePassword({
+        oldPassword: 'wrongpassword',
+        newPassword: 'newpassword',
+      })
+    ).rejects.toThrow('Failed to change password')
   })
 
   it('should get current user details', async () => {
@@ -162,27 +204,37 @@ describe('User Router', () => {
     await expect(caller.getCurrentUser()).rejects.toThrow('User not found')
   })
 
-  it('should handle login failure', async () => {
-    vi.mocked(loginUser).mockResolvedValue(null)
+  it('should handle unexpected errors in login', async () => {
+    const error = new Error('An unexpected error occurred')
+    vi.mocked(loginUser).mockRejectedValue(error)
 
     const caller = createCaller({ user: { id: mockUserId } })
     await expect(
       caller.login({
         email: 'test@example.com',
-        password: 'wrongpassword',
+        password: 'password123',
       })
-    ).rejects.toThrow('Invalid credentials')
+    ).rejects.toThrow('An unexpected error occurred')
+
+    expect(loginUser).toHaveBeenCalledWith('test@example.com', 'password123')
   })
 
-  it('should handle password change failure', async () => {
-    vi.mocked(changePassword).mockResolvedValue(false)
+  it('should handle unexpected errors in changePassword', async () => {
+    const error = new Error('Failed to change password')
+    vi.mocked(changePassword).mockRejectedValue(error)
 
     const caller = createCaller({ user: { id: mockUserId } })
     await expect(
       caller.changePassword({
-        oldPassword: 'wrongpassword',
+        oldPassword: 'oldpassword',
         newPassword: 'newpassword',
       })
     ).rejects.toThrow('Failed to change password')
+
+    expect(changePassword).toHaveBeenCalledWith(
+      mockUserId,
+      'oldpassword',
+      'newpassword'
+    )
   })
 })
