@@ -95,7 +95,13 @@ const checkTableExists = async (client: PoolClient, tableName: string) => {
   return result.rows[0].exists
 }
 
-export const seed = async (recordCount = 10) => {
+// Define the interface for the options object
+interface SeedOptions {
+  moodScore?: number
+}
+
+// Update the seed function to accept an options object of type SeedOptions
+export const seed = async (recordCount = 10, options: SeedOptions = {}) => {
   let client: PoolClient | null = null
   try {
     client = await pool.connect()
@@ -142,7 +148,7 @@ export const seed = async (recordCount = 10) => {
         const mood = {
           user_id: userId,
           date,
-          mood_score: chance.integer({ min: 1, max: 10 }),
+          mood_score: options.moodScore || chance.integer({ min: 1, max: 10 }),
           emotions: chance.pickset(
             ['happy', 'sad', 'angry', 'excited', 'nervous', 'calm'],
             chance.integer({ min: 1, max: 3 })
@@ -154,7 +160,7 @@ export const seed = async (recordCount = 10) => {
           [
             validatedMood.user_id,
             validatedMood.date,
-            validatedMood.moodScore,
+            validatedMood.mood_score,
             validatedMood.emotions,
           ]
         )

@@ -1,29 +1,50 @@
 import { sql } from 'kysely'
+import dotenv from 'dotenv'
 import { db } from '../database'
 import { migrate } from '../database/migrations/migrateLatest'
 import { seed } from '../database/seed/seed'
 import type { Database } from '../models/database'
 
+// Load environment variables
+dotenv.config()
+
 async function tableExists(tableName: string): Promise<boolean> {
-  const result = (await sql`
+  const result = await sql<{ exists: boolean }>`
     SELECT EXISTS (
       SELECT FROM information_schema.tables
       WHERE table_schema = 'public'
       AND table_name = ${tableName}
     );
-  `.execute(db)) as { rows: [{ exists: boolean }] }
+  `.execute(db)
 
   return result.rows[0]?.exists ?? false
+}
+
+async function checkDatabaseConnection() {
+  try {
+    await db.selectFrom('users').select('id').limit(1).execute()
+    console.log('Database connection successful')
+  } catch (error) {
+    console.error('Error connecting to the database:', error)
+    throw error
+  }
 }
 
 export async function setupTestDatabase() {
   console.log('Setting up test database...')
 
   try {
+    await checkDatabaseConnection()
+
     const usersExist = await tableExists('users')
     if (!usersExist) {
-      await migrate(db)
-      console.log('Migrations completed.')
+      try {
+        await migrate(db)
+        console.log('Migrations completed.')
+      } catch (migrationError) {
+        console.error('Error during migration:', migrationError)
+        throw migrationError
+      }
     } else {
       console.log('Tables already exist, skipping migrations.')
     }
@@ -31,7 +52,9 @@ export async function setupTestDatabase() {
     await cleanupTestDatabase()
 
     try {
-      await seed(5)
+      await seed(5, {
+        moodScore: 5, // Add a default mood score
+      })
       console.log('Seeding completed.')
     } catch (seedError: unknown) {
       if (seedError instanceof Error) {
@@ -43,6 +66,8 @@ export async function setupTestDatabase() {
         console.warn('Warning: Seeding failed with an unknown error')
       }
     }
+
+    await verifyTables()
   } catch (error) {
     console.error('Error setting up test database:', error)
     throw error
@@ -64,7 +89,8 @@ export async function cleanupTestDatabase() {
         db
       )
     } catch (error) {
-      console.warn(`Warning: Failed to truncate table ${table}:`, error)
+      console.error(`Error truncating table ${table}:`, error)
+      throw error // Throw the error to stop the process if a table can't be truncated
     }
   }
 
@@ -83,6 +109,8 @@ export async function verifyTables() {
     'users',
   ]
 
+  const missingTables = []
+
   for (const table of requiredTables) {
     try {
       await db
@@ -91,10 +119,14 @@ export async function verifyTables() {
         .limit(1)
         .execute()
     } catch (error) {
-      throw new Error(
-        `Required table ${table} does not exist or is not accessible`
-      )
+      missingTables.push(table)
     }
+  }
+
+  if (missingTables.length > 0) {
+    throw new Error(
+      `Required tables do not exist or are not accessible: ${missingTables.join(', ')}`
+    )
   }
 
   console.log('All required tables exist and are accessible')

@@ -7,7 +7,7 @@ describe('Mood Schema Validation', () => {
       id: 1,
       user_id: 100,
       date: '2024-08-26',
-      moodScore: 7,
+      mood_score: 7,
       emotions: ['happy', 'excited'],
     }
 
@@ -19,7 +19,7 @@ describe('Mood Schema Validation', () => {
       id: 1,
       user_id: 100,
       date: 'not-a-date',
-      moodScore: 7,
+      mood_score: 7,
       emotions: ['happy', 'excited'],
     }
 
@@ -28,12 +28,12 @@ describe('Mood Schema Validation', () => {
     )
   })
 
-  it('should fail validation if the moodScore is out of range', () => {
+  it('should fail validation if the mood_score is out of range', () => {
     const invalidMoodTooLow = {
       id: 1,
       user_id: 100,
       date: '2024-08-26',
-      moodScore: 0, // Below the allowed minimum of 1
+      mood_score: 0,
       emotions: ['sad'],
     }
 
@@ -41,7 +41,7 @@ describe('Mood Schema Validation', () => {
       id: 1,
       user_id: 100,
       date: '2024-08-26',
-      moodScore: 11, // Above the allowed maximum of 10
+      mood_score: 11,
       emotions: ['overjoyed'],
     }
 
@@ -53,7 +53,7 @@ describe('Mood Schema Validation', () => {
     const invalidMoodMissingUserId = {
       id: 1,
       date: '2024-08-26',
-      moodScore: 7,
+      mood_score: 7,
       emotions: ['happy', 'excited'],
     }
 
@@ -63,7 +63,7 @@ describe('Mood Schema Validation', () => {
       id: 1,
       user_id: 100,
       date: '2024-08-26',
-      moodScore: 7,
+      mood_score: 7,
     }
 
     expect(() => moodSchema.parse(invalidMoodMissingEmotions)).toThrowError()
@@ -74,8 +74,8 @@ describe('Mood Schema Validation', () => {
       id: 1,
       user_id: 100,
       date: '2024-08-26',
-      moodScore: 7,
-      emotions: 'happy', // Invalid, should be an array of strings
+      mood_score: 7,
+      emotions: 'happy',
     }
 
     expect(() =>
@@ -88,7 +88,7 @@ describe('Mood Schema Validation', () => {
       id: 1,
       user_id: 100,
       date: '2024-08-26',
-      moodScore: 7,
+      mood_score: 7,
       emotions: ['happy', 'content'],
     }
 
