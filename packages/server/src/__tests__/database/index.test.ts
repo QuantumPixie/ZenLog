@@ -30,30 +30,29 @@ describe('Database', () => {
 
   it('should execute a query', async () => {
     const mockResult = [{ id: 1 }]
-    if (mockDb) {
-      mockDb
-        .selectFrom('users')
-        .select('id')
-        .limit(1)
-        .execute.mockResolvedValue(mockResult)
+    if (mockDb && mockDb.selectFrom) {
+      const mockExecute = vi.fn().mockResolvedValue(mockResult)
+      mockDb.selectFrom('users').select('id').limit(1).execute = mockExecute
     }
     const result = await db.selectFrom('users').select('id').limit(1).execute()
 
     expect(result).toEqual(mockResult)
-    expect(mockDb.selectFrom).toHaveBeenCalledWith('users')
+    expect(mockDb?.selectFrom).toHaveBeenCalledWith('users')
   })
 
   it('should insert data', async () => {
     const mockResult = { id: 1, email: 'john@example.com', username: 'johndoe' }
-    mockDb
-      .insertInto('users')
-      .values({
-        email: 'john@example.com',
-        username: 'johndoe',
-        password: 'mypassword',
-      })
-      .returningAll()
-      .executeTakeFirstOrThrow.mockResolvedValue(mockResult)
+    if (mockDb && mockDb.insertInto) {
+      const mockExecuteTakeFirstOrThrow = vi.fn().mockResolvedValue(mockResult)
+      mockDb
+        .insertInto('users')
+        .values({
+          email: 'john@example.com',
+          username: 'johndoe',
+          password: 'mypassword',
+        })
+        .returningAll().executeTakeFirstOrThrow = mockExecuteTakeFirstOrThrow
+    }
 
     const result = await db
       .insertInto('users')
@@ -71,12 +70,14 @@ describe('Database', () => {
 
   it('should update data', async () => {
     const mockResult = { id: 1, username: 'janedoe' }
-    mockDb
-      .updateTable('users')
-      .set({ username: 'janedoe' })
-      .where('id', '=', 1)
-      .returningAll()
-      .executeTakeFirst.mockResolvedValue(mockResult)
+    if (mockDb && mockDb.updateTable) {
+      const mockExecuteTakeFirst = vi.fn().mockResolvedValue(mockResult)
+      mockDb
+        .updateTable('users')
+        .set({ username: 'janedoe' })
+        .where('id', '=', 1)
+        .returningAll().executeTakeFirst = mockExecuteTakeFirst
+    }
 
     const result = await db
       .updateTable('users')
