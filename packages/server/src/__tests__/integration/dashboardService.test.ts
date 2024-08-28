@@ -35,7 +35,7 @@ describe('Dashboard Service Integration Tests', () => {
   it('should get dashboard summary', async () => {
     await moodService.createMood(userId, {
       date: '2024-08-01',
-      moodScore: 7,
+      mood_score: 7,
       emotions: ['happy'],
     })
     await journalEntryService.createJournalEntry(userId, {
@@ -79,5 +79,11 @@ describe('Dashboard Service Integration Tests', () => {
       activity: 'Running',
       duration: 30,
     })
+
+    expect(typeof summary.recentEntries[0].sentiment).toBe('string')
+
+    expect(summary.recentMoods[0]).toHaveProperty('userId')
+
+    console.log('Full summary:', JSON.stringify(summary, null, 2))
   })
 })

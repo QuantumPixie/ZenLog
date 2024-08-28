@@ -27,7 +27,7 @@ function isDashboardSummary(obj: unknown): obj is DashboardSummary {
     (typeof (obj as DashboardSummary).averageSentimentLastWeek === 'number' ||
       (obj as DashboardSummary).averageSentimentLastWeek === null) &&
     (obj as DashboardSummary).recentMoods.every(
-      (mood) => 'moodScore' in mood && typeof mood.moodScore === 'number'
+      (mood) => 'mood_score' in mood && typeof mood.mood_score === 'number'
     ) &&
     (obj as DashboardSummary).recentEntries.every(
       (entry) => 'sentiment' in entry && typeof entry.sentiment === 'number'
@@ -46,7 +46,7 @@ const mockDashboardRouter = router({
       })),
       recentMoods: summary.recentMoods.map((mood) => ({
         ...mood,
-        moodScore: Number(mood.moodScore),
+        mood_score: Number(mood.mood_score),
       })),
     }
   }),
@@ -68,14 +68,14 @@ describe('dashboardRouter', () => {
           id: 1,
           user_id: mockUserId,
           date: '2024-08-02',
-          moodScore: 7,
+          mood_score: 7,
           emotions: ['happy', 'energetic'],
         },
         {
           id: 2,
           user_id: mockUserId,
           date: '2024-08-01',
-          moodScore: 6,
+          mood_score: 6,
           emotions: ['calm'],
         },
       ],

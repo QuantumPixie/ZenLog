@@ -53,7 +53,7 @@ export async function setupTestDatabase() {
 
     try {
       await seed(5, {
-        moodScore: 5, // Add a default mood score
+        mood_score: 5,
       })
       console.log('Seeding completed.')
     } catch (seedError: unknown) {

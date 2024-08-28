@@ -21,7 +21,7 @@ describe('Activity Service Integration Tests', () => {
 
   beforeEach(async () => {
     try {
-      await cleanupTestDatabase() // Truncate tables to clean the state
+      await cleanupTestDatabase()
       const user = await createUser({
         email: 'test@example.com',
         username: 'testuser',

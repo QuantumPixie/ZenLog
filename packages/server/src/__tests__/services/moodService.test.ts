@@ -21,40 +21,37 @@ describe('moodService', () => {
         {
           id: 1,
           date: '2023-08-03',
-          moodScore: 7,
+          mood_score: 7,
           emotions: ['happy', 'excited'],
         },
-        { id: 2, date: '2023-08-02', moodScore: 5, emotions: ['neutral'] },
+        { id: 2, date: '2023-08-02', mood_score: 5, emotions: ['neutral'] },
       ]
 
+      const mockSelect = vi.fn().mockReturnThis()
+      const mockWhere = vi.fn().mockReturnThis()
+      const mockOrderBy = vi.fn().mockReturnThis()
+      const mockExecute = vi.fn().mockResolvedValue(mockMoods)
+
       mockKysely.selectFrom = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnThis(),
-        where: vi.fn().mockReturnThis(),
-        orderBy: vi.fn().mockReturnThis(),
-        execute: vi.fn().mockResolvedValue(mockMoods),
+        select: mockSelect,
+        where: mockWhere,
+        orderBy: mockOrderBy,
+        execute: mockExecute,
       })
 
       const result = await moodService.getMoods(userId)
 
       expect(result).toEqual(mockMoods)
       expect(mockKysely.selectFrom).toHaveBeenCalledWith('moods')
-      expect(mockKysely.selectFrom('moods').select).toHaveBeenCalledWith([
+      expect(mockSelect).toHaveBeenCalledWith([
         'id',
         'date',
-        'moodScore',
+        'mood_score',
         'emotions',
       ])
-      expect(
-        mockKysely
-          .selectFrom('moods')
-          .select(['id', 'date', 'moodScore', 'emotions']).where
-      ).toHaveBeenCalledWith('user_id', '=', userId)
-      expect(
-        mockKysely
-          .selectFrom('moods')
-          .select(['id', 'date', 'moodScore', 'emotions'])
-          .where('user_id', '=', userId).orderBy
-      ).toHaveBeenCalledWith('date', 'desc')
+      expect(mockWhere).toHaveBeenCalledWith('user_id', '=', userId)
+      expect(mockOrderBy).toHaveBeenCalledWith('date', 'desc')
+      expect(mockExecute).toHaveBeenCalled()
     })
   })
 
@@ -63,28 +60,36 @@ describe('moodService', () => {
       const userId = 1
       const moodData = {
         date: '2023-08-03',
-        moodScore: 8,
+        mood_score: 8,
         emotions: ['happy', 'relaxed'],
       }
       const createdMood = { id: 1, ...moodData }
 
+      const mockValues = vi.fn().mockReturnThis()
+      const mockReturning = vi.fn().mockReturnThis()
+      const mockExecuteTakeFirst = vi.fn().mockResolvedValue(createdMood)
+
       mockKysely.insertInto = vi.fn().mockReturnValue({
-        values: vi.fn().mockReturnThis(),
-        returning: vi.fn().mockReturnThis(),
-        executeTakeFirst: vi.fn().mockResolvedValue(createdMood),
+        values: mockValues,
+        returning: mockReturning,
+        executeTakeFirst: mockExecuteTakeFirst,
       })
 
       const result = await moodService.createMood(userId, moodData)
 
       expect(result).toEqual(createdMood)
       expect(mockKysely.insertInto).toHaveBeenCalledWith('moods')
-      expect(mockKysely.insertInto('moods').values).toHaveBeenCalledWith({
+      expect(mockValues).toHaveBeenCalledWith({
         ...moodData,
         user_id: userId,
       })
-      expect(
-        mockKysely.insertInto('moods').values(expect.any(Object)).returning
-      ).toHaveBeenCalledWith(['id', 'date', 'moodScore', 'emotions'])
+      expect(mockReturning).toHaveBeenCalledWith([
+        'id',
+        'date',
+        'mood_score',
+        'emotions',
+      ])
+      expect(mockExecuteTakeFirst).toHaveBeenCalled()
     })
   })
 
@@ -94,15 +99,20 @@ describe('moodService', () => {
       const startDate = '2023-01-01'
       const endDate = '2023-01-31'
       const mockMoods = [
-        { id: 1, date: '2023-01-15', moodScore: 7, emotions: ['happy'] },
-        { id: 2, date: '2023-01-20', moodScore: 6, emotions: ['content'] },
+        { id: 1, date: '2023-01-15', mood_score: 7, emotions: ['happy'] },
+        { id: 2, date: '2023-01-20', mood_score: 6, emotions: ['content'] },
       ]
 
+      const mockSelect = vi.fn().mockReturnThis()
+      const mockWhere = vi.fn().mockReturnThis()
+      const mockOrderBy = vi.fn().mockReturnThis()
+      const mockExecute = vi.fn().mockResolvedValue(mockMoods)
+
       mockKysely.selectFrom = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnThis(),
-        where: vi.fn().mockReturnThis(),
-        orderBy: vi.fn().mockReturnThis(),
-        execute: vi.fn().mockResolvedValue(mockMoods),
+        select: mockSelect,
+        where: mockWhere,
+        orderBy: mockOrderBy,
+        execute: mockExecute,
       })
 
       const result = await moodService.getMoodsByDateRange(
@@ -113,38 +123,17 @@ describe('moodService', () => {
 
       expect(result).toEqual(mockMoods)
       expect(mockKysely.selectFrom).toHaveBeenCalledWith('moods')
-      expect(mockKysely.selectFrom('moods').select).toHaveBeenCalledWith([
+      expect(mockSelect).toHaveBeenCalledWith([
         'id',
         'date',
-        'moodScore',
+        'mood_score',
         'emotions',
       ])
-      expect(
-        mockKysely
-          .selectFrom('moods')
-          .select(['id', 'date', 'moodScore', 'emotions']).where
-      ).toHaveBeenCalledWith('user_id', '=', userId)
-      expect(
-        mockKysely
-          .selectFrom('moods')
-          .select(['id', 'date', 'moodScore', 'emotions'])
-          .where('user_id', '=', userId).where
-      ).toHaveBeenCalledWith('date', '>=', startDate)
-      expect(
-        mockKysely
-          .selectFrom('moods')
-          .select(['id', 'date', 'moodScore', 'emotions'])
-          .where('user_id', '=', userId)
-          .where('date', '>=', startDate).where
-      ).toHaveBeenCalledWith('date', '<=', endDate)
-      expect(
-        mockKysely
-          .selectFrom('moods')
-          .select(['id', 'date', 'moodScore', 'emotions'])
-          .where('user_id', '=', userId)
-          .where('date', '>=', startDate)
-          .where('date', '<=', endDate).orderBy
-      ).toHaveBeenCalledWith('date', 'asc')
+      expect(mockWhere).toHaveBeenCalledWith('user_id', '=', userId)
+      expect(mockWhere).toHaveBeenCalledWith('date', '>=', startDate)
+      expect(mockWhere).toHaveBeenCalledWith('date', '<=', endDate)
+      expect(mockOrderBy).toHaveBeenCalledWith('date', 'asc')
+      expect(mockExecute).toHaveBeenCalled()
     })
   })
 })

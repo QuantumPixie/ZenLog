@@ -5,7 +5,7 @@ export const moodService = {
   async getMoods(userId: number) {
     return db
       .selectFrom('moods')
-      .select(['id', 'date', 'moodScore', 'emotions'])
+      .select(['id', 'date', 'mood_score', 'emotions'])
       .where('user_id', '=', userId)
       .orderBy('date', 'desc')
       .execute()
@@ -18,7 +18,7 @@ export const moodService = {
     return db
       .insertInto('moods')
       .values({ ...moodData, user_id: userId })
-      .returning(['id', 'date', 'moodScore', 'emotions'])
+      .returning(['id', 'date', 'mood_score', 'emotions'])
       .executeTakeFirst()
   },
 
@@ -29,7 +29,7 @@ export const moodService = {
   ) {
     return db
       .selectFrom('moods')
-      .select(['id', 'date', 'moodScore', 'emotions'])
+      .select(['id', 'date', 'mood_score', 'emotions'])
       .where('user_id', '=', userId)
       .where('date', '>=', startDate)
       .where('date', '<=', endDate)

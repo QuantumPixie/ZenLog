@@ -20,7 +20,7 @@ function isMoodTable(obj: unknown): obj is MoodTable {
     'id' in obj &&
     'user_id' in obj &&
     'date' in obj &&
-    'moodScore' in obj &&
+    'mood_score' in obj &&
     'emotions' in obj &&
     Array.isArray((obj as MoodTable).emotions)
   )
@@ -41,7 +41,7 @@ const mockMoodRouter = router({
         date: z.string().refine((val) => !Number.isNaN(Date.parse(val)), {
           message: 'Invalid date format',
         }),
-        moodScore: z.number().min(1).max(10),
+        mood_score: z.number().min(1).max(10),
         emotions: z.array(z.string()),
       })
     )
@@ -71,7 +71,7 @@ describe('moodRouter', () => {
     id: 1,
     user_id: 1,
     date: '2024-08-02',
-    moodScore: 7,
+    mood_score: 7,
     emotions: ['happy', 'excited'],
   }
 
@@ -81,7 +81,7 @@ describe('moodRouter', () => {
       id: 2,
       user_id: 1,
       date: '2024-08-03',
-      moodScore: 6,
+      mood_score: 6,
       emotions: ['calm'],
     },
   ]
@@ -106,7 +106,7 @@ describe('moodRouter', () => {
   it('should create a new mood', async () => {
     const newMood = {
       date: '2024-08-04',
-      moodScore: 8,
+      mood_score: 8,
       emotions: ['happy', 'relaxed'],
     }
     const createdMood = {
@@ -156,10 +156,10 @@ describe('moodRouter', () => {
     expect(result).toEqual([])
   })
 
-  it('should reject invalid moodScore for createMood', async () => {
+  it('should reject invalid mood_score for createMood', async () => {
     const invalidMood = {
       date: '2024-08-04',
-      moodScore: 11, // Invalid: should be between 1 and 10
+      mood_score: 11, // Invalid: should be between 1 and 10
       emotions: ['happy'],
     }
 
@@ -172,7 +172,7 @@ describe('moodRouter', () => {
   it('should reject invalid date for createMood', async () => {
     const invalidMood = {
       date: 'invalid-date',
-      moodScore: 7,
+      mood_score: 7,
       emotions: ['happy'],
     }
 

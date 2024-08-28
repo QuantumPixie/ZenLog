@@ -3,7 +3,7 @@ export interface DashboardSummary {
     id: number
     user_id: number
     date: string
-    moodScore: number
+    mood_score: number
     emotions: string[]
   }>
   recentEntries: Array<{

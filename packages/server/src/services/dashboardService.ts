@@ -7,7 +7,7 @@ export const dashboardService = {
   async getSummary(userId: number) {
     const recentMoods = await db
       .selectFrom('moods')
-      .select(['id', 'user_id', 'date', 'moodScore', 'emotions'])
+      .select(['id', 'user_id', 'date', 'mood_score', 'emotions'])
       .where('user_id', '=', userId)
       .orderBy('date', 'desc')
       .limit(5)
@@ -36,7 +36,7 @@ export const dashboardService = {
 
     const averageMoodScore = (await db
       .selectFrom('moods')
-      .select(db.fn.avg('moodScore').as('averageMood'))
+      .select(db.fn.avg('mood_score').as('averageMood'))
       .where('user_id', '=', userId)
       .where('date', '>=', sevenDaysAgoString)
       .executeTakeFirst()) as AverageMoodResult | undefined

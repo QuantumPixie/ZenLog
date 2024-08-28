@@ -30,7 +30,7 @@ describe('dashboardService', () => {
           id: 1,
           user_id: 1,
           date: '2023-08-01',
-          moodScore: 7,
+          mood_score: 7,
           emotions: ['happy'],
         },
       ]
@@ -86,7 +86,7 @@ describe('dashboardService', () => {
         'id',
         'user_id',
         'date',
-        'moodScore',
+        'mood_score',
         'emotions',
       ])
       expect(mockChain.select).toHaveBeenNthCalledWith(2, [
@@ -113,7 +113,7 @@ describe('dashboardService', () => {
         expect.any(String)
       )
 
-      expect(mockAvg).toHaveBeenCalledWith('moodScore')
+      expect(mockAvg).toHaveBeenCalledWith('mood_score')
       expect(mockAvg).toHaveBeenCalledWith('sentiment')
     })
   })
