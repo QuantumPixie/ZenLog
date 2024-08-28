@@ -5,7 +5,7 @@ import {
   teardownTestDatabase,
 } from '../setupTestDatabase'
 import { journalEntryService } from '../../services/journalEntryService'
-import { createUser } from '../../services/userService'
+import { createUser, getUserById } from '../../services/userService'
 
 describe('Journal Entry Service Integration Tests', () => {
   let userId: number
@@ -17,12 +17,24 @@ describe('Journal Entry Service Integration Tests', () => {
   beforeEach(async () => {
     await cleanupTestDatabase()
 
-    const user = await createUser({
-      email: 'test@example.com',
-      username: 'testuser',
-      password: 'password123',
-    })
-    userId = user.id
+    try {
+      const uniqueEmail = `test${Date.now()}@example.com`
+      const user = await createUser({
+        email: uniqueEmail,
+        username: 'testuser',
+        password: 'password123',
+      })
+      userId = user.id
+
+      // Verify that the user was actually created
+      const createdUser = await getUserById(userId)
+      if (!createdUser) {
+        throw new Error('User was not created successfully')
+      }
+    } catch (error) {
+      console.error('Error in test setup:', error)
+      throw error
+    }
   })
 
   afterAll(async () => {
@@ -60,11 +72,9 @@ describe('Journal Entry Service Integration Tests', () => {
       { date: '2024-08-03', entry: 'Third entry' },
     ]
 
-    await Promise.all(
-      entries.map((entry) =>
-        journalEntryService.createJournalEntry(userId, entry)
-      )
-    )
+    for (const entry of entries) {
+      await journalEntryService.createJournalEntry(userId, entry)
+    }
 
     const retrievedEntries =
       await journalEntryService.getJournalEntriesByDateRange(
