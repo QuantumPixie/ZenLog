@@ -1,0 +1,68 @@
+name: Test
+
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    env:
+      DATABASE_URL: postgres://thuppertz:turing_college@localhost:5432/mental_health_tracker_test
+      JWT_SECRET: test_secret
+      PORT: 3005
+
+    services:
+      postgres:
+        image: postgres:16.1-alpine
+        env:
+          POSTGRES_USER: thuppertz
+          POSTGRES_PASSWORD: turing_college
+          POSTGRES_DB: mental_health_tracker_test
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.14.0"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Lint code
+        run: npm run lint
+
+      - name: Run database migrations
+        run: npm run migrate:latest
+
+      - name: Run back-end tests
+        run: npm run test
+
+      # Uncomment these steps when you add a front-end
+      # - name: Type check front-end
+      #   run: npm run type-check:frontend
+
+      # - name: Lint front-end code
+      #   run: npm run lint:frontend
+
+      # - name: Run front-end tests
+      #   run: npm run test:frontend
+
+      # Uncomment this step when you're ready for E2E testing
+      # - name: Run E2E tests
+      #   run: npm run test:e2e
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: coverage/
+          retention-days: 7
