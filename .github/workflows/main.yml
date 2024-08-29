@@ -37,7 +37,7 @@ jobs:
         run: npm run type-check -w server
 
       - name: Lint code
-        run: npm run lint -w server
+        run: npm run lint -w server -- --resolve-plugins-relative-to ./packages/server
 
       - name: Run database migrations
         run: npm run migrate:latest -w server

@@ -9,7 +9,7 @@
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:prettier/recommended",
-    "prettier"  // This should be the last item
+    "prettier"
   ],
   "parserOptions": {
     "ecmaVersion": 2020,
