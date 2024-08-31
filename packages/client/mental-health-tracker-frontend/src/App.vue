@@ -1,54 +1,125 @@
 <template>
-  <div class="app">
-    <Menubar :model="items">
-      <template #start>
-        <img alt="logo" src="https://www.primefaces.org/wp-content/uploads/2020/05/placeholder.png" height="40" class="mr-2">
-      </template>
-      <template #end>
-      </template>
-    </Menubar>
+  <div id="app">
+    <Toast />
+    <header>
+      <Menubar :model="menuItems">
+        <template #start>
+          <img
+            alt="logo"
+            src="https://www.primefaces.org/wp-content/uploads/2020/05/placeholder.png"
+            height="40"
+            class="mr-2"
+          >
+        </template>
+        <template #end>
+          <Button
+            v-if="!authStore.isAuthenticated"
+            label="Login/Signup"
+            icon="pi pi-user"
+            @click="navigateToLoginSignup"
+          />
+          <Button
+            v-else
+            label="Logout" 
+            icon="pi pi-sign-out"
+            @click="handleLogout"
+          />
+        </template>
+      </Menubar>
+    </header>
 
-    <router-view></router-view>
+    <main>
+      <router-view></router-view>
+    </main>
 
-    <div class="footer">
+    <footer class="footer">
       © {{ new Date().getFullYear() }} ZenLog
-    </div>
+    </footer>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from './stores/authStore'
+import { trpc } from './utils/trpc'
 import Menubar from 'primevue/menubar'
+import Button from 'primevue/button'
+import Toast from 'primevue/toast'
 
-const items = ref([
+const router = useRouter()
+const authStore = useAuthStore()
+
+const menuItems = computed(() => [
   {
     label: 'Home',
     icon: 'pi pi-fw pi-home',
-    to: '/'
+    command: () => router.push('/')
+  },
+  {
+    label: 'Dashboard',
+    icon: 'pi pi-fw pi-th-large',
+    command: () => router.push('/dashboard'),
+    visible: authStore.isAuthenticated
   },
   {
     label: 'Mood',
     icon: 'pi pi-fw pi-heart',
-    to: '/mood'
+    command: () => router.push('/mood'),
+    visible: authStore.isAuthenticated
   },
   {
     label: 'Journal',
     icon: 'pi pi-fw pi-book',
-    to: '/journal'
+    command: () => router.push('/journal'),
+    visible: authStore.isAuthenticated
   },
   {
-    label: 'Profile',
+    label: 'Activities',
+    icon: 'pi pi-fw pi-bolt',
+    command: () => router.push('/activities'),
+    visible: authStore.isAuthenticated
+  },
+  {
+    label: 'User Management',
     icon: 'pi pi-fw pi-user',
-    to: '/profile'
+    command: () => router.push('/user-management'),
+    visible: authStore.isAuthenticated
   }
 ])
+
+const navigateToLoginSignup = () => {
+  router.push('/login-signup')
+}
+
+const handleLogout = () => {
+  authStore.logout(router)
+}
+
+onMounted(async () => {
+  const token = localStorage.getItem('auth_token')
+  if (token) {
+    try {
+      const user = await trpc.user.getCurrentUser.query()
+      authStore.setAuth(true, user)
+    } catch (error) {
+      console.error('Error verifying token:', error)
+      localStorage.removeItem('auth_token')
+      authStore.setAuth(false, null)
+    }
+  }
+})
 </script>
 
 <style scoped>
-.app {
+#app {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+}
+
+main {
+  flex: 1;
 }
 
 .footer {

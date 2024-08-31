@@ -36,6 +36,8 @@ export async function loginUser(
   password: string
 ): Promise<{ token: string; user: SafeUser } | null> {
   try {
+    console.log(`Attempting login for email: ${email}`)
+
     const [user] = await db
       .selectFrom('users')
       .select(['id', 'email', 'username', 'password'])
@@ -44,17 +46,24 @@ export async function loginUser(
       .execute()
 
     if (!user) {
+      console.log(`User not found for email: ${email}`)
       return null // user not found
     }
+
+    console.log(`User found for email: ${email}`)
 
     const passwordMatch = await bcrypt.compare(password, user.password)
 
     if (!passwordMatch) {
+      console.log(`Password mismatch for email: ${email}`)
       return null // invalid password
     }
 
+    console.log(`Password match successful for email: ${email}`)
+
     const jwtSecret = process.env.JWT_SECRET
     if (!jwtSecret) {
+      console.error('JWT_SECRET is not set')
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Server configuration error',
@@ -64,6 +73,8 @@ export async function loginUser(
     const token = jwt.sign({ user_id: user.id }, jwtSecret, { expiresIn: '1h' })
 
     const { id, email: userEmail, username } = user
+
+    console.log(`Login successful for email: ${email}`)
 
     return { token, user: { id, email: userEmail, username } }
   } catch (error) {

@@ -15,42 +15,135 @@
     </div>
 
     <div class="feature-grid">
-      <div class="feature-item">
-        <i class="pi pi-heart feature-icon"></i>
-        <h3>Mood Tracking</h3>
-        <p>Log your daily moods and emotions to gain insights into your mental state.</p>
-      </div>
-      <div class="feature-item">
-        <i class="pi pi-book feature-icon"></i>
-        <h3>Journaling</h3>
-        <p>Write down your thoughts and experiences to reflect on your journey.</p>
-      </div>
-      <div class="feature-item">
-        <i class="pi pi-chart-line feature-icon"></i>
-        <h3>Progress Visualization</h3>
-        <p>View your mental health trends over time with easy-to-understand charts.</p>
-      </div>
-      <div class="feature-item">
-        <i class="pi pi-user feature-icon"></i>
-        <h3>Personalized Insights</h3>
-        <p>Receive tailored recommendations based on your mood and journal entries.</p>
+      <div v-for="feature in features" :key="feature.title" class="feature-item" @click="showFeatureDetails(feature)">
+        <i :class="['pi', feature.icon, 'feature-icon']"></i>
+        <h3>{{ feature.title }}</h3>
+        <p>{{ feature.description }}</p>
       </div>
     </div>
+
+    <Dialog 
+      v-model:visible="displayFeatureDialog" 
+      :header="selectedFeature.title" 
+      :modal="true"
+      class="feature-dialog"
+    >
+      <template #default>
+        <ul>
+          <li v-for="(point, index) in selectedFeature.bulletPoints" :key="index">
+            {{ point }}
+          </li>
+        </ul>
+      </template>
+    </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
+
+interface Feature {
+  icon: string;
+  title: string;
+  description: string;
+  bulletPoints: string[];
+}
 
 const router = useRouter()
 
+const displayFeatureDialog = ref(false)
+const selectedFeature = ref<Feature>({
+  icon: '',
+  title: '',
+  description: '',
+  bulletPoints: []
+})
+
+const features: Feature[] = [
+{
+    icon: 'pi-bolt',
+    title: 'Activity Tracking',
+    description: 'Log your daily activities and see how they impact your mood.',
+    bulletPoints: [
+      'Record various types of activities (exercise, hobbies, social interactions, etc.)',
+      'Track duration and intensity of activities',
+      'Add notes to provide context for each activity',
+      'Correlate activities with mood changes',
+      'Identify activities that positively impact your mental health',
+      'Receive suggestions for mood-boosting activities',
+      'Set and track activity goals'
+    ]
+  },
+  {
+    icon: 'pi-heart',
+    title: 'Mood Tracking',
+    description: 'Log your daily moods and emotions to gain insights into your mental state.',
+    bulletPoints: [
+      'Easily log your emotional state throughout the day',
+      'Select from a range of emotions',
+      'Rate your overall mood',
+      'Add notes about influencing factors',
+      'Create a comprehensive picture of your emotional well-being',
+      'Identify patterns, triggers, and areas for improvement'
+    ]
+  },
+  {
+    icon: 'pi-book',
+    title: 'Journaling',
+    description: 'Write down your thoughts and experiences to reflect on your journey.',
+    bulletPoints: [
+      'Safe and private space for self-expression',
+      'Create entries of any length',
+      'Attach entries to specific moods or events',
+      'Automatic sentiment analysis of your entries',
+      'Track emotional tone over time',
+      'Gain insights into your thought patterns',
+      'Promote self-reflection and emotional processing'
+    ]
+  },
+  {
+    icon: 'pi-chart-line',
+    title: 'Progress Visualization',
+    description: 'View your mental health trends over time with easy-to-understand charts.',
+    bulletPoints: [
+      'Transform your data into intuitive charts and graphs',
+      'Track mood trends over time',
+      'Correlate journal entries with emotional states',
+      'Identify factors affecting your mental well-being',
+      'Recognize improvements in your mental health',
+      'Pinpoint areas that need attention'
+    ]
+  },
+  // {
+  //   icon: 'pi-user',
+  //   title: 'Personalized Insights',
+  //   description: 'Receive tailored recommendations based on your mood and journal entries.',
+  //   bulletPoints: [
+  //     'Advanced analytics for personalized recommendations',
+  //     'Suggest activities to boost your mood',
+  //     'Reminders of your strengths during difficult times',
+  //     'Gentle nudges for self-care when stress levels are high',
+  //     'Increasingly personalized insights as you use the app',
+  //     'Support your journey towards better mental health'
+  //   ]
+  // },
+
+]
+
 const navigateToSignup = () => {
-  router.push({ name: 'login', query: { mode: 'signup' } })
+  router.push({ name: 'login-signup', query: { mode: 'signup' } })
 }
 
 const navigateToLogin = () => {
-  router.push({ name: 'login', query: { mode: 'login' } })
+  router.push({ name: 'login-signup', query: { mode: 'login' } })
+}
+
+const showFeatureDetails = (feature: Feature) => {
+  selectedFeature.value = feature
+  displayFeatureDialog.value = true
 }
 </script>
 
@@ -122,11 +215,13 @@ const navigateToLogin = () => {
   padding: 1.5rem;
   text-align: center;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
 }
 
 .feature-item:hover {
   transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
 .feature-icon {
@@ -154,6 +249,54 @@ const navigateToLogin = () => {
 .custom-signup-button:hover {
   background-color: #3CCDC2 !important;
   border-color: #3CCDC2 !important;
+}
+
+:deep(.feature-dialog) {
+  width: 90%;
+  max-width: 400px;
+  border-radius: 10px;
+}
+
+:deep(.feature-dialog .p-dialog-header) {
+  background-color: #1a1a1a;
+  color: #b19cd9;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+:deep(.feature-dialog .p-dialog-content) {
+  background-color: #2a2a2a !important;
+  color: #b19cd9 !important;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  padding: 1.5rem;
+}
+
+:deep(.feature-dialog ul) {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+:deep(.feature-dialog li) {
+  margin-bottom: 0.75rem;
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+:deep(.feature-dialog li::before) {
+  content: '•';
+  color: #9370db !important;
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
+:deep(.feature-dialog .p-dialog-header-close) {
+  color: #b19cd9 !important;
+}
+
+:deep(.feature-dialog .p-dialog-header-close:hover) {
+  background-color: rgba(177, 156, 217, 0.1) !important;
 }
 
 @media (max-width: 1024px) {
