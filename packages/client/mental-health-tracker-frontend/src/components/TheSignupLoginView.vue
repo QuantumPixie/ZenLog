@@ -64,7 +64,7 @@ const handleSubmit = async () => {
       toast.add({ severity: 'success', summary: 'Success', detail: 'Logged in successfully', life: 3000 });
       router.push('/home');
     } else {
-      const result = await trpc.user.signup.mutate({
+      await trpc.user.signup.mutate({
         username: username.value,
         email: email.value,
         password: password.value,
