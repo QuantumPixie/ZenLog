@@ -55,6 +55,6 @@
       console.error('Failed to create journal entry:', error)
     }
   }
-  
+
   onMounted(getJournalEntries)
   </script>

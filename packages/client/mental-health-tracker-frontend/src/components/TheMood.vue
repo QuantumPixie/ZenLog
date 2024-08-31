@@ -3,7 +3,7 @@
       <h2>Mood Tracker</h2>
       <div class="mood-input">
         <h3>Log Your Mood</h3>
-        <input v-model="newMood.moodScore" type="number" min="1" max="10" placeholder="Mood Score (1-10)">
+        <input v-model="newMood.mood_score" type="number" min="1" max="10" placeholder="Mood Score (1-10)">
         <input v-model="newMood.emotions" placeholder="Emotions (comma-separated)">
         <Button label="Log Mood" @click="createMood" />
       </div>
@@ -32,7 +32,7 @@
 
   const moods = ref<Mood[]>([])
   const newMood = ref({
-    moodScore: 5,
+    mood_score: 5,
     emotions: ''
   })
 
@@ -48,11 +48,11 @@
     try {
       await trpc.mood.createMood.mutate({
         date: new Date().toISOString().split('T')[0],
-        mood_score: newMood.value.moodScore,
+        mood_score: newMood.value.mood_score,
         emotions: newMood.value.emotions.split(',').map(e => e.trim())
       })
       await getMoods()
-      newMood.value = { moodScore: 5, emotions: '' }
+      newMood.value = { mood_score: 5, emotions: '' }
     } catch (error) {
       console.error('Failed to create mood:', error)
     }

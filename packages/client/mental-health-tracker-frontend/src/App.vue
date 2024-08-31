@@ -52,14 +52,14 @@ const authStore = useAuthStore()
 
 const menuItems = computed(() => [
   {
-    label: 'Home',
+    label: 'ZenLog',
     icon: 'pi pi-fw pi-home',
     command: () => router.push('/')
   },
   {
-    label: 'Dashboard',
+    label: 'Home',
     icon: 'pi pi-fw pi-th-large',
-    command: () => router.push('/dashboard'),
+    command: () => router.push('/home'),
     visible: authStore.isAuthenticated
   },
   {
@@ -84,6 +84,12 @@ const menuItems = computed(() => [
     label: 'User Management',
     icon: 'pi pi-fw pi-user',
     command: () => router.push('/user-management'),
+    visible: authStore.isAuthenticated
+  },
+  {
+    label: 'Dashboard',
+    icon: 'pi pi-fw pi-chart-line',
+    command: () => router.push('/dashboard'),
     visible: authStore.isAuthenticated
   }
 ])

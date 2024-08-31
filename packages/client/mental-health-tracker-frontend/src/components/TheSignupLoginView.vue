@@ -62,7 +62,7 @@ const handleSubmit = async () => {
       authStore.setAuth(true, result.user);
       localStorage.setItem('auth_token', result.token);
       toast.add({ severity: 'success', summary: 'Success', detail: 'Logged in successfully', life: 3000 });
-      router.push('/dashboard');
+      router.push('/home');
     } else {
       const result = await trpc.user.signup.mutate({
         username: username.value,

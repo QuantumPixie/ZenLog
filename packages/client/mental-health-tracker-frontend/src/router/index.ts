@@ -1,12 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import ZenLog from '../views/ZenLog.vue'
 import TheMood from '../components/TheMood.vue'
 import TheSignupLoginView from '../components/TheSignupLoginView.vue';
 import { useAuthStore } from '../stores/authStore'
-import DashboardView from '../views/DashboardView.vue'
+import HomeView from '../views/HomeView.vue'
 import TheJournal from '../components/TheJournal.vue'
 import UserManagement from '../components/UserManagement.vue'
-import TheSummary from '../components/TheSummary.vue'
+import TheDashboard from '../components/TheDashboard.vue'
 import TheActivities from '../components/TheActivities.vue'
 
 const router = createRouter({
@@ -14,8 +14,8 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: HomeView
+      name: 'ZenLog',
+      component: ZenLog
     },
     {
       path: '/login-signup',
@@ -23,9 +23,9 @@ const router = createRouter({
       component: TheSignupLoginView
     },
     {
-      path: '/dashboard',
-      name: 'dashboard',
-      component: DashboardView,
+      path: '/home',
+      name: 'Home',
+      component: HomeView,
       meta: { requiresAuth: true }
     },
     {
@@ -53,9 +53,9 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/summary',
-      name: 'Summary',
-      component: TheSummary,
+      path: '/dashboard',
+      name: 'Dashboard',
+      component: TheDashboard,
       meta: { requiresAuth: true }
     },
   ]
