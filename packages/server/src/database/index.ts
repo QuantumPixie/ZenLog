@@ -1,11 +1,6 @@
 import { fileURLToPath } from 'url'
 import { dirname, resolve } from 'path'
-import {
-  CamelCasePlugin,
-  Kysely,
-  ParseJSONResultsPlugin,
-  PostgresDialect,
-} from 'kysely'
+import { Kysely, ParseJSONResultsPlugin, PostgresDialect } from 'kysely'
 import dotenv from 'dotenv'
 import pg from 'pg'
 import type { Database } from '../models/database'
@@ -15,7 +10,6 @@ const __dirname = dirname(__filename)
 
 dotenv.config({ path: resolve(__dirname, '../../../../.env') })
 
-// const isTest = process.env.NODE_ENV === 'test';
 const databaseUrl = process.env.DATABASE_URL
 
 if (!databaseUrl) {
@@ -42,7 +36,7 @@ export function createDatabase(options: pg.PoolConfig): Kysely<Database> {
 
   return new Kysely<Database>({
     dialect: new PostgresDialect({ pool }),
-    plugins: [new CamelCasePlugin(), new ParseJSONResultsPlugin()],
+    plugins: [new ParseJSONResultsPlugin()],
   })
 }
 

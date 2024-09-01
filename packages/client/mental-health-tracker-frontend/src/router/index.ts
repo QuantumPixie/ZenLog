@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import ZenLog from '../views/ZenLog.vue'
-import TheMood from '../components/TheMood.vue'
+import MoodView from '../views/MoodView.vue'
 import TheSignupLoginView from '../components/TheSignupLoginView.vue';
 import { useAuthStore } from '../stores/authStore'
 import HomeView from '../views/HomeView.vue'
@@ -31,7 +31,7 @@ const router = createRouter({
     {
       path: '/mood',
       name: 'Mood',
-      component: TheMood,
+      component: MoodView,
       meta: { requiresAuth: true }
     },
     {

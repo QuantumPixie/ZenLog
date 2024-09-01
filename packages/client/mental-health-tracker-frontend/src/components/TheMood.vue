@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
     <div class="mood-view">
       <h2>Mood Tracker</h2>
       <div class="mood-input">
@@ -59,4 +59,4 @@
   }
 
   onMounted(getMoods)
-  </script>
+  </script> -->

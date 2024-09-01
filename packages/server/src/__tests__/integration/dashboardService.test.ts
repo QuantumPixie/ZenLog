@@ -79,7 +79,7 @@ describe('Dashboard Service Integration Tests', () => {
     // Check content of recent items
     expect(summary.recentMoods[0]).toMatchObject({
       date: expect.any(Date),
-      moodScore: 7,
+      mood_score: 7,
       emotions: ['happy'],
     })
 
