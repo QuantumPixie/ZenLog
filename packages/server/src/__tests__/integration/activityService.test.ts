@@ -65,7 +65,7 @@ describe('Activity Service Integration Tests', () => {
 
     expect(retrievedActivity).toMatchObject({
       id: createdActivity.id,
-      userId,
+      user_id: userId,
       date: createdActivity.date,
       activity: createdActivity.activity,
       duration: createdActivity.duration,
