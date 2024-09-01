@@ -6,8 +6,8 @@
   "scripts": {
     "start": "tsx -r tsconfig-paths/register ./src/index.ts",
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'tsx -r tsconfig-paths/register ./src/index.ts'",
-    "migrate:up": "dotenv -e .env tsx src/migrations/migrate.ts up",
-    "migrate:down": "dotenv -e .env tsx src/migrations/migrate.ts down",
+    "migrate:up": "dotenv -e .env tsx src/database/migrations/migrateLatest.ts",
+    "migrate:down": "dotenv -e .env tsx src/database/migrations/migrateDown.ts",
     "migrate:latest": "dotenv -e .env tsx --tsconfig tsconfig.json src/database/migrations/migrateLatest.ts",
     "create-migration": "tsx --tsconfig tsconfig.json src/database/migrations/createMigration.ts",
     "seed": "dotenv -e .env tsx src/database/seed/seed.ts",

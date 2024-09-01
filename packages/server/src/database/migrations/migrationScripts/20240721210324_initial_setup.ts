@@ -70,7 +70,6 @@ export async function up(db: Kysely<Database>): Promise<void> {
         col.defaultTo(sql`now()`).notNull()
       )
       .addColumn('deleted_at', 'timestamp')
-      .addUniqueConstraint('unique_user_date_mood', ['user_id', 'date'])
       .execute()
   }
 
