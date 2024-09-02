@@ -228,12 +228,12 @@ const showFeatureDetails = (feature: Feature) => {
 }
 
 .custom-signup-button {
-  background-color: #40E0D0 !important;
+  background-color: #3A7E77 !important;
   border-color: #40E0D0 !important;
 }
 
 .custom-signup-button:hover {
-  background-color: #3CCDC2 !important;
+  background-color: #3A7E77 !important;
   border-color: #3CCDC2 !important;
 }
 

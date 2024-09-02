@@ -5,11 +5,24 @@ import {
   activityInputSchema,
   isValidDateString,
 } from '../schemas/activitySchema'
+import { TRPCError } from '@trpc/server'
 
 export const activityRouter = router({
   getActivities: authedProcedure.query(async ({ ctx }) => {
-    const activities = await activityService.getActivities(ctx.user.id)
-    return activities
+    console.log(`Fetching activities for user ${ctx.user.id}`)
+    try {
+      const activities = await activityService.getActivities(ctx.user.id)
+      console.log(
+        `Retrieved ${activities.length} activities for user ${ctx.user.id}`
+      )
+      return activities
+    } catch (error) {
+      console.error('Error fetching activities:', error)
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to fetch activities',
+      })
+    }
   }),
 
   getActivityById: authedProcedure

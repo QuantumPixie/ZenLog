@@ -17,24 +17,17 @@ function toDbInsertableActivity(
 
 export const activityService = {
   async getActivities(userId: number): Promise<ActivityTable[]> {
+    console.log(`Fetching activities for user ${userId}`)
     const activities = await db
       .selectFrom('activities')
       .selectAll()
       .where('user_id', '=', userId)
+      .orderBy('date', 'desc')
       .execute()
 
-    // Filter out invalid activities
-    return activities.filter(
-      (activity) =>
-        typeof activity.id === 'number' &&
-        typeof activity.user_id === 'number' &&
-        typeof activity.date === 'string' &&
-        isValidDateString(activity.date) &&
-        typeof activity.activity === 'string' &&
-        (activity.duration === undefined ||
-          typeof activity.duration === 'number') &&
-        (activity.notes === undefined || typeof activity.notes === 'string')
-    )
+    console.log(`Retrieved ${activities.length} activities for user ${userId}`)
+    console.log('Activities:', activities)
+    return activities
   },
 
   async getActivityById(
@@ -88,6 +81,7 @@ export const activityService = {
       .where('user_id', '=', userId)
       .where('date', '>=', startDate)
       .where('date', '<=', endDate)
+      .orderBy('date', 'desc')
       .execute()
   },
 }

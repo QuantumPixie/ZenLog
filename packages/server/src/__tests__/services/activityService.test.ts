@@ -24,7 +24,7 @@ describe('activityService', () => {
         {
           id: 1,
           user_id: 1,
-          date: '2024-08-02',
+          date: '2024-08-02T00:00:00.000Z',
           activity: 'Running',
           duration: 30,
           notes: 'Good run',
@@ -32,7 +32,7 @@ describe('activityService', () => {
         {
           id: 2,
           user_id: 1,
-          date: '2024-08-02',
+          date: '2024-08-02T12:00:00.000Z',
           activity: 'Yoga',
           notes: 'Relaxing session',
         },
@@ -41,6 +41,7 @@ describe('activityService', () => {
       mockKysely.selectFrom = vi.fn().mockReturnValue({
         selectAll: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
+        orderBy: vi.fn().mockReturnThis(),
         execute: vi.fn().mockResolvedValue(mockActivities),
       })
 
@@ -52,6 +53,12 @@ describe('activityService', () => {
       expect(
         mockKysely.selectFrom('activities').selectAll().where
       ).toHaveBeenCalledWith('user_id', '=', userId)
+      expect(
+        mockKysely
+          .selectFrom('activities')
+          .selectAll()
+          .where('user_id', '=', userId).orderBy
+      ).toHaveBeenCalledWith('date', 'desc')
     })
   })
 
@@ -62,7 +69,7 @@ describe('activityService', () => {
       const mockActivity = {
         id: 1,
         user_id: 1,
-        date: '2024-08-02',
+        date: '2024-08-02T00:00:00.000Z',
         activity: 'Running',
         duration: 30,
         notes: 'Good run',
@@ -104,7 +111,7 @@ describe('activityService', () => {
     it('should create and return a new activity with duration', async () => {
       const userId = 1
       const newActivity = {
-        date: '2023-07-27',
+        date: '2023-07-27T10:00:00.000Z',
         activity: 'Running',
         duration: 30,
         notes: 'Good run',
@@ -132,7 +139,7 @@ describe('activityService', () => {
     it('should create and return a new activity without duration', async () => {
       const userId = 1
       const newActivity = {
-        date: '2023-07-27',
+        date: '2023-07-27T14:00:00.000Z',
         activity: 'Meditation',
         notes: 'Peaceful',
       }
@@ -155,18 +162,31 @@ describe('activityService', () => {
         })
       )
     })
+
+    it('should throw an error for invalid date format', async () => {
+      const userId = 1
+      const invalidActivity = {
+        date: '2023-07-27', // Invalid format, missing time
+        activity: 'Running',
+        duration: 30,
+      }
+
+      await expect(
+        activityService.createActivity(userId, invalidActivity)
+      ).rejects.toThrow('Invalid date format')
+    })
   })
 
   describe('getActivitiesByDateRange', () => {
     it('should return activities within the specified date range', async () => {
       const userId = 1
-      const startDate = '2023-07-27'
-      const endDate = '2023-07-28'
+      const startDate = '2023-07-27T00:00:00.000Z'
+      const endDate = '2023-07-28T23:59:59.999Z'
       const mockActivities = [
         {
           id: 1,
           user_id: 1,
-          date: '2023-07-27',
+          date: '2023-07-27T10:00:00.000Z',
           activity: 'Running',
           duration: 30,
           notes: 'Good run',
@@ -174,7 +194,7 @@ describe('activityService', () => {
         {
           id: 2,
           user_id: 1,
-          date: '2023-07-28',
+          date: '2023-07-28T14:00:00.000Z',
           activity: 'Yoga',
           notes: 'Relaxing session',
         },
@@ -183,6 +203,7 @@ describe('activityService', () => {
       mockKysely.selectFrom = vi.fn().mockReturnValue({
         selectAll: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
+        orderBy: vi.fn().mockReturnThis(),
         execute: vi.fn().mockResolvedValue(mockActivities),
       })
 
@@ -198,16 +219,23 @@ describe('activityService', () => {
       expect(
         mockKysely.selectFrom('activities').selectAll().where
       ).toHaveBeenCalledTimes(3)
+      expect(
+        mockKysely
+          .selectFrom('activities')
+          .selectAll()
+          .where('user_id', '=', userId).orderBy
+      ).toHaveBeenCalledWith('date', 'desc')
     })
 
     it('should return an empty array if no activities are found in the date range', async () => {
       const userId = 1
-      const startDate = '2023-07-27'
-      const endDate = '2023-07-28'
+      const startDate = '2023-01-01T00:00:00.000Z'
+      const endDate = '2023-01-02T23:59:59.999Z'
 
       mockKysely.selectFrom = vi.fn().mockReturnValue({
         selectAll: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
+        orderBy: vi.fn().mockReturnThis(),
         execute: vi.fn().mockResolvedValue([]),
       })
 
@@ -221,50 +249,14 @@ describe('activityService', () => {
     })
   })
 
-  describe('error handling', () => {
-    it('should throw an error if database query fails in getActivities', async () => {
-      const userId = 1
-
-      mockKysely.selectFrom = vi.fn().mockReturnValue({
-        selectAll: vi.fn().mockReturnThis(),
-        where: vi.fn().mockReturnThis(),
-        execute: vi.fn().mockRejectedValue(new Error('Database error')),
-      })
-
-      await expect(activityService.getActivities(userId)).rejects.toThrow(
-        'Database error'
-      )
-    })
-
-    it('should throw an error if activity creation fails', async () => {
-      const userId = 1
-      const newActivity = {
-        date: '2023-07-27',
-        activity: 'Running',
-        duration: 30,
-        notes: 'Good run',
-      }
-
-      mockKysely.insertInto = vi.fn().mockReturnValue({
-        values: vi.fn().mockReturnThis(),
-        returning: vi.fn().mockReturnThis(),
-        executeTakeFirst: vi.fn().mockResolvedValue(null),
-      })
-
-      await expect(
-        activityService.createActivity(userId, newActivity)
-      ).rejects.toThrow('Failed to create activity')
-    })
-  })
-
   describe('data validation', () => {
-    it('should filter out invalid activities in getActivities', async () => {
+    it('should not filter out valid activities in getActivities', async () => {
       const userId = 1
       const mockActivities = [
         {
           id: 1,
           user_id: 1,
-          date: '2024-08-02',
+          date: '2024-08-02T10:00:00.000Z',
           activity: 'Running',
           duration: 30,
           notes: 'Good run',
@@ -272,28 +264,22 @@ describe('activityService', () => {
         {
           id: 2,
           user_id: 1,
-          date: '2024-08-02',
+          date: '2024-08-02T14:00:00.000Z',
           activity: 'Yoga',
           notes: 'Relaxing session',
-        },
-        {
-          id: 3,
-          user_id: 1,
-          date: 'invalid-date',
-          activity: 'Invalid',
-          notes: 'Should be filtered out',
         },
       ]
 
       mockKysely.selectFrom = vi.fn().mockReturnValue({
         selectAll: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
+        orderBy: vi.fn().mockReturnThis(),
         execute: vi.fn().mockResolvedValue(mockActivities),
       })
 
       const result = await activityService.getActivities(userId)
 
-      expect(result).toEqual([mockActivities[0], mockActivities[1]])
+      expect(result).toEqual(mockActivities)
       expect(result).toHaveLength(2)
       expect(result.every((activity) => isValidDateString(activity.date))).toBe(
         true

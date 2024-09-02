@@ -1,30 +1,20 @@
 import { z } from 'zod'
 
 /**
- * Validates if the input string is a valid date in the format YYYY-MM-DD.
+ * Validates if the input string is a valid date in ISO 8601 format.
  *
  * @param {string} dateString - The date string to validate.
  * @return {boolean} Returns true if the input string is a valid date, false otherwise.
  */
-export const isValidDateString = (dateString: string) => {
-  const regex = /^\d{4}-\d{2}-\d{2}$/
-  if (!regex.test(dateString)) return false
-
-  const [year, month, day] = dateString.split('-').map(Number)
+export const isValidDateString = (dateString: string): boolean => {
   const date = new Date(dateString)
-
-  return (
-    date instanceof Date &&
-    !Number.isNaN(date.getTime()) &&
-    date.getUTCFullYear() === year &&
-    date.getUTCMonth() + 1 === month &&
-    date.getUTCDate() === day
-  )
+  return !isNaN(date.getTime()) && dateString === date.toISOString()
 }
 
 export const activityInputSchema = z.object({
   date: z.string().refine(isValidDateString, {
-    message: 'Invalid date format. Use YYYY-MM-DD',
+    message:
+      'Invalid date format. Use ISO 8601 format (e.g., "2024-08-26T00:00:00.000Z")',
   }),
   activity: z.string(),
   duration: z.number().optional(),

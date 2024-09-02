@@ -46,16 +46,16 @@ describe('Dashboard Service Integration Tests', () => {
   it('should get dashboard summary', async () => {
     // Create test data
     await moodService.createMood(userId, {
-      date: '2024-08-01',
+      date: '2024-08-01T12:00:00.000Z',
       mood_score: 7,
       emotions: ['happy'],
     })
     await journalEntryService.createJournalEntry(userId, {
-      date: '2024-08-01',
+      date: '2024-08-01T13:00:00.000Z',
       entry: 'Great day!',
     })
     await activityService.createActivity(userId, {
-      date: '2024-08-01',
+      date: '2024-08-01T14:00:00.000Z',
       activity: 'Running',
       duration: 30,
     })
@@ -111,22 +111,22 @@ describe('Dashboard Service Integration Tests', () => {
     threeDaysAgo.setDate(today.getDate() - 3)
 
     await moodService.createMood(userId, {
-      date: today.toISOString().split('T')[0],
+      date: today.toISOString(),
       mood_score: 8,
       emotions: ['happy'],
     })
     await moodService.createMood(userId, {
-      date: threeDaysAgo.toISOString().split('T')[0],
+      date: threeDaysAgo.toISOString(),
       mood_score: 6,
       emotions: ['neutral'],
     })
 
     await journalEntryService.createJournalEntry(userId, {
-      date: today.toISOString().split('T')[0],
+      date: today.toISOString(),
       entry: 'Feeling great!',
     })
     await journalEntryService.createJournalEntry(userId, {
-      date: threeDaysAgo.toISOString().split('T')[0],
+      date: threeDaysAgo.toISOString(),
       entry: 'Just an average day.',
     })
 

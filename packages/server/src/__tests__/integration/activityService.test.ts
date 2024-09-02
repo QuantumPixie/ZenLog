@@ -45,7 +45,7 @@ describe('Activity Service Integration Tests', () => {
 
   it('should create and retrieve an activity', async () => {
     const newActivity = {
-      date: '2024-08-01',
+      date: '2024-08-01T09:00:00.000Z',
       activity: 'Running',
       duration: 30,
       notes: 'Morning jog',
@@ -75,9 +75,9 @@ describe('Activity Service Integration Tests', () => {
 
   it('should get activities by date range', async () => {
     const activities = [
-      { date: '2024-08-01', activity: 'Running', duration: 30 },
-      { date: '2024-08-02', activity: 'Cycling', duration: 45 },
-      { date: '2024-08-03', activity: 'Swimming', duration: 60 },
+      { date: '2024-08-01T09:00:00.000Z', activity: 'Running', duration: 30 },
+      { date: '2024-08-02T10:00:00.000Z', activity: 'Cycling', duration: 45 },
+      { date: '2024-08-03T11:00:00.000Z', activity: 'Swimming', duration: 60 },
     ]
 
     await Promise.all(
@@ -88,11 +88,23 @@ describe('Activity Service Integration Tests', () => {
 
     const retrievedActivities = await activityService.getActivitiesByDateRange(
       userId,
-      '2024-08-01',
-      '2024-08-02'
+      '2024-08-01T00:00:00.000Z',
+      '2024-08-02T23:59:59.999Z'
     )
     expect(retrievedActivities).toHaveLength(2)
-    expect(retrievedActivities[0].activity).toBe('Running')
-    expect(retrievedActivities[1].activity).toBe('Cycling')
+    expect(retrievedActivities[0].activity).toBe('Cycling')
+    expect(retrievedActivities[1].activity).toBe('Running')
+  })
+
+  it('should throw an error for invalid date format', async () => {
+    const invalidActivity = {
+      date: '2024-08-01', // Invalid format, missing time
+      activity: 'Running',
+      duration: 30,
+    }
+
+    await expect(
+      activityService.createActivity(userId, invalidActivity)
+    ).rejects.toThrow('Invalid date format')
   })
 })

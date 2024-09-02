@@ -4,10 +4,10 @@ import MoodView from '../views/MoodView.vue'
 import TheSignupLoginView from '../components/TheSignupLoginView.vue';
 import { useAuthStore } from '../stores/authStore'
 import HomeView from '../views/HomeView.vue'
-import TheJournal from '../components/TheJournal.vue'
+import JournalView from '../views/JournalView.vue'
 import UserManagement from '../components/UserManagement.vue'
 import TheDashboard from '../components/TheDashboard.vue'
-import TheActivities from '../components/TheActivities.vue'
+import ActivityView from '../views/ActivityView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.VITE_BASE_URL),
@@ -37,13 +37,13 @@ const router = createRouter({
     {
       path: '/journal',
       name: 'Journal',
-      component: TheJournal,
+      component: JournalView,
       meta: { requiresAuth: true }
     },
     {
       path: '/activities',
       name: 'Activities',
-      component: TheActivities,
+      component: ActivityView,
       meta: { requiresAuth: true }
     },
     {
