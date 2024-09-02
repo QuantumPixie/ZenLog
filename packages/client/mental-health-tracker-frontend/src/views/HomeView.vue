@@ -1,7 +1,12 @@
 <template>
   <div class="dashboard">
-    <h1 class="dashboard-title">Welcome, {{ authStore.user?.username }}!</h1>
-    <p class="dashboard-subtitle">What would you like to do today?</p>
+    <div class="header-welcome">
+      <h1 class="welcome-title">
+        <span>Welcome, {{ authStore.user?.username }}!</span>
+        <i class="pi pi-home custom-icon"></i>
+      </h1>
+      <p class="welcome-message">What would you like to do today?</p>
+    </div>
 
     <div class="feature-grid">
       <div v-for="feature in features" :key="feature.title" class="feature-item" @click="feature.action">
@@ -79,15 +84,28 @@ const features: Feature[] = [
   color: var(--text-color);
 }
 
-.dashboard-title {
-  font-size: 2.5rem;
-  color: var(--primary-color);
-  margin-bottom: 1rem;
+.header-welcome {
+  margin-bottom: 3rem;
 }
 
-.dashboard-subtitle {
+.welcome-title {
+  font-size: 3.3rem;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.custom-icon {
+  color: #1b968a;
+  margin-left: 1rem;
+  font-size: 3.3rem;
+}
+
+.welcome-message {
   font-size: 1.2rem;
   margin-bottom: 2rem;
+  color: var(--text-color-secondary);
 }
 
 .feature-grid {
@@ -100,11 +118,12 @@ const features: Feature[] = [
 .feature-item {
   background-color: var(--surface-card);
   border-radius: 10px;
-  padding: 1.5rem;
+  padding: 2rem;
   text-align: center;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
+  border: 2px solid #1b968a;
 }
 
 .feature-item:hover {
@@ -113,8 +132,8 @@ const features: Feature[] = [
 }
 
 .feature-icon {
-  font-size: 2rem;
-  color: #40E0D0;
+  font-size: 2.5rem;
+  color: #1b968a;
   margin-bottom: 1rem;
 }
 
@@ -130,11 +149,11 @@ const features: Feature[] = [
 }
 
 @media (max-width: 768px) {
-  .dashboard-title {
-    font-size: 2rem;
+  .welcome-title {
+    font-size: 2.5rem;
   }
 
-  .dashboard-subtitle {
+  .welcome-message {
     font-size: 1rem;
   }
 }

@@ -31,7 +31,7 @@
       <div class="journal-grid">
         <div v-for="entry in journalEntries" :key="entry.id" class="journal-item">
           <h3>{{ formatDate(entry.date) }}</h3>
-          <p>Sentiment Score: {{ entry.sentiment.toFixed(2) }}</p>
+          <p>Sentiment Score: {{ formatSentiment(entry.sentiment) }}</p>
           <p>{{ truncateText(entry.entry, 150) }}</p>
         </div>
       </div>
@@ -45,6 +45,7 @@ import { trpc } from '../utils/trpc'
 import { format, parseISO } from 'date-fns'
 import Button from 'primevue/button'
 import Textarea from 'primevue/textarea'
+import { useToast } from 'primevue/usetoast'
 
 interface JournalEntry {
   id: number;
@@ -57,21 +58,26 @@ const journalEntries = ref<JournalEntry[]>([])
 const newEntry = ref({
   entry: ''
 })
+const toast = useToast()
 
 const getJournalEntries = async () => {
   try {
     const fetchedEntries = await trpc.journalEntry.getJournalEntries.query()
     console.log('Fetched journal entries:', fetchedEntries)
-    journalEntries.value = fetchedEntries
+    journalEntries.value = fetchedEntries.map(entry => ({
+      ...entry,
+      sentiment: Number(entry.sentiment)
+    }))
     console.log('Processed journal entries:', journalEntries.value)
   } catch (error) {
     console.error('Failed to fetch journal entries:', error)
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to fetch journal entries', life: 3000 })
   }
 }
 
 const createJournalEntry = async () => {
   if (!newEntry.value.entry.trim()) {
-    console.error('Journal entry is required')
+    toast.add({ severity: 'warn', summary: 'Warning', detail: 'Journal entry is required', life: 3000 })
     return
   }
 
@@ -83,17 +89,33 @@ const createJournalEntry = async () => {
     console.log('Created journal entry:', createdEntry)
     await getJournalEntries()
     newEntry.value.entry = ''
+    toast.add({ severity: 'success', summary: 'Success', detail: 'Journal entry created', life: 3000 })
   } catch (error) {
     console.error('Failed to create journal entry:', error)
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to create journal entry', life: 3000 })
   }
 }
 
 const formatDate = (dateString: string) => {
-  const date = parseISO(dateString)
-  return format(date, 'PPP p')  // This format includes the time
+  try {
+    const date = parseISO(dateString)
+    return format(date, 'PPP p')
+  } catch (error) {
+    console.error('Error formatting date:', error)
+    return 'Invalid Date'
+  }
+}
+
+const formatSentiment = (sentiment: number | string | null | undefined) => {
+  if (sentiment === null || sentiment === undefined) {
+    return 'N/A'
+  }
+  const numSentiment = Number(sentiment)
+  return isNaN(numSentiment) ? 'Invalid' : numSentiment.toFixed(2)
 }
 
 const truncateText = (text: string, maxLength: number) => {
+  if (!text) return ''
   if (text.length <= maxLength) return text
   return text.substr(0, maxLength) + '...'
 }

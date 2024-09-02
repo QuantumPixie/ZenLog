@@ -1,4 +1,3 @@
-// src/utils/auth.ts
 import { useAuthStore } from '../stores/authStore'
 import { trpc } from '../utils/trpc'
 
