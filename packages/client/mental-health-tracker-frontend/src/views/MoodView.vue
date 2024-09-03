@@ -64,12 +64,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { trpc } from '../utils/trpc'
-import { format, parseISO } from 'date-fns'
 import InputNumber from 'primevue/inputnumber'
 import MultiSelect from 'primevue/multiselect'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
+import { formatDate } from '../utils/dateUtils'
 
 interface Mood {
   id: number;
@@ -101,6 +101,16 @@ const emotionOptions = ref<EmotionOption[]>([
 const displayCustomEmotionDialog = ref(false)
 const customEmotion = ref('')
 
+// const formatDate = (dateString: string) => {
+//   const date = new Date(dateString);
+//   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+//   const zonedDate = toZonedTime(date, timeZone);
+
+//   return format(zonedDate, 'd MMMM yyyy \'at\' h:mm a', { timeZone });
+// }
+
+// Fetch moods from the server
 const getMoods = async () => {
   try {
     const fetchedMoods = await trpc.mood.getMoods.query()
@@ -108,7 +118,8 @@ const getMoods = async () => {
     moods.value = fetchedMoods.map(mood => ({
       ...mood,
       mood_score: mood.mood_score ?? null,
-      emotions: Array.isArray(mood.emotions) ? mood.emotions : [mood.emotions]
+      emotions: Array.isArray(mood.emotions) ? mood.emotions : [mood.emotions],
+      date: mood.date
     }))
     console.log('Processed moods:', moods.value)
   } catch (error) {
@@ -118,28 +129,27 @@ const getMoods = async () => {
 
 const createMood = async () => {
   if (newMood.value.mood_score === null) {
-    console.error('Mood score is required')
-    return
+    console.error('Mood score is required');
+    return;
   }
 
   try {
-    const createdMood = await trpc.mood.createMood.mutate({
-      date: new Date().toISOString(),
-      mood_score: newMood.value.mood_score,
-      emotions: selectedEmotions.value.map(e => e.name)
-    })
-    console.log('Created mood:', createdMood)
-    await getMoods()
-    newMood.value.mood_score = null
-    selectedEmotions.value = []
-  } catch (error) {
-    console.error('Failed to create mood:', error)
-  }
-}
+    const now = new Date();
 
-const formatDate = (dateString: string) => {
-  const date = parseISO(dateString)
-  return format(date, 'PPP p')  // This format includes the time
+    const isoDate = now.toISOString();
+
+    const createdMood = await trpc.mood.createMood.mutate({
+      date: isoDate,
+      mood_score: newMood.value.mood_score,
+      emotions: selectedEmotions.value.map(e => e.name),
+    });
+    console.log('Created mood:', createdMood);
+    await getMoods();
+    newMood.value.mood_score = null;
+    selectedEmotions.value = [];
+  } catch (error) {
+    console.error('Failed to create mood:', error);
+  }
 }
 
 const addCustomEmotion = () => {
@@ -195,12 +205,13 @@ onMounted(getMoods)
   margin-bottom: 2rem;
   display: flex;
   align-items: center;
+  white-space: nowrap;
 }
 
 .custom-icon {
   color: #1b968a;
-  margin-left: 1rem;
-  font-size: 3.3rem;
+  margin-left: 0.5rem;
+  font-size: 3rem;
 }
 
 .welcome-message {
@@ -249,7 +260,7 @@ label {
 .custom-button {
   margin-top: 1rem;
   background-color: #3a7e77!important;
-  /* border-color: #CB58DF !important; */
+  border-color: #3a7e77!important;
 }
 
 .custom-button:hover {

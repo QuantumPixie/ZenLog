@@ -100,7 +100,7 @@ onMounted(getCurrentUser)
 .top-section {
   display: grid;
   grid-template-columns: 1fr 500px;
-  gap: 12rem;
+  gap: 3rem;
   margin-bottom: 5rem;
   align-items: start;
 }
@@ -121,6 +121,7 @@ onMounted(getCurrentUser)
   margin-bottom: 2rem;
   display: flex;
   align-items: center;
+  white-space: nowrap;
 }
 
 .custom-icon {

@@ -1,25 +1,39 @@
 <template>
-  <div class="login-signup-form">
-    <h2>{{ isLoginMode ? 'Login' : 'Sign Up' }}</h2>
-    <form @submit.prevent="handleSubmit">
-      <div v-if="!isLoginMode" class="form-group">
-        <label for="username">Username</label>
-        <InputText id="username" v-model="username" required />
+  <div class="login-signup-view">
+    <div class="form-container">
+      <div class="header-welcome">
+        <h1 class="welcome-title">
+          <span>{{ isLoginMode ? 'Login' : 'Sign Up' }}</span>
+          <i class="pi pi-user-plus custom-icon"></i>
+        </h1>
+        <ul class="welcome-message">
+          <li>{{ isLoginMode ? 'Welcome back! Please login to access your account.' : 'Create an account to start tracking your mental health journey.' }}</li>
+          <li>{{ isLoginMode ? 'Securely access your personal dashboard and records.' : 'Join our community and take control of your well-being.' }}</li>
+        </ul>
       </div>
-      <div class="form-group">
-        <label for="email">Email</label>
-        <InputText id="email" v-model="email" type="email" required />
+      <div class="login-signup-form">
+        <h2>{{ isLoginMode ? 'Login to Your Account' : 'Create Your Account' }}</h2>
+        <form @submit.prevent="handleSubmit" class="p-fluid">
+          <div v-if="!isLoginMode" class="field">
+            <label for="username">Username</label>
+            <InputText id="username" v-model="username" required />
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <InputText id="email" v-model="email" type="email" required />
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <Password id="password" v-model="password" :feedback="!isLoginMode" required toggleMask />
+          </div>
+          <Button type="submit" :label="isLoginMode ? 'Login' : 'Sign Up'" :loading="loading" class="p-button-raised p-button-rounded custom-button" />
+        </form>
+        <div class="mt-3 text-center">
+          <a href="#" @click.prevent="toggleMode" class="toggle-mode-link">
+            {{ isLoginMode ? "Don't have an account? Sign up" : "Already have an account? Login" }}
+          </a>
+        </div>
       </div>
-      <div class="form-group">
-        <label for="password">Password</label>
-        <Password id="password" v-model="password" :feedback="!isLoginMode" required toggleMask />
-      </div>
-      <Button type="submit" :label="isLoginMode ? 'Login' : 'Sign Up'" :loading="loading" class="w-full" />
-    </form>
-    <div class="mt-3 text-center">
-      <a href="#" @click.prevent="toggleMode">
-        {{ isLoginMode ? "Don't have an account? Sign up" : "Already have an account? Login" }}
-      </a>
     </div>
   </div>
 </template>
@@ -82,17 +96,68 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
-.login-signup-form {
-  max-width: 400px;
-  margin: 2rem auto;
+.login-signup-view {
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 2rem;
-  background-color: var(--surface-card);
-  border-radius: var(--border-radius);
-  box-shadow: 0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12);
+  background-color: var(--surface-ground);
+  color: var(--text-color);
 }
 
-.form-group {
-  margin-bottom: 1.5rem;
+.form-container {
+  display: grid;
+  grid-template-columns: 1fr 500px;
+  gap: 12rem;
+  margin-bottom: 5rem;
+  align-items: start;
+}
+
+.header-welcome {
+  display: flex;
+  flex-direction: column;
+}
+
+.welcome-title {
+  font-size: 3.3rem;
+  color: var(--primary-color);
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+}
+
+.custom-icon {
+  color: #1b968a;
+  margin-left: 1rem;
+  font-size: 3.3rem;
+}
+
+.welcome-message {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  max-width: 600px;
+  padding-left: 1.5rem;
+}
+
+.welcome-message li {
+  margin-bottom: 0.5rem;
+}
+
+.login-signup-form {
+  background-color: var(--surface-card);
+  border-radius: 10px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 2px solid #1b968a;
+}
+
+.login-signup-form h2 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  margin-top: 0;
+}
+
+.field {
+  margin-bottom: 1rem;
 }
 
 label {
@@ -100,15 +165,36 @@ label {
   margin-bottom: 0.5rem;
 }
 
-.w-full {
-  width: 100%;
-}
-
-.mt-3 {
+.custom-button {
   margin-top: 1rem;
+  background-color: #1b968a !important;
+  border-color: #1b968a !important;
 }
 
-.text-center {
-  text-align: center;
+.custom-button:hover {
+  background-color: #22b8a8 !important;
+  border-color: #22b8a8 !important;
+}
+
+.toggle-mode-link {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.toggle-mode-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 1024px) {
+  .form-container {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .welcome-title {
+    font-size: 2.5rem;
+  }
 }
 </style>

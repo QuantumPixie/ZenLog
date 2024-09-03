@@ -16,9 +16,9 @@
     </div>
 
     <div class="view-toggle">
-      <Button @click="currentView = 'detailed'" :class="{ active: currentView === 'detailed' }">Detailed View</Button>
-      <Button @click="currentView = 'chart'" :class="{ active: currentView === 'chart' }">Chart View</Button>
-      <Button @click="refreshData" icon="pi pi-refresh" label="Refresh Data" class="refresh-button" />
+      <Button @click="currentView = 'detailed'" :class="['p-button-raised p-button-rounded custom-button', { active: currentView === 'detailed' }]">Detailed View</Button>
+      <Button @click="currentView = 'chart'" :class="['p-button-raised p-button-rounded custom-button', { active: currentView === 'chart' }]">Chart View</Button>
+      <Button @click="refreshData" icon="pi pi-refresh" label="Refresh Data" class="p-button-raised p-button-rounded custom-button refresh-button" />
     </div>
 
     <ProgressSpinner v-if="isLoading" />
@@ -65,17 +65,17 @@
       <div v-else-if="currentView === 'chart'" class="chart-view">
         <div class="chart-container">
           <h2>Mood Trend</h2>
-          <Chart type="line" :data="moodChartData || {}" :options="moodChartOptions" />
+          <Chart type="line" :data="moodChartData" :options="moodChartOptions" />
         </div>
 
         <div class="chart-container">
           <h2>Activity Distribution</h2>
-          <Chart type="pie" :data="activityChartData || {}" :options="activityChartOptions" />
+          <Chart type="pie" :data="activityChartData" :options="activityChartOptions" />
         </div>
 
         <div class="chart-container">
           <h2>Journal Sentiment Trend</h2>
-          <Chart type="line" :data="sentimentChartData || {}" :options="sentimentChartOptions" />
+          <Chart type="line" :data="sentimentChartData" :options="sentimentChartOptions" />
         </div>
       </div>
     </div>
@@ -88,12 +88,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
-import { format, parseISO } from 'date-fns'
 import Button from 'primevue/button'
 import Chart from 'primevue/chart'
 import ProgressSpinner from 'primevue/progressspinner'
 import { useDashboardStore } from '../stores/dashboardStore'
 import { Mood, JournalEntry, Activity } from '../types/dashboard'
+import { formatDate } from '../utils/dateUtils'
+import { format, parseISO } from 'date-fns'
 
 const dashboardStore = useDashboardStore()
 const currentView = ref('detailed')
@@ -107,11 +108,6 @@ const refreshData = async () => {
   isLoading.value = false
 }
 
-const formatDate = (dateString: string) => {
-  const date = parseISO(dateString)
-  return format(date, 'PPP p')
-}
-
 const truncateText = (text: string, maxLength: number) => {
   if (!text) return ''
   if (text.length <= maxLength) return text
@@ -120,9 +116,9 @@ const truncateText = (text: string, maxLength: number) => {
 
 // Chart data computations
 const moodChartData = computed(() => {
-  if (!summary.value) return null
+  if (!summary.value) return { labels: [], datasets: [] }
   const labels = summary.value.recentMoods.map((mood: Mood) => format(parseISO(mood.date), 'MMM d'))
-  const data = summary.value.recentMoods.map((mood: Mood)=> mood.mood_score)
+  const data = summary.value.recentMoods.map((mood: Mood) => mood.mood_score)
   return {
     labels,
     datasets: [{
@@ -135,11 +131,11 @@ const moodChartData = computed(() => {
 })
 
 const activityChartData = computed(() => {
-  if (!summary.value) return null
+  if (!summary.value) return { labels: [], datasets: [] }
   const activityCounts = summary.value.recentActivities.reduce((acc: Record<string, number>, activity: Activity) => {
-  acc[activity.activity] = (acc[activity.activity] || 0) + 1
-  return acc
-}, {} as Record<string, number>)
+    acc[activity.activity] = (acc[activity.activity] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
 
   return {
     labels: Object.keys(activityCounts),
@@ -151,7 +147,7 @@ const activityChartData = computed(() => {
 })
 
 const sentimentChartData = computed(() => {
-  if (!summary.value) return null
+  if (!summary.value) return { labels: [], datasets: [] }
   const labels = summary.value.recentEntries.map((entry: JournalEntry) => format(parseISO(entry.date), 'MMM d'))
   const data = summary.value.recentEntries.map((entry: JournalEntry) => entry.sentiment)
   return {
@@ -252,13 +248,21 @@ onMounted(async () => {
   margin-bottom: 2rem;
 }
 
-.view-toggle .p-button {
+.view-toggle .custom-button {
   margin: 0 0.5rem;
+  background-color: #1b968a !important;
+  border-color: #1b968a !important;
+  color: white !important;
 }
 
-.view-toggle .p-button.active {
-  background-color: #1b968a;
-  border-color: #1b968a;
+.view-toggle .custom-button:hover {
+  background-color: #22b8a8 !important;
+  border-color: #22b8a8 !important;
+}
+
+.view-toggle .custom-button.active {
+  background-color: #19635c !important;
+  border-color: #19635c !important;
 }
 
 .refresh-button {
@@ -336,15 +340,18 @@ onMounted(async () => {
 
   .view-toggle {
     flex-direction: column;
+    align-items: center;
   }
 
-  .view-toggle .p-button {
+  .view-toggle .custom-button {
     margin: 0.5rem 0;
+    width: 100%;
   }
 
   .refresh-button {
     margin-left: 0;
     margin-top: 0.5rem;
+    width: 100%;
   }
 }
 </style>

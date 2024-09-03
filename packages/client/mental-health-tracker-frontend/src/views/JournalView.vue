@@ -42,7 +42,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { trpc } from '../utils/trpc'
-import { format, parseISO } from 'date-fns'
+import { formatDate } from '../utils/dateUtils'
 import Button from 'primevue/button'
 import Textarea from 'primevue/textarea'
 import { useToast } from 'primevue/usetoast'
@@ -93,16 +93,6 @@ const createJournalEntry = async () => {
   } catch (error) {
     console.error('Failed to create journal entry:', error)
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to create journal entry', life: 3000 })
-  }
-}
-
-const formatDate = (dateString: string) => {
-  try {
-    const date = parseISO(dateString)
-    return format(date, 'PPP p')
-  } catch (error) {
-    console.error('Error formatting date:', error)
-    return 'Invalid Date'
   }
 }
 

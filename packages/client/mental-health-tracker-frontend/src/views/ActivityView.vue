@@ -51,7 +51,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { trpc } from '../utils/trpc'
-import { format, parseISO } from 'date-fns'
+import { formatDate } from '../utils/dateUtils'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
@@ -107,15 +107,10 @@ const createActivity = async () => {
   }
 }
 
-const formatDate = (dateString: string) => {
-  const date = parseISO(dateString)
-  return format(date, 'PPP p')
-}
-
 const truncateText = (text: string, maxLength: number) => {
   if (!text) return ''
   if (text.length <= maxLength) return text
-  return text.substr(0, maxLength) + '...'
+  return text.slice(0, maxLength) + '...'
 }
 
 onMounted(getActivities)

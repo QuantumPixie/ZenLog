@@ -1,14 +1,14 @@
 <template>
   <div id="app">
     <Toast />
-    <header>
-      <Menubar :model="menuItems">
+    <header class="header">
+      <Menubar :model="menuItems" class="custom-menubar">
         <template #start>
           <img
             alt="logo"
             src="https://www.primefaces.org/wp-content/uploads/2020/05/placeholder.png"
             height="40"
-            class="mr-2"
+            class="mr-2 logo"
           >
         </template>
         <template #end>
@@ -17,12 +17,14 @@
             label="Login/Signup"
             icon="pi pi-user"
             @click="navigateToLoginSignup"
+            class="p-button-raised p-button-rounded custom-button"
           />
           <Button
             v-else
             label="Logout" 
             icon="pi pi-sign-out"
             @click="handleLogout"
+            class="p-button-raised p-button-rounded custom-button"
           />
         </template>
       </Menubar>
@@ -122,16 +124,65 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background-color: var(--surface-ground);
+  color: var(--text-color);
+}
+
+.header {
+  background-color: var(--surface-card);
+  border-bottom: 2px solid #1b968a;
+}
+
+.custom-menubar {
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0.5rem 2rem;
+}
+
+.custom-menubar :deep(.p-menubar-root-list > .p-menuitem > .p-menuitem-content .p-menuitem-link .p-menuitem-text) {
+  color: var(--primary-color) !important;
+}
+
+.custom-menubar :deep(.p-menuitem-link:hover) {
+  background-color: white !important;
+}
+
+.custom-menubar :deep(.p-menuitem-link:hover .p-menuitem-text) {
+  color: #333333 !important;
+}
+
+.custom-menubar :deep(.p-menuitem-icon) {
+  color: #1b968a !important;
+}
+
+.logo {
+  border-radius: 50%;
+  border: 2px solid #1b968a;
+}
+
+.custom-button {
+  background-color: #1b968a !important;
+  border-color: #1b968a !important;
+}
+
+.custom-button:hover {
+  background-color: #22b8a8 !important;
+  border-color: #22b8a8 !important;
 }
 
 main {
   flex: 1;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .footer {
   margin-top: auto;
   padding: 1rem;
   text-align: center;
-  background-color: var(--surface-ground);
+  background-color: var(--surface-card);
+  border-top: 2px solid #1b968a;
 }
 </style>

@@ -1,17 +1,15 @@
 <template>
-  <div class="home">
-    <div class="top-section">
-      <div class="header-welcome">
-        <h1 class="welcome-title">Welcome to ZenLog</h1>
-        <p class="welcome-message">Track your moods and journal your thoughts to improve your mental well-being.</p>
-      </div>
-      <div class="cta-section">
-        <h2>Ready to start your journey?</h2>
-        <div class="cta-buttons">
-          <Button label="Sign Up" icon="pi pi-user-plus" @click="navigateToSignup" class="p-button-raised p-button-rounded custom-signup-button" />
-          <Button label="Log In" icon="pi pi-sign-in" @click="navigateToLogin" class="p-button-raised p-button-rounded p-button-secondary" />
-        </div>
-      </div>
+  <div class="zen-log-view">
+    <div class="header-welcome">
+      <h1 class="welcome-title">
+        <span>Welcome to ZenLog</span>
+        <i class="pi pi-sun custom-icon"></i>
+      </h1>
+      <ul class="welcome-message">
+        <li>Track your moods and journal your thoughts to improve your mental well-being.</li>
+        <li>Gain insights into your emotional patterns and triggers.</li>
+        <li>Take control of your mental health journey with our comprehensive tools.</li>
+      </ul>
     </div>
 
     <div class="feature-grid">
@@ -19,6 +17,14 @@
         <i :class="['pi', feature.icon, 'feature-icon']"></i>
         <h3>{{ feature.title }}</h3>
         <p>{{ feature.description }}</p>
+      </div>
+    </div>
+
+    <div class="cta-section">
+      <h2>Ready to start your journey?</h2>
+      <div class="cta-buttons">
+        <Button label="Sign Up" icon="pi pi-user-plus" @click="navigateToSignup" class="p-button-raised p-button-rounded custom-button" />
+        <Button label="Log In" icon="pi pi-sign-in" @click="navigateToLogin" class="p-button-raised p-button-rounded custom-button" />
       </div>
     </div>
 
@@ -63,7 +69,7 @@ const selectedFeature = ref<Feature>({
 })
 
 const features: Feature[] = [
-{
+  {
     icon: 'pi-bolt',
     title: 'Activity Tracking',
     description: 'Log your daily activities and see how they impact your mood.',
@@ -117,6 +123,34 @@ const features: Feature[] = [
       'Pinpoint areas that need attention'
     ]
   },
+  {
+    icon: 'pi-user',
+    title: 'User Management',
+    description: 'Manage your account settings and preferences.',
+    bulletPoints: [
+      'Update your personal information',
+      'Change your password for enhanced security',
+      'Customize your notification preferences',
+      'Manage your privacy settings',
+      'Control data sharing options',
+      'Access and export your data',
+      'Delete your account if needed'
+    ]
+  },
+  {
+    icon: 'pi-th-large',
+    title: 'Dashboard',
+    description: 'Get a comprehensive overview of your mental health journey.',
+    bulletPoints: [
+      'View a summary of your recent moods and activities',
+      'See your progress towards goals',
+      'Get insights and recommendations based on your data',
+      'Access quick links to frequently used features',
+      'Customize your dashboard layout',
+      'Set and track personal wellness goals',
+      'Receive motivational messages and tips'
+    ]
+  }
 ]
 
 const navigateToSignup = () => {
@@ -134,7 +168,7 @@ const showFeatureDetails = (feature: Feature) => {
 </script>
 
 <style scoped>
-.home {
+.zen-log-view {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
@@ -142,57 +176,46 @@ const showFeatureDetails = (feature: Feature) => {
   color: var(--text-color);
 }
 
-.top-section {
-  display: grid;
-  grid-template-columns: 1fr 260px;
-  gap: 15rem;
-  margin-bottom: 5rem;
-  align-items: start;
-}
-
 .header-welcome {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 3rem;
 }
 
 .welcome-title {
   font-size: 3.3rem;
   color: var(--primary-color);
   margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+}
+
+.custom-icon {
+  color: #1b968a;
+  margin-left: 1rem;
+  font-size: 3.3rem;
 }
 
 .welcome-message {
   font-size: 1.2rem;
   margin-bottom: 1rem;
-  max-width: 600px;
+  max-width: 800px;
+  padding-left: 1.5rem;
+  list-style-type: none;
 }
 
-.cta-section {
-  margin-top: 3rem;
-  text-align: center;
-  padding: 2rem;
-  background-color: var(--surface-card);
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.cta-section h2 {
-  color: var(--primary-color);
-  margin-bottom: 1rem;
-  margin-top: 0rem;
-}
-
-.cta-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.welcome-message li {
+  margin-bottom: 0.5rem;
 }
 
 .feature-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 2rem;
   width: 100%;
+  margin-bottom: 4rem;
 }
 
 .feature-item {
@@ -203,6 +226,7 @@ const showFeatureDetails = (feature: Feature) => {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
+  border: 1px solid #1b968a;
 }
 
 .feature-item:hover {
@@ -211,48 +235,73 @@ const showFeatureDetails = (feature: Feature) => {
 }
 
 .feature-icon {
-  font-size: 2rem;
-  color: #40E0D0;
+  font-size: 2.5rem;
+  color: #1b968a;
   margin-bottom: 1rem;
 }
 
 .feature-item h3 {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   margin-bottom: 0.5rem;
   color: var(--primary-color);
 }
 
 .feature-item p {
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: var(--text-color-secondary);
 }
 
-.custom-signup-button {
-  background-color: #3A7E77 !important;
-  border-color: #40E0D0 !important;
+.cta-section {
+  background-color: var(--surface-card);
+  border-radius: 10px;
+  padding: 3rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 2px solid #1b968a;
+  text-align: center;
+  margin-top: 4rem;
 }
 
-.custom-signup-button:hover {
-  background-color: #3A7E77 !important;
-  border-color: #3CCDC2 !important;
+.cta-section h2 {
+  color: var(--primary-color);
+  margin-bottom: 2rem;
+  margin-top: 0;
+  font-size: 2.2rem;
+}
+
+.cta-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.custom-button {
+  background-color: #1b968a !important;
+  border-color: #1b968a !important;
+  font-size: 1.2rem !important;
+  padding: 1rem 2rem !important;
+}
+
+.custom-button:hover {
+  background-color: #22b8a8 !important;
+  border-color: #22b8a8 !important;
 }
 
 :deep(.feature-dialog) {
   width: 90%;
-  max-width: 400px;
+  max-width: 500px;
   border-radius: 10px;
 }
 
 :deep(.feature-dialog .p-dialog-header) {
-  background-color: #1a1a1a;
-  color: #b19cd9;
+  background-color: var(--surface-card);
+  color: var(--primary-color);
   border-top-left-radius: 10px;
   border-top-right-radius: 10px;
 }
 
 :deep(.feature-dialog .p-dialog-content) {
-  background-color: #2a2a2a !important;
-  color: #b19cd9 !important;
+  background-color: var(--surface-card) !important;
+  color: var(--text-color) !important;
   border-bottom-left-radius: 10px;
   border-bottom-right-radius: 10px;
   padding: 1.5rem;
@@ -271,29 +320,18 @@ const showFeatureDetails = (feature: Feature) => {
 
 :deep(.feature-dialog li::before) {
   content: '•';
-  color: #9370db !important;
+  color: #1b968a !important;
   font-weight: bold;
   position: absolute;
   left: 0;
 }
 
 :deep(.feature-dialog .p-dialog-header-close) {
-  color: #b19cd9 !important;
+  color: var(--text-color) !important;
 }
 
 :deep(.feature-dialog .p-dialog-header-close:hover) {
-  background-color: rgba(177, 156, 217, 0.1) !important;
-}
-
-@media (max-width: 1024px) {
-  .top-section {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }
-
-  .cta-section {
-    margin-top: 0;
-  }
+  background-color: var(--surface-hover) !important;
 }
 
 @media (max-width: 768px) {
@@ -302,21 +340,10 @@ const showFeatureDetails = (feature: Feature) => {
   }
 
   .cta-buttons {
-    flex-direction: row;
-    justify-content: center;
-  }
-
-  .cta-buttons .p-button {
-    flex: 1;
-  }
-}
-
-@media (max-width: 480px) {
-  .cta-buttons {
     flex-direction: column;
   }
 
-  .cta-buttons .p-button {
+  .custom-button {
     width: 100%;
   }
 }

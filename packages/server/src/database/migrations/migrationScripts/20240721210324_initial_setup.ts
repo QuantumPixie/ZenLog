@@ -58,7 +58,7 @@ export async function up(db: Kysely<Database>): Promise<void> {
       .addColumn('user_id', 'integer', (col) =>
         col.references('users.id').onDelete('cascade').notNull()
       )
-      .addColumn('date', 'date', (col) => col.notNull())
+      .addColumn('date', sql`timestamp with time zone`, (col) => col.notNull())
       .addColumn('mood_score', 'integer', (col) =>
         col.notNull().check(sql`mood_score >= 1 AND mood_score <= 10`)
       )
@@ -80,7 +80,7 @@ export async function up(db: Kysely<Database>): Promise<void> {
       .addColumn('user_id', 'integer', (col) =>
         col.references('users.id').onDelete('cascade').notNull()
       )
-      .addColumn('date', 'date', (col) => col.notNull())
+      .addColumn('date', sql`timestamp with time zone`, (col) => col.notNull())
       .addColumn('entry', 'text', (col) => col.notNull())
       .addColumn('sentiment', sql`numeric(3,1)`, (col) =>
         col.notNull().check(sql`sentiment >= 1 AND sentiment <= 10`)
@@ -103,7 +103,7 @@ export async function up(db: Kysely<Database>): Promise<void> {
       .addColumn('user_id', 'integer', (col) =>
         col.references('users.id').onDelete('cascade').notNull()
       )
-      .addColumn('date', 'date', (col) => col.notNull())
+      .addColumn('date', sql`timestamp with time zone`, (col) => col.notNull())
       .addColumn('activity', 'varchar', (col) => col.notNull())
       .addColumn('duration', 'integer')
       .addColumn('notes', 'text')
