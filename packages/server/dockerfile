@@ -1,0 +1,25 @@
+FROM node:18
+
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+EXPOSE 3005
+
+# Install wait-for-it script
+ADD https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh /usr/wait-for-it.sh
+RUN chmod +x /usr/wait-for-it.sh
+
+# Create a startup script
+RUN echo '#!/bin/sh\n\
+npm run migrate:latest\n\
+npm start' > /usr/src/app/startup.sh && chmod +x /usr/src/app/startup.sh
+
+# Use wait-for-it to wait for the database before starting the server
+CMD ["/usr/wait-for-it.sh", "db:5432", "--", "/usr/src/app/startup.sh"]
