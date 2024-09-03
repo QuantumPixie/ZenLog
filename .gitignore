@@ -1,3 +1,5 @@
 node_modules
 .env
 *.tsbuildinfo
+# Generated tRPC types
+/packages/client/src/types/trpc/

@@ -95,36 +95,6 @@ import ProgressSpinner from 'primevue/progressspinner'
 import { useDashboardStore } from '../stores/dashboardStore'
 import { Mood, JournalEntry, Activity } from '../types/dashboard'
 
-// interface Mood {
-//   id: number
-//   date: string
-//   mood_score: number
-//   emotions: string[]
-// }
-
-// interface JournalEntry {
-//   id?: number
-//   date: string
-//   entry: string
-//   sentiment: number
-// }
-
-// interface Activity {
-//   id?: number
-//   date: string
-//   activity: string
-//   duration?: number
-//   notes?: string
-// }
-
-// interface Summary {
-//   recentMoods: Mood[]
-//   recentEntries: JournalEntry[]
-//   recentActivities: Activity[]
-//   averageMoodLastWeek: number | null
-//   averageSentimentLastWeek: number | null
-// }
-
 const dashboardStore = useDashboardStore()
 const currentView = ref('detailed')
 const isLoading = ref(false)
