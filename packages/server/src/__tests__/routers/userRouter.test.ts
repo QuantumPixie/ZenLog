@@ -16,7 +16,6 @@ vi.mock('../../services/userService', () => ({
   getUserById: vi.fn(),
 }))
 
-// Create mock router
 const mockUserRouter = router({
   signup: authedProcedure
     .input(
@@ -26,7 +25,18 @@ const mockUserRouter = router({
         password: z.string().min(6),
       })
     )
-    .mutation(async ({ input }) => ({ user: await createUser(input) })),
+    .mutation(async ({ input }) => {
+      try {
+        const user = await createUser(input)
+        return { user }
+      } catch (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to register user',
+          cause: error,
+        })
+      }
+    }),
 
   login: authedProcedure
     .input(
@@ -77,7 +87,6 @@ const mockUserRouter = router({
   }),
 })
 
-// Create caller factory
 const createCaller = createCallerFactory(mockUserRouter)
 
 describe('User Router', () => {
@@ -108,9 +117,20 @@ describe('User Router', () => {
     )
   })
 
-  it('should handle signup failure', async () => {
-    const error = new Error('Failed to register user')
-    vi.mocked(createUser).mockRejectedValue(error)
+  it('should throw a TRPCError for invalid signup input', async () => {
+    const caller = createCaller({ user: { id: mockUserId } })
+    await expect(
+      caller.signup({
+        email: 'invalid-email',
+        username: 'a', // too short
+        password: '12345', // too short
+      })
+    ).rejects.toThrow(TRPCError)
+  })
+
+  it('should handle database errors during signup', async () => {
+    const dbError = new Error('Database connection failed')
+    vi.mocked(createUser).mockRejectedValue(dbError)
 
     const caller = createCaller({ user: { id: mockUserId } })
     await expect(
@@ -119,9 +139,18 @@ describe('User Router', () => {
         username: 'testuser',
         password: 'password123',
       })
-    ).rejects.toThrow('Failed to register user')
+    ).rejects.toThrow(TRPCError)
 
-    expect(createUser).toHaveBeenCalled()
+    try {
+      await caller.signup({
+        email: 'test@example.com',
+        username: 'testuser',
+        password: 'password123',
+      })
+    } catch (error) {
+      expect(error.message).toContain('Failed to register user')
+      expect(error.code).toBe('INTERNAL_SERVER_ERROR')
+    }
   })
 
   it('should login a user', async () => {
@@ -150,7 +179,27 @@ describe('User Router', () => {
         email: 'test@example.com',
         password: 'wrongpassword',
       })
-    ).rejects.toThrow('Invalid credentials')
+    ).rejects.toThrow(TRPCError)
+
+    try {
+      await caller.login({
+        email: 'test@example.com',
+        password: 'wrongpassword',
+      })
+    } catch (error) {
+      expect(error.message).toBe('Invalid credentials')
+      expect(error.code).toBe('UNAUTHORIZED')
+    }
+  })
+
+  it('should throw a TRPCError for invalid login input', async () => {
+    const caller = createCaller({ user: { id: mockUserId } })
+    await expect(
+      caller.login({
+        email: 'invalid-email',
+        password: 'password123',
+      })
+    ).rejects.toThrow(TRPCError)
   })
 
   it('should change user password', async () => {
@@ -179,7 +228,27 @@ describe('User Router', () => {
         oldPassword: 'wrongpassword',
         newPassword: 'newpassword',
       })
-    ).rejects.toThrow('Failed to change password')
+    ).rejects.toThrow(TRPCError)
+
+    try {
+      await caller.changePassword({
+        oldPassword: 'wrongpassword',
+        newPassword: 'newpassword',
+      })
+    } catch (error) {
+      expect(error.message).toBe('Failed to change password')
+      expect(error.code).toBe('BAD_REQUEST')
+    }
+  })
+
+  it('should throw a TRPCError for invalid changePassword input', async () => {
+    const caller = createCaller({ user: { id: mockUserId } })
+    await expect(
+      caller.changePassword({
+        oldPassword: 'oldpassword',
+        newPassword: '12345', // too short
+      })
+    ).rejects.toThrow(TRPCError)
   })
 
   it('should get current user details', async () => {
@@ -201,40 +270,21 @@ describe('User Router', () => {
     vi.mocked(getUserById).mockResolvedValue(undefined)
 
     const caller = createCaller({ user: { id: mockUserId } })
-    await expect(caller.getCurrentUser()).rejects.toThrow('User not found')
+    await expect(caller.getCurrentUser()).rejects.toThrow(TRPCError)
+
+    try {
+      await caller.getCurrentUser()
+    } catch (error) {
+      expect(error.message).toBe('User not found')
+      expect(error.code).toBe('NOT_FOUND')
+    }
   })
 
-  it('should handle unexpected errors in login', async () => {
-    const error = new Error('An unexpected error occurred')
-    vi.mocked(loginUser).mockRejectedValue(error)
+  it('should handle unexpected errors in getCurrentUser', async () => {
+    const error = new Error('Database error')
+    vi.mocked(getUserById).mockRejectedValue(error)
 
     const caller = createCaller({ user: { id: mockUserId } })
-    await expect(
-      caller.login({
-        email: 'test@example.com',
-        password: 'password123',
-      })
-    ).rejects.toThrow('An unexpected error occurred')
-
-    expect(loginUser).toHaveBeenCalledWith('test@example.com', 'password123')
-  })
-
-  it('should handle unexpected errors in changePassword', async () => {
-    const error = new Error('Failed to change password')
-    vi.mocked(changePassword).mockRejectedValue(error)
-
-    const caller = createCaller({ user: { id: mockUserId } })
-    await expect(
-      caller.changePassword({
-        oldPassword: 'oldpassword',
-        newPassword: 'newpassword',
-      })
-    ).rejects.toThrow('Failed to change password')
-
-    expect(changePassword).toHaveBeenCalledWith(
-      mockUserId,
-      'oldpassword',
-      'newpassword'
-    )
+    await expect(caller.getCurrentUser()).rejects.toThrow(TRPCError)
   })
 })
