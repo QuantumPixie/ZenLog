@@ -14,14 +14,14 @@
         <template #end>
           <Button
             v-if="!authStore.isAuthenticated"
-            label="Login/Signup"
+            label="Login / Signup"
             icon="pi pi-user"
             @click="navigateToLoginSignup"
             class="p-button-raised p-button-rounded custom-button"
           />
           <Button
             v-else
-            label="Logout" 
+            label="Logout"
             icon="pi pi-sign-out"
             @click="handleLogout"
             class="p-button-raised p-button-rounded custom-button"
