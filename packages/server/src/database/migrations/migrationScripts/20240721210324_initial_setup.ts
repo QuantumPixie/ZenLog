@@ -1,5 +1,3 @@
-// src/database/migrations/migrationScripts/20240721210324_initial_setup.ts
-
 import { Kysely, sql } from 'kysely'
 import type { Database } from '../../../models/database'
 
@@ -7,30 +5,34 @@ interface ExistsResult {
   exists: boolean
 }
 
-async function tableExists(
+export async function tableExists(
   db: Kysely<Database>,
   tableName: string
 ): Promise<boolean> {
-  const result = await db.executeQuery<ExistsResult>(
-    sql`SELECT EXISTS (
-      SELECT FROM information_schema.tables 
+  const result = await db
+    .selectFrom(sql`information_schema.tables`.as('t'))
+    .select(sql<boolean>`EXISTS (
+      SELECT FROM information_schema.tables
       WHERE table_schema = 'public' AND table_name = ${tableName}
-    )`.compile(db)
-  )
-  return result.rows[0].exists
+    )`.as('exists'))
+    .executeTakeFirst()
+
+  return result?.exists ?? false
 }
 
-async function indexExists(
+export async function indexExists(
   db: Kysely<Database>,
   indexName: string
 ): Promise<boolean> {
-  const result = await db.executeQuery<ExistsResult>(
-    sql`SELECT EXISTS (
+  const result = await db
+    .selectFrom(sql`pg_indexes`.as('i')) // Use sql template tag here
+    .select(sql<boolean>`EXISTS (
       SELECT FROM pg_indexes 
       WHERE schemaname = 'public' AND indexname = ${indexName}
-    )`.compile(db)
-  )
-  return result.rows[0].exists
+    )`.as('exists'))
+    .executeTakeFirst()
+
+  return result?.exists ?? false
 }
 
 export async function up(db: Kysely<Database>): Promise<void> {
