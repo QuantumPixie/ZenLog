@@ -44,10 +44,10 @@
 import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from './stores/authStore'
-import { trpc } from './utils/trpc'
 import Menubar from 'primevue/menubar'
 import Button from 'primevue/button'
 import Toast from 'primevue/toast'
+import { initializeAuth } from './utils/auth'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -105,17 +105,7 @@ const handleLogout = () => {
 }
 
 onMounted(async () => {
-  const token = localStorage.getItem('auth_token')
-  if (token) {
-    try {
-      const user = await trpc.user.getCurrentUser.query()
-      authStore.setAuth(true, user)
-    } catch (error) {
-      console.error('Error verifying token:', error)
-      localStorage.removeItem('auth_token')
-      authStore.setAuth(false, null)
-    }
-  }
+  await initializeAuth()
 })
 </script>
 

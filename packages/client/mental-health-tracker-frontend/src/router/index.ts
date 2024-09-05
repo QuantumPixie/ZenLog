@@ -66,9 +66,9 @@ router.beforeEach((to, _from, next) => {
   const isAuthenticated = authStore.isAuthenticated
 
   if (to.meta.requiresAuth && !isAuthenticated) {
-    next('/login')
-  } else if (to.meta.guestOnly && isAuthenticated) {
-    next('/')
+    next('/login-signup')
+  } else if (to.name === 'login-signup' && isAuthenticated) {
+    next('/home')
   } else {
     next()
   }

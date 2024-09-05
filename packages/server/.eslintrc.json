@@ -2,7 +2,10 @@
   "root": true,
   "env": {
     "es6": true,
-    "node": true
+    "node": true,
+    "globals": {
+    "vi": true
+  }
   },
   "parser": "@typescript-eslint/parser",
   "extends": [

@@ -22,7 +22,7 @@ app.use('/api/health', (_, res) => {
 app.use('/panel', (_, res) =>
   res.send(
     renderTrpcPanel(appRouter, {
-      url: 'http://localhost:3005/api/trpc',
+      url: 'http://localhost:3007/api/trpc',
     })
   )
 )
@@ -47,7 +47,7 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Not Found' })
 })
 
-const PORT = process.env.PORT || 3005
+const PORT = process.env.PORT || 3007
 
 const startServer = async () => {
   try {

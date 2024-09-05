@@ -88,7 +88,11 @@ const handleSubmit = async () => {
     }
   } catch (error) {
     console.error('Authentication error:', error);
-    toast.add({ severity: 'error', summary: 'Error', detail: isLoginMode.value ? 'Failed to login' : 'Failed to create account', life: 3000 });
+    let errorMessage = isLoginMode.value ? 'Failed to login' : 'Failed to create account';
+    if (error instanceof Error) {
+      errorMessage += `: ${error.message}`;
+    }
+    toast.add({ severity: 'error', summary: 'Error', detail: errorMessage, life: 5000 });
   } finally {
     loading.value = false;
   }
