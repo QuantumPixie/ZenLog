@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { Kysely, sql } from 'kysely'
+import { Kysely } from 'kysely'
 import * as migrationModule from '../../../database/migrations/migrationScripts/20240721210324_initial_setup'
 import type { Database } from '../../../models/database'
 
@@ -20,8 +21,12 @@ describe('20240721210324_initial_setup migration', () => {
         columns: vi.fn().mockReturnThis(),
         execute: vi.fn().mockResolvedValue(undefined),
       })),
-      dropIndex: vi.fn(() => ({ execute: vi.fn().mockResolvedValue(undefined) })),
-      dropTable: vi.fn(() => ({ execute: vi.fn().mockResolvedValue(undefined) })),
+      dropIndex: vi.fn(() => ({
+        execute: vi.fn().mockResolvedValue(undefined),
+      })),
+      dropTable: vi.fn(() => ({
+        execute: vi.fn().mockResolvedValue(undefined),
+      })),
     }
 
     mockSelectFrom = vi.fn(() => ({
@@ -57,15 +62,21 @@ describe('20240721210324_initial_setup migration', () => {
     })
 
     it('should create indexes if they do not exist', async () => {
-      mockSelectFrom().executeTakeFirst
-        .mockResolvedValueOnce({ exists: true }) // tables exist
+      mockSelectFrom()
+        .executeTakeFirst.mockResolvedValueOnce({ exists: true }) // tables exist
         .mockResolvedValue({ exists: false }) // indexes don't exist
 
       await migrationModule.up(mockDb)
 
-      expect(mockSchema.createIndex).toHaveBeenCalledWith('moods_user_id_date_index')
-      expect(mockSchema.createIndex).toHaveBeenCalledWith('journal_entries_user_id_date_index')
-      expect(mockSchema.createIndex).toHaveBeenCalledWith('activities_user_id_date_index')
+      expect(mockSchema.createIndex).toHaveBeenCalledWith(
+        'moods_user_id_date_index'
+      )
+      expect(mockSchema.createIndex).toHaveBeenCalledWith(
+        'journal_entries_user_id_date_index'
+      )
+      expect(mockSchema.createIndex).toHaveBeenCalledWith(
+        'activities_user_id_date_index'
+      )
     })
   })
 
@@ -73,9 +84,15 @@ describe('20240721210324_initial_setup migration', () => {
     it('should drop indexes and tables', async () => {
       await migrationModule.down(mockDb)
 
-      expect(mockSchema.dropIndex).toHaveBeenCalledWith('activities_user_id_date_index')
-      expect(mockSchema.dropIndex).toHaveBeenCalledWith('journal_entries_user_id_date_index')
-      expect(mockSchema.dropIndex).toHaveBeenCalledWith('moods_user_id_date_index')
+      expect(mockSchema.dropIndex).toHaveBeenCalledWith(
+        'activities_user_id_date_index'
+      )
+      expect(mockSchema.dropIndex).toHaveBeenCalledWith(
+        'journal_entries_user_id_date_index'
+      )
+      expect(mockSchema.dropIndex).toHaveBeenCalledWith(
+        'moods_user_id_date_index'
+      )
 
       expect(mockSchema.dropTable).toHaveBeenCalledWith('activities')
       expect(mockSchema.dropTable).toHaveBeenCalledWith('journal_entries')

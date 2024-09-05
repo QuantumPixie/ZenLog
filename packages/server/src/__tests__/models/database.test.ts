@@ -28,7 +28,7 @@ describe('Database Interface', () => {
       activities: {} as ActivityTable,
     }
 
-    // @ts-expect-error
+    // @ts-expect-error: Testing that extra properties are not allowed
     mockDatabase.extraProperty = 'This should cause a TypeScript error'
     expect(true).toBe(true)
   })

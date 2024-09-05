@@ -57,8 +57,12 @@ const mockActivityRouter = router({
   getActivitiesByDateRange: authedProcedure
     .input(
       z.object({
-        startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid start date format'),
-        endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid end date format'),
+        startDate: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid start date format'),
+        endDate: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid end date format'),
       })
     )
     .query(async ({ ctx, input }) =>
@@ -111,10 +115,14 @@ describe('activityRouter', () => {
     })
 
     it('should handle errors when fetching activities', async () => {
-      vi.mocked(activityService.getActivities).mockRejectedValue(new Error('Database error'))
+      vi.mocked(activityService.getActivities).mockRejectedValue(
+        new Error('Database error')
+      )
 
       const caller = createCaller({ user: { id: mockUserId } })
-      await expect(caller.getActivities()).rejects.toThrow('Failed to fetch activities')
+      await expect(caller.getActivities()).rejects.toThrow(
+        'Failed to fetch activities'
+      )
     })
   })
 
@@ -136,7 +144,9 @@ describe('activityRouter', () => {
       vi.mocked(activityService.getActivityById).mockResolvedValue(undefined)
 
       const caller = createCaller({ user: { id: mockUserId } })
-      await expect(caller.getActivityById({ id: 3 })).rejects.toThrow('Activity not found')
+      await expect(caller.getActivityById({ id: 3 })).rejects.toThrow(
+        'Activity not found'
+      )
     })
   })
 
@@ -153,7 +163,9 @@ describe('activityRouter', () => {
         id: 3,
         user_id: mockUserId,
       }
-      vi.mocked(activityService.createActivity).mockResolvedValue(createdActivity)
+      vi.mocked(activityService.createActivity).mockResolvedValue(
+        createdActivity
+      )
 
       const caller = createCaller({ user: { id: mockUserId } })
       const result = await caller.createActivity(newActivity)
@@ -177,28 +189,37 @@ describe('activityRouter', () => {
         duration: undefined,
         notes: undefined,
       }
-      vi.mocked(activityService.createActivity).mockResolvedValue(createdActivity)
+      vi.mocked(activityService.createActivity).mockResolvedValue(
+        createdActivity
+      )
 
       const caller = createCaller({ user: { id: mockUserId } })
       const result = await caller.createActivity(newActivity)
 
       expect(result).toEqual(createdActivity)
-      expect(activityService.createActivity).toHaveBeenCalledWith(mockUserId, newActivity)
+      expect(activityService.createActivity).toHaveBeenCalledWith(
+        mockUserId,
+        newActivity
+      )
     })
 
     it('should throw an error for invalid input in createActivity', async () => {
       const caller = createCaller({ user: { id: mockUserId } })
-      await expect(caller.createActivity({
-        date: 'invalid-date',
-        activity: '',
-        duration: -1,
-      })).rejects.toThrow()
+      await expect(
+        caller.createActivity({
+          date: 'invalid-date',
+          activity: '',
+          duration: -1,
+        })
+      ).rejects.toThrow()
     })
   })
 
   describe('getActivitiesByDateRange', () => {
     it('should get activities by date range', async () => {
-      vi.mocked(activityService.getActivitiesByDateRange).mockResolvedValue(mockActivities)
+      vi.mocked(activityService.getActivitiesByDateRange).mockResolvedValue(
+        mockActivities
+      )
 
       const caller = createCaller({ user: { id: mockUserId } })
       const result = await caller.getActivitiesByDateRange({
@@ -233,20 +254,26 @@ describe('activityRouter', () => {
 
     it('should throw an error for invalid date format in getActivitiesByDateRange', async () => {
       const caller = createCaller({ user: { id: mockUserId } })
-      await expect(caller.getActivitiesByDateRange({
-        startDate: 'invalid-date',
-        endDate: '2024-08-03',
-      })).rejects.toThrow('Invalid start date format')
+      await expect(
+        caller.getActivitiesByDateRange({
+          startDate: 'invalid-date',
+          endDate: '2024-08-03',
+        })
+      ).rejects.toThrow('Invalid start date format')
     })
 
     it('should handle errors when fetching activities by date range', async () => {
-      vi.mocked(activityService.getActivitiesByDateRange).mockRejectedValue(new Error('Database error'))
+      vi.mocked(activityService.getActivitiesByDateRange).mockRejectedValue(
+        new Error('Database error')
+      )
 
       const caller = createCaller({ user: { id: mockUserId } })
-      await expect(caller.getActivitiesByDateRange({
-        startDate: '2024-08-02',
-        endDate: '2024-08-03',
-      })).rejects.toThrow()
+      await expect(
+        caller.getActivitiesByDateRange({
+          startDate: '2024-08-02',
+          endDate: '2024-08-03',
+        })
+      ).rejects.toThrow()
     })
   })
 
@@ -280,13 +307,18 @@ describe('activityRouter', () => {
         id: 5,
         user_id: mockUserId,
       }
-      vi.mocked(activityService.createActivity).mockResolvedValue(createdActivity)
+      vi.mocked(activityService.createActivity).mockResolvedValue(
+        createdActivity
+      )
 
       const caller = createCaller({ user: { id: mockUserId } })
       const result = await caller.createActivity(newActivity)
 
       expect(result).toEqual(createdActivity)
-      expect(activityService.createActivity).toHaveBeenCalledWith(mockUserId, newActivity)
+      expect(activityService.createActivity).toHaveBeenCalledWith(
+        mockUserId,
+        newActivity
+      )
     })
 
     it('should handle very long activity name in createActivity', async () => {
@@ -302,21 +334,38 @@ describe('activityRouter', () => {
         user_id: mockUserId,
         notes: undefined,
       }
-      vi.mocked(activityService.createActivity).mockResolvedValue(createdActivity)
+      vi.mocked(activityService.createActivity).mockResolvedValue(
+        createdActivity
+      )
 
       const caller = createCaller({ user: { id: mockUserId } })
       const result = await caller.createActivity(newActivity)
 
       expect(result).toEqual(createdActivity)
-      expect(activityService.createActivity).toHaveBeenCalledWith(mockUserId, newActivity)
+      expect(activityService.createActivity).toHaveBeenCalledWith(
+        mockUserId,
+        newActivity
+      )
     })
 
     it('should handle date range spanning multiple years in getActivitiesByDateRange', async () => {
       const multiYearActivities: ActivityTable[] = [
-        { id: 7, user_id: mockUserId, date: '2023-12-31', activity: 'New Year\'s Eve Run' },
-        { id: 8, user_id: mockUserId, date: '2024-01-01', activity: 'New Year\'s Day Yoga' },
+        {
+          id: 7,
+          user_id: mockUserId,
+          date: '2023-12-31',
+          activity: "New Year's Eve Run",
+        },
+        {
+          id: 8,
+          user_id: mockUserId,
+          date: '2024-01-01',
+          activity: "New Year's Day Yoga",
+        },
       ]
-      vi.mocked(activityService.getActivitiesByDateRange).mockResolvedValue(multiYearActivities)
+      vi.mocked(activityService.getActivitiesByDateRange).mockResolvedValue(
+        multiYearActivities
+      )
 
       const caller = createCaller({ user: { id: mockUserId } })
       const result = await caller.getActivitiesByDateRange({

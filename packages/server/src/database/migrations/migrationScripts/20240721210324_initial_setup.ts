@@ -1,9 +1,9 @@
 import { Kysely, sql } from 'kysely'
 import type { Database } from '../../../models/database'
 
-interface ExistsResult {
-  exists: boolean
-}
+// interface ExistsResult {
+//   exists: boolean
+// }
 
 export async function tableExists(
   db: Kysely<Database>,
@@ -11,10 +11,12 @@ export async function tableExists(
 ): Promise<boolean> {
   const result = await db
     .selectFrom(sql`information_schema.tables`.as('t'))
-    .select(sql<boolean>`EXISTS (
+    .select(
+      sql<boolean>`EXISTS (
       SELECT FROM information_schema.tables
       WHERE table_schema = 'public' AND table_name = ${tableName}
-    )`.as('exists'))
+    )`.as('exists')
+    )
     .executeTakeFirst()
 
   return result?.exists ?? false
@@ -25,11 +27,13 @@ export async function indexExists(
   indexName: string
 ): Promise<boolean> {
   const result = await db
-    .selectFrom(sql`pg_indexes`.as('i')) // Use sql template tag here
-    .select(sql<boolean>`EXISTS (
+    .selectFrom(sql`pg_indexes`.as('i'))
+    .select(
+      sql<boolean>`EXISTS (
       SELECT FROM pg_indexes 
       WHERE schemaname = 'public' AND indexname = ${indexName}
-    )`.as('exists'))
+    )`.as('exists')
+    )
     .executeTakeFirst()
 
   return result?.exists ?? false
