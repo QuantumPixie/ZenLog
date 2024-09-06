@@ -6,6 +6,15 @@ dotenv.config({ path: '.env.test' })
 
 export default defineConfig({
   test: {
+    coverage: {
+      exclude: [
+        '**/types/**',
+        '**/models/**',
+        '**/config.ts',
+        '**/__tests__/**',
+        './vitest.config.ts',
+      ],
+    },
     maxConcurrency: 1,
     sequence: {
       shuffle: false,

@@ -1,11 +1,22 @@
 import { createServer, Server } from 'http'
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  vi,
+  beforeEach,
+  afterEach,
+} from 'vitest'
 import request from 'supertest'
 
 import type { MockDatabase } from '../mocks/databaseMock'
 
 import { createMockDatabase } from '../mocks/databaseMock'
+
 import app from '../../server'
+import { AddressInfo } from 'net'
 
 describe('Server', () => {
   let mockDb: MockDatabase
@@ -17,13 +28,10 @@ describe('Server', () => {
       new Promise<void>((resolve) => {
         server = createServer(app)
         server.listen(0, () => {
-          const address = server.address()
-          if (address && typeof address !== 'string') {
-            baseUrl = `http://localhost:${address.port}`
-            mockDb = createMockDatabase()
-          } else {
-            throw new Error('Server address is not valid')
-          }
+          // Use port 0 to get a random available port
+          const address = server.address() as AddressInfo
+          baseUrl = `http://localhost:${address.port}`
+          mockDb = createMockDatabase()
           resolve()
         })
       })

@@ -95,7 +95,13 @@ describe('moodRouter', () => {
   it('should get moods', async () => {
     vi.mocked(moodService.getMoods).mockResolvedValue(mockMoods)
 
-    const caller = createCaller({ user: { id: mockUserId } })
+    const caller = createCaller({
+      user: {
+        id: mockUserId,
+        email: 'mockuser@example.com',
+        username: 'mockuser',
+      },
+    })
     const result = await caller.getMoods()
 
     expect(isMoodTableArray(result)).toBe(true)
@@ -117,7 +123,13 @@ describe('moodRouter', () => {
 
     vi.mocked(moodService.createMood).mockResolvedValue(createdMood)
 
-    const caller = createCaller({ user: { id: mockUserId } })
+    const caller = createCaller({
+      user: {
+        id: mockUserId,
+        email: 'mockuser@example.com',
+        username: 'mockuser',
+      },
+    })
     const result = await caller.createMood(newMood)
 
     expect(isMoodTable(result)).toBe(true)
@@ -128,7 +140,13 @@ describe('moodRouter', () => {
   it('should get moods by date range', async () => {
     vi.mocked(moodService.getMoodsByDateRange).mockResolvedValue(mockMoods)
 
-    const caller = createCaller({ user: { id: mockUserId } })
+    const caller = createCaller({
+      user: {
+        id: mockUserId,
+        email: 'mockuser@example.com',
+        username: 'mockuser',
+      },
+    })
     const result = await caller.getMoodsByDateRange({
       startDate: '2024-08-01',
       endDate: '2024-08-31',
@@ -146,7 +164,13 @@ describe('moodRouter', () => {
   it('should handle empty result for getMoodsByDateRange', async () => {
     vi.mocked(moodService.getMoodsByDateRange).mockResolvedValue([])
 
-    const caller = createCaller({ user: { id: mockUserId } })
+    const caller = createCaller({
+      user: {
+        id: mockUserId,
+        email: 'mockuser@example.com',
+        username: 'mockuser',
+      },
+    })
     const result = await caller.getMoodsByDateRange({
       startDate: '2024-09-01',
       endDate: '2024-09-02',
@@ -163,7 +187,13 @@ describe('moodRouter', () => {
       emotions: ['happy'],
     }
 
-    const caller = createCaller({ user: { id: mockUserId } })
+    const caller = createCaller({
+      user: {
+        id: mockUserId,
+        email: 'mockuser@example.com',
+        username: 'mockuser',
+      },
+    })
     await expect(caller.createMood(invalidMood)).rejects.toThrow(
       'Number must be less than or equal to 10'
     )
@@ -176,9 +206,151 @@ describe('moodRouter', () => {
       emotions: ['happy'],
     }
 
-    const caller = createCaller({ user: { id: mockUserId } })
+    const caller = createCaller({
+      user: {
+        id: mockUserId,
+        email: 'mockuser@example.com',
+        username: 'mockuser',
+      },
+    })
     await expect(caller.createMood(invalidMood)).rejects.toThrow(
       'Invalid date format'
+    )
+  })
+
+  it('should handle errors in getMoods', async () => {
+    const errorMessage = 'Error fetching moods'
+    vi.mocked(moodService.getMoods).mockRejectedValue(new Error(errorMessage))
+
+    const caller = createCaller({
+      user: {
+        id: mockUserId,
+        email: 'mockuser@example.com',
+        username: 'mockuser',
+      },
+    })
+
+    await expect(caller.getMoods()).rejects.toThrow(errorMessage)
+  })
+  it('should handle errors in createMood', async () => {
+    const errorMessage = 'Error creating mood'
+    vi.mocked(moodService.createMood).mockRejectedValue(new Error(errorMessage))
+
+    const caller = createCaller({
+      user: {
+        id: mockUserId,
+        email: 'mockuser@example.com',
+        username: 'mockuser',
+      },
+    })
+
+    const newMood = {
+      date: '2024-08-04',
+      mood_score: 8,
+      emotions: ['happy', 'relaxed'],
+    }
+
+    await expect(caller.createMood(newMood)).rejects.toThrow(errorMessage)
+  })
+
+  it('should handle errors in getMoodsByDateRange', async () => {
+    const errorMessage = 'Error fetching moods by date range'
+    vi.mocked(moodService.getMoodsByDateRange).mockRejectedValue(
+      new Error(errorMessage)
+    )
+
+    const caller = createCaller({
+      user: {
+        id: mockUserId,
+        email: 'mockuser@example.com',
+        username: 'mockuser',
+      },
+    })
+
+    await expect(
+      caller.getMoodsByDateRange({
+        startDate: '2024-08-01',
+        endDate: '2024-08-31',
+      })
+    ).rejects.toThrow(errorMessage)
+  })
+
+  it('should pass through invalid date range for getMoodsByDateRange', async () => {
+    const caller = createCaller({
+      user: {
+        id: mockUserId,
+        email: 'mockuser@example.com',
+        username: 'mockuser',
+      },
+    })
+
+    await caller.getMoodsByDateRange({
+      startDate: 'invalid-date',
+      endDate: '2024-08-31',
+    })
+
+    expect(moodService.getMoodsByDateRange).toHaveBeenCalledWith(
+      mockUserId,
+      'invalid-date',
+      '2024-08-31'
+    )
+
+    await caller.getMoodsByDateRange({
+      startDate: '2024-08-01',
+      endDate: 'invalid-date',
+    })
+
+    expect(moodService.getMoodsByDateRange).toHaveBeenCalledWith(
+      mockUserId,
+      '2024-08-01',
+      'invalid-date'
+    )
+  })
+
+  it('should handle empty emotions array for createMood', async () => {
+    const newMood = {
+      date: '2024-08-04',
+      mood_score: 8,
+      emotions: [],
+    }
+    const createdMood = {
+      ...newMood,
+      id: 3,
+      user_id: mockUserId,
+    }
+
+    vi.mocked(moodService.createMood).mockResolvedValue(createdMood)
+
+    const caller = createCaller({
+      user: {
+        id: mockUserId,
+        email: 'mockuser@example.com',
+        username: 'mockuser',
+      },
+    })
+    const result = await caller.createMood(newMood)
+
+    expect(isMoodTable(result)).toBe(true)
+    expect(result).toEqual(createdMood)
+    expect(moodService.createMood).toHaveBeenCalledWith(mockUserId, newMood)
+  })
+
+  it('should reject non-array emotions for createMood', async () => {
+    const invalidMood = {
+      date: '2024-08-04',
+      mood_score: 7,
+      emotions: 'happy' as never, // Invalid: should be an array
+    }
+
+    const caller = createCaller({
+      user: {
+        id: mockUserId,
+        email: 'mockuser@example.com',
+        username: 'mockuser',
+      },
+    })
+    await expect(caller.createMood(invalidMood)).rejects.toThrow(
+      'Expected array, received string'
     )
   })
 })

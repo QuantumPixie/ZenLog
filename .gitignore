@@ -1,5 +1,8 @@
 node_modules
 .env
 *.tsbuildinfo
+
 # Generated tRPC types
-/packages/client/src/types/trpc/
+packages/client/src/types/trpc/
+# Generated test converage
+packages/server/coverage

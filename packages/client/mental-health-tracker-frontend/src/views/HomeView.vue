@@ -2,14 +2,19 @@
   <div class="dashboard">
     <div class="header-welcome">
       <h1 class="welcome-title">
-        <span>Welcome, {{ authStore.user?.username }}!</span>
+        <span>Welcome, {{ authStore.user?.username || 'Guest' }}!</span>
         <i class="pi pi-home custom-icon"></i>
       </h1>
       <p class="welcome-message">What would you like to do today?</p>
     </div>
 
     <div class="feature-grid">
-      <div v-for="feature in features" :key="feature.title" class="feature-item" @click="feature.action">
+      <div
+        v-for="feature in features"
+        :key="feature.title"
+        class="feature-item"
+        @click="feature.action"
+      >
         <i :class="['pi', feature.icon, 'feature-icon']"></i>
         <h3>{{ feature.title }}</h3>
         <p>{{ feature.description }}</p>
@@ -24,10 +29,10 @@ import { useAuthStore } from '../stores/authStore'
 import { trpc } from '../utils/trpc'
 
 interface Feature {
-  icon: string;
-  title: string;
-  description: string;
-  action: () => void;
+  icon: string
+  title: string
+  description: string
+  action: () => void
 }
 
 const router = useRouter()
@@ -121,7 +126,9 @@ const features: Feature[] = [
   padding: 2rem;
   text-align: center;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
   cursor: pointer;
   border: 2px solid #1b968a;
 }
