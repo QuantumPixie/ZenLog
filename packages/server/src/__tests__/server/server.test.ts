@@ -78,7 +78,9 @@ describe('CORS', () => {
       .get('/api/health')
       .set('Origin', 'http://example.com')
 
-    expect(response.headers['access-control-allow-origin']).toBe('*')
+    expect(response.headers['access-control-allow-origin']).toBe(
+      'http://localhost:5173'
+    )
   })
 
   it('should handle preflight requests and include appropriate CORS headers', async () => {
@@ -88,7 +90,9 @@ describe('CORS', () => {
       .set('Access-Control-Request-Method', 'GET')
       .set('Access-Control-Request-Headers', 'Content-Type')
 
-    expect(response.headers['access-control-allow-origin']).toBe('*')
+    expect(response.headers['access-control-allow-origin']).toBe(
+      'http://localhost:5173'
+    )
     expect(response.headers['access-control-allow-methods']).toBeDefined()
     expect(response.headers['access-control-allow-headers']).toBeDefined()
   })

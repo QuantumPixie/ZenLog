@@ -20,56 +20,22 @@ export const createContext = ({
   user: User | null
 } => {
   const customReq = req as CustomRequest
-  const authHeader = customReq.header ? customReq.header('Authorization') : null
+  const token = customReq.cookies.token
   let user: User | null = null
 
-  if (authHeader) {
-    const [bearer, token] = authHeader.split(' ')
-
-    if (bearer !== 'Bearer' || !token) {
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'Invalid authorization header format',
-      })
-    }
-
+  if (token) {
     try {
-      const decoded = jwt.verify(token, JWT_SECRET!)
+      const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload
 
-      if (
-        typeof decoded !== 'object' ||
-        decoded === null ||
-        !('user_id' in decoded)
-      ) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'Invalid token payload',
-        })
-      }
-
-      user = getUserFromToken(decoded as JwtPayload) as User | null
-      if (!user) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'User not found',
-        })
+      if (typeof decoded !== 'object' || !('user_id' in decoded)) {
+        // Invalid token payload
+        user = null
+      } else {
+        user = getUserFromToken(decoded)
       }
     } catch (error) {
-      if (error instanceof jwt.JsonWebTokenError) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'Invalid token',
-          cause: error,
-        })
-      }
-      if (error instanceof TRPCError) {
-        throw error
-      }
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'Authentication failed',
-        cause: error,
-      })
+      // Token is invalid or expired
+      user = null
     }
   }
 
@@ -90,6 +56,6 @@ const isAuthenticated = t.middleware(({ ctx, next }) => {
   return next({ ctx: { ...ctx, user: ctx.user } })
 })
 
-export const { router } = t
-export const { procedure } = t
+export const router = t.router
+export const procedure = t.procedure
 export const authedProcedure = t.procedure.use(isAuthenticated)

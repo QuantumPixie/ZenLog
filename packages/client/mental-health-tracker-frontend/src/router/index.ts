@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import ZenLog from '../views/ZenLog.vue'
 import MoodView from '../views/MoodView.vue'
 import TheSignupLoginView from '../components/TheSignupLoginView.vue'
-import { useAuthStore } from '../stores/authStore'
+// import { useAuthStore } from '../stores/authStore'
 import HomeView from '../views/HomeView.vue'
 import JournalView from '../views/JournalView.vue'
 import UserManagement from '../components/UserManagement.vue'
@@ -61,23 +61,20 @@ const router = createRouter({
   ]
 })
 
-router.beforeEach((to, from, next) => {
-  const authStore = useAuthStore()
-  const isAuthenticated = authStore.isAuthenticated
+// router.beforeEach((to, from, next) => {
+//   const authStore = useAuthStore()
 
-  // testing
-  if (import.meta.env.MODE === 'test') {
-    next()
-    return
-  }
+//   // testing
+//   if (import.meta.env.MODE === 'test') {
+//     next()
+//     return
+//   }
 
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next('/login-signup')
-  } else if (to.name === 'login-signup' && isAuthenticated) {
-    next('/home')
-  } else {
-    next()
-  }
-})
+//   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+//     next('/login')
+//   } else {
+//     next()
+//   }
+// })
 
 export default router

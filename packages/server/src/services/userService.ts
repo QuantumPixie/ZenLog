@@ -9,7 +9,9 @@ type User = Selectable<UserTable>
 type NewUser = Insertable<UserTable>
 type SafeUser = Omit<User, 'password'>
 
-export async function createUser(newUser: NewUser): Promise<SafeUser> {
+export async function createUser(
+  newUser: NewUser
+): Promise<{ user: SafeUser; token: string }> {
   try {
     const hashedPassword = await bcrypt.hash(newUser.password, 10)
     const userToInsert = { ...newUser, password: hashedPassword }
@@ -24,7 +26,19 @@ export async function createUser(newUser: NewUser): Promise<SafeUser> {
       throw new Error('Failed to create user')
     }
 
-    return createdUser
+    const jwtSecret = process.env.JWT_SECRET
+    if (!jwtSecret) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Server configuration error',
+      })
+    }
+
+    const token = jwt.sign({ user_id: createdUser.id }, jwtSecret, {
+      expiresIn: '1d',
+    })
+
+    return { user: createdUser, token }
   } catch (error) {
     console.error('Error in createUser:', error)
     throw error
@@ -34,7 +48,7 @@ export async function createUser(newUser: NewUser): Promise<SafeUser> {
 export async function loginUser(
   email: string,
   password: string
-): Promise<{ token: string; user: SafeUser } | null> {
+): Promise<{ user: SafeUser; token: string } | null> {
   try {
     console.log(`Attempting login for email: ${email}`)
 
@@ -70,13 +84,13 @@ export async function loginUser(
       })
     }
 
-    const token = jwt.sign({ user_id: user.id }, jwtSecret, { expiresIn: '1h' })
+    const token = jwt.sign({ user_id: user.id }, jwtSecret, { expiresIn: '1d' })
 
     const { id, email: userEmail, username } = user
 
     console.log(`Login successful for email: ${email}`)
 
-    return { token, user: { id, email: userEmail, username } }
+    return { user: { id, email: userEmail, username }, token }
   } catch (error) {
     console.error('Error in loginUser:', error)
     throw error
@@ -136,4 +150,15 @@ export async function changePassword(
     console.error('Error in changePassword:', error)
     throw error
   }
+}
+
+export function generateToken(userId: number): string {
+  const jwtSecret = process.env.JWT_SECRET
+  if (!jwtSecret) {
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Server configuration error',
+    })
+  }
+  return jwt.sign({ user_id: userId }, jwtSecret, { expiresIn: '1d' })
 }

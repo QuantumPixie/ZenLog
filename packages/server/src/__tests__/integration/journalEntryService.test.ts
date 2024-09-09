@@ -24,7 +24,7 @@ describe('Journal Entry Service Integration Tests', () => {
         username: 'testuser',
         password: 'password123',
       })
-      userId = user.id
+      userId = user.user.id
 
       // Verify that the user was actually created
       const createdUser = await getUserById(userId)

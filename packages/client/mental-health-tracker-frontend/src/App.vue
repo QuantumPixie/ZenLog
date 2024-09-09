@@ -9,7 +9,7 @@
             src="https://www.primefaces.org/wp-content/uploads/2020/05/placeholder.png"
             height="40"
             class="mr-2 logo"
-          >
+          />
         </template>
         <template #end>
           <Button
@@ -34,9 +34,7 @@
       <router-view></router-view>
     </main>
 
-    <footer class="footer">
-      © {{ new Date().getFullYear() }} ZenLog
-    </footer>
+    <footer class="footer">© {{ new Date().getFullYear() }} ZenLog</footer>
   </div>
 </template>
 
@@ -47,54 +45,57 @@ import { useAuthStore } from './stores/authStore'
 import Menubar from 'primevue/menubar'
 import Button from 'primevue/button'
 import Toast from 'primevue/toast'
-import { initializeAuth } from './utils/auth'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
-const menuItems = computed(() => [
-  {
-    label: 'ZenLog',
-    icon: 'pi pi-fw pi-home',
-    command: () => router.push('/')
-  },
+// menu items
+const authenticatedMenuItems = [
   {
     label: 'Home',
     icon: 'pi pi-fw pi-th-large',
-    command: () => router.push('/home'),
-    visible: authStore.isAuthenticated
+    command: () => router.push('/home')
   },
   {
     label: 'Mood',
     icon: 'pi pi-fw pi-heart',
-    command: () => router.push('/mood'),
-    visible: authStore.isAuthenticated
+    command: () => router.push('/mood')
   },
   {
     label: 'Journal',
     icon: 'pi pi-fw pi-book',
-    command: () => router.push('/journal'),
-    visible: authStore.isAuthenticated
+    command: () => router.push('/journal')
   },
   {
     label: 'Activities',
     icon: 'pi pi-fw pi-bolt',
-    command: () => router.push('/activities'),
-    visible: authStore.isAuthenticated
+    command: () => router.push('/activities')
   },
   {
     label: 'User Management',
     icon: 'pi pi-fw pi-user',
-    command: () => router.push('/user-management'),
-    visible: authStore.isAuthenticated
+    command: () => router.push('/user-management')
   },
   {
     label: 'Dashboard',
     icon: 'pi pi-fw pi-chart-line',
-    command: () => router.push('/dashboard'),
-    visible: authStore.isAuthenticated
+    command: () => router.push('/dashboard')
   }
-])
+]
+
+const nonAuthenticatedMenuItems = [
+  {
+    label: 'ZenLog',
+    icon: 'pi pi-fw pi-home',
+    command: () => router.push('/')
+  }
+]
+
+const menuItems = computed(() =>
+  authStore.isAuthenticated
+    ? [...nonAuthenticatedMenuItems, ...authenticatedMenuItems]
+    : nonAuthenticatedMenuItems
+)
 
 const navigateToLoginSignup = () => {
   router.push('/login-signup')
@@ -105,7 +106,7 @@ const handleLogout = () => {
 }
 
 onMounted(async () => {
-  await initializeAuth()
+  await authStore.checkAuth()
 })
 </script>
 
@@ -129,16 +130,12 @@ onMounted(async () => {
   padding: 0.5rem 2rem;
 }
 
-.custom-menubar :deep(.p-menubar-root-list > .p-menuitem > .p-menuitem-content .p-menuitem-link .p-menuitem-text) {
-  color: var(--primary-color) !important;
-}
-
 .custom-menubar :deep(.p-menuitem-link:hover) {
   background-color: white !important;
 }
 
 .custom-menubar :deep(.p-menuitem-link:hover .p-menuitem-text) {
-  color: #333333 !important;
+  color: var(--primary-color) !important;
 }
 
 .custom-menubar :deep(.p-menuitem-icon) {

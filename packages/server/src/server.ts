@@ -1,19 +1,25 @@
 import express from 'express'
 import cors from 'cors'
+import cookieParser from 'cookie-parser'
 import * as trpcExpress from '@trpc/server/adapters/express'
 import { renderTrpcPanel } from 'trpc-panel'
 import { createContext } from './trpc'
 import { appRouter } from './routers'
-import type { CustomRequest } from './types/customRequest'
 import { db } from './database'
-import { authenticateJWT } from './middleware/auth'
 
 export type AppRouter = typeof appRouter
 
 const app = express()
 
-app.use(cors())
+app.use(
+  cors({
+    origin: 'http://localhost:5173',
+    credentials: true,
+  })
+)
 app.use(express.json())
+
+app.use(cookieParser())
 
 app.use('/api/health', (_, res) => {
   res.status(200).send('OK')
@@ -27,19 +33,11 @@ app.use('/panel', (_, res) =>
   )
 )
 
-app.use('/api/trpc/:path', (req, res, next) => {
-  if (req.params.path !== 'user.signup' && req.params.path !== 'user.login') {
-    return authenticateJWT(req as CustomRequest, res, next)
-  }
-  return next()
-})
-
 app.use(
   '/api/trpc',
   trpcExpress.createExpressMiddleware({
     router: appRouter,
-    createContext: ({ req, res }: trpcExpress.CreateExpressContextOptions) =>
-      createContext({ req: req as CustomRequest, res }),
+    createContext: ({ req, res }) => createContext({ req, res }),
   })
 )
 

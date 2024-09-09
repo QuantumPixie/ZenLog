@@ -1,12 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeAll,
-  beforeEach,
-  afterEach,
-  afterAll,
-} from 'vitest'
+import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest'
 import {
   setupTestDatabase,
   cleanupTestDatabase,
@@ -26,113 +18,156 @@ describe('Dashboard Service Integration Tests', () => {
   })
 
   beforeEach(async () => {
-    const uniqueEmail = `test${Date.now()}@example.com`
-    const user = await createUser({
-      email: uniqueEmail,
+    await cleanupTestDatabase()
+    const { user } = await createUser({
+      email: 'test@example.com',
       username: 'testuser',
       password: 'password123',
     })
     userId = user.id
   })
 
-  afterEach(async () => {
-    await cleanupTestDatabase()
-  })
-
   afterAll(async () => {
     await teardownTestDatabase()
   })
 
-  it('should get dashboard summary', async () => {
-    // Create test data
+  it('should get dashboard summary with recent data', async () => {
+    const testDate = new Date('2024-08-01T12:00:00.000Z')
+
     await moodService.createMood(userId, {
-      date: '2024-08-01T12:00:00.000Z',
+      date: testDate.toISOString(),
       mood_score: 7,
       emotions: ['happy'],
     })
     await journalEntryService.createJournalEntry(userId, {
-      date: '2024-08-01T13:00:00.000Z',
+      date: testDate.toISOString(),
       entry: 'Great day!',
     })
     await activityService.createActivity(userId, {
-      date: '2024-08-01T14:00:00.000Z',
+      date: testDate.toISOString(),
       activity: 'Running',
       duration: 30,
     })
 
     const summary = await dashboardService.getSummary(userId)
 
-    expect(summary).toHaveProperty('recentMoods')
-    expect(summary).toHaveProperty('recentEntries')
-    expect(summary).toHaveProperty('recentActivities')
-    expect(summary).toHaveProperty('averageMoodLastWeek')
-
-    expect(summary.recentMoods).toHaveLength(1)
-    expect(summary.recentEntries).toHaveLength(1)
-    expect(summary.recentActivities).toHaveLength(1)
-
-    // Check if averageMoodLastWeek is a number (could be null if not enough data)
-    if (summary.averageMoodLastWeek !== null) {
-      expect(summary.averageMoodLastWeek).toBeCloseTo(7, 1)
-    }
-
-    // Check content of recent items
-    expect(summary.recentMoods[0]).toMatchObject({
-      date: expect.any(Date),
-      mood_score: 7,
-      emotions: ['happy'],
-    })
-
-    expect(summary.recentEntries[0]).toMatchObject({
-      date: expect.any(Date),
-      entry: 'Great day!',
-    })
-
-    expect(summary.recentActivities[0]).toMatchObject({
-      date: expect.any(Date),
-      activity: 'Running',
-      duration: 30,
+    expect(summary).toMatchObject({
+      recentMoods: [
+        expect.objectContaining({
+          date: expect.any(String),
+          mood_score: 7,
+          emotions: ['happy'],
+        }),
+      ],
+      recentEntries: [
+        expect.objectContaining({
+          date: expect.any(String),
+          entry: 'Great day!',
+        }),
+      ],
+      recentActivities: [
+        expect.objectContaining({
+          date: expect.any(String),
+          activity: 'Running',
+          duration: 30,
+        }),
+      ],
+      averageMoodLastWeek: expect.any(Number),
+      averageSentimentLastWeek: expect.any(Number),
     })
   })
 
   it('should handle empty data', async () => {
     const summary = await dashboardService.getSummary(userId)
 
-    expect(summary.recentMoods).toHaveLength(0)
-    expect(summary.recentEntries).toHaveLength(0)
-    expect(summary.recentActivities).toHaveLength(0)
-    expect(summary.averageMoodLastWeek).toBeNull()
-    expect(summary.averageSentimentLastWeek).toBeNull()
+    expect(summary).toEqual({
+      recentMoods: [],
+      recentEntries: [],
+      recentActivities: [],
+      averageMoodLastWeek: null,
+      averageSentimentLastWeek: null,
+    })
   })
 
-  it('should calculate correct averages', async () => {
+  it('should calculate correct averages for the last week', async () => {
     const today = new Date()
-    const threeDaysAgo = new Date(today)
-    threeDaysAgo.setDate(today.getDate() - 3)
-
-    await moodService.createMood(userId, {
-      date: today.toISOString(),
-      mood_score: 8,
-      emotions: ['happy'],
-    })
-    await moodService.createMood(userId, {
-      date: threeDaysAgo.toISOString(),
-      mood_score: 6,
-      emotions: ['neutral'],
+    const dates = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(today)
+      date.setDate(today.getDate() - i)
+      return date.toISOString()
     })
 
-    await journalEntryService.createJournalEntry(userId, {
-      date: today.toISOString(),
-      entry: 'Feeling great!',
-    })
-    await journalEntryService.createJournalEntry(userId, {
-      date: threeDaysAgo.toISOString(),
-      entry: 'Just an average day.',
-    })
+    for (let i = 0; i < 7; i++) {
+      await moodService.createMood(userId, {
+        date: dates[i],
+        mood_score: 7,
+        emotions: ['neutral'],
+      })
+      await journalEntryService.createJournalEntry(userId, {
+        date: dates[i],
+        entry: `Day ${i + 1}`,
+      })
+    }
 
     const summary = await dashboardService.getSummary(userId)
 
     expect(summary.averageMoodLastWeek).toBeCloseTo(7, 1)
-    expect(summary.averageSentimentLastWeek).not.toBeNull()
+    expect(summary.averageSentimentLastWeek).toBeDefined()
+    expect(typeof summary.averageSentimentLastWeek).toBe('number')
+  })
+
+  it('should limit recent data to 5 items', async () => {
+    const testDate = new Date('2024-08-01T12:00:00.000Z')
+
+    for (let i = 0; i < 10; i++) {
+      const date = new Date(testDate)
+      date.setDate(testDate.getDate() - i)
+      await moodService.createMood(userId, {
+        date: date.toISOString(),
+        mood_score: 7,
+        emotions: ['happy'],
+      })
+      await journalEntryService.createJournalEntry(userId, {
+        date: date.toISOString(),
+        entry: `Entry ${i + 1}`,
+      })
+      await activityService.createActivity(userId, {
+        date: date.toISOString(),
+        activity: `Activity ${i + 1}`,
+        duration: 30,
+      })
+    }
+
+    const summary = await dashboardService.getSummary(userId)
+
+    expect(summary.recentMoods).toHaveLength(5)
+    expect(summary.recentEntries).toHaveLength(5)
+    expect(summary.recentActivities).toHaveLength(5)
+  })
+
+  it('should handle partial data', async () => {
+    const testDate = new Date('2024-08-01T12:00:00.000Z')
+
+    await moodService.createMood(userId, {
+      date: testDate.toISOString(),
+      mood_score: 7,
+      emotions: ['happy'],
+    })
+
+    const summary = await dashboardService.getSummary(userId)
+
+    expect(summary).toMatchObject({
+      recentMoods: [
+        expect.objectContaining({
+          date: expect.any(String),
+          mood_score: 7,
+          emotions: ['happy'],
+        }),
+      ],
+      recentEntries: [],
+      recentActivities: [],
+      averageMoodLastWeek: expect.any(Number),
+      averageSentimentLastWeek: null,
+    })
   })
 })

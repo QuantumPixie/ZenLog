@@ -27,7 +27,7 @@ describe('Activity Service Integration Tests', () => {
         username: 'testuser',
         password: 'password123',
       })
-      userId = user.id
+      userId = user.user.id
     } catch (error) {
       console.error('Failed to create user:', error)
       throw error

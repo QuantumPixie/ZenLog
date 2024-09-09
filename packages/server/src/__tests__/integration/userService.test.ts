@@ -26,7 +26,7 @@ describe('User Service Integration Tests', () => {
       password: 'password123',
     }
 
-    const createdUser = await createUser(newUser)
+    const { user: createdUser } = await createUser(newUser)
     expect(createdUser).toHaveProperty('id')
     expect(createdUser.email).toBe(newUser.email)
     expect(createdUser.username).toBe(newUser.username)

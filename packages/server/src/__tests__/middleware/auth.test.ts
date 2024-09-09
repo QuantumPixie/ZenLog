@@ -17,7 +17,7 @@ describe('Authentication Middleware', () => {
 
   beforeEach(() => {
     req = {
-      header: vi.fn(),
+      cookies: {},
     } as unknown as CustomRequest
     res = {} as Response
     next = vi.fn()
@@ -26,14 +26,12 @@ describe('Authentication Middleware', () => {
   })
 
   it('should throw an error if no token is provided', () => {
-    req.header = vi.fn().mockReturnValue(undefined)
-
     expect(() => authenticateJWT(req, res, next)).toThrow(TRPCError)
     expect(() => authenticateJWT(req, res, next)).toThrow('No token provided')
   })
 
   it('should throw an error if the token is invalid', () => {
-    req.header = vi.fn().mockReturnValue('Bearer invalid-token')
+    req.cookies = { token: 'invalid-token' }
     vi.mocked(jwt.verify).mockImplementation(() => {
       throw new jwt.JsonWebTokenError('invalid token')
     })
@@ -43,7 +41,7 @@ describe('Authentication Middleware', () => {
   })
 
   it('should throw an error if the token payload is invalid', () => {
-    req.header = vi.fn().mockReturnValue('Bearer valid-token')
+    req.cookies = { token: 'valid-token' }
     vi.mocked(jwt.verify).mockImplementation(() => ({}) as JwtPayload)
 
     expect(() => authenticateJWT(req, res, next)).toThrow(TRPCError)
@@ -53,7 +51,7 @@ describe('Authentication Middleware', () => {
   })
 
   it('should throw an error if user data in token is invalid', () => {
-    req.header = vi.fn().mockReturnValue('Bearer valid-token')
+    req.cookies = { token: 'valid-token' }
     vi.mocked(jwt.verify).mockImplementation(
       () => ({ user_id: 1 }) as JwtPayload
     )
@@ -71,7 +69,7 @@ describe('Authentication Middleware', () => {
       email: 'test@example.com',
       username: 'testuser',
     }
-    req.header = vi.fn().mockReturnValue('Bearer valid-token')
+    req.cookies = { token: 'valid-token' }
     vi.mocked(jwt.verify).mockImplementation(
       () => ({ user_id: 1 }) as JwtPayload
     )

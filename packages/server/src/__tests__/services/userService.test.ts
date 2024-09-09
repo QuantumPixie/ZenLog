@@ -59,9 +59,11 @@ describe('userService', () => {
         }),
       } as unknown as ReturnType<typeof db.insertInto>)
 
+      vi.mocked(jwt.sign).mockReturnValue('token' as never)
+
       const result = await createUser(newUser)
 
-      expect(result).toEqual(createdUser)
+      expect(result).toEqual({ user: createdUser, token: 'token' })
       expect(db.insertInto).toHaveBeenCalledWith('users')
       expect(vi.mocked(db.insertInto('users').values)).toHaveBeenCalledWith({
         ...newUser,
@@ -130,7 +132,7 @@ describe('userService', () => {
       expect(jwt.sign).toHaveBeenCalledWith(
         { user_id: user.id },
         'test_secret',
-        { expiresIn: '1h' }
+        { expiresIn: '1d' }
       )
     })
 

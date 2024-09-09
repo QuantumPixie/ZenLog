@@ -46,6 +46,8 @@ export const activityService = {
     userId: number,
     activityData: ActivityInput
   ): Promise<ActivityTable> {
+    console.log('Creating activity for user:', userId)
+    console.log('Activity data:', activityData)
     if (!isValidDateString(activityData.date)) {
       throw new Error('Invalid date format')
     }

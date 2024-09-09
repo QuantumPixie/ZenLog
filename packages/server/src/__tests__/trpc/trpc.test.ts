@@ -22,9 +22,9 @@ describe('tRPC Setup', () => {
   })
 
   describe('createContext', () => {
-    it('should create context without user when no auth header is present', async () => {
+    it('should create context without user when no token is present', async () => {
       const req = {
-        header: vi.fn().mockReturnValue(null),
+        cookies: {},
       } as unknown as CustomRequest
       const res = {} as Response
 
@@ -34,12 +34,11 @@ describe('tRPC Setup', () => {
       } as CreateExpressContextOptions)
 
       expect(context).toEqual({ req, res, user: null })
-      expect(req.header).toHaveBeenCalledWith('Authorization')
     })
 
-    it('should create context with user when valid auth header is present', async () => {
+    it('should create context with user when valid token is present', async () => {
       const req = {
-        header: vi.fn().mockReturnValue('Bearer validtoken'),
+        cookies: { token: 'validtoken' },
       } as unknown as CustomRequest
       const res = {} as Response
       const mockUser: User = { id: 1 }
@@ -55,14 +54,13 @@ describe('tRPC Setup', () => {
       } as CreateExpressContextOptions)
 
       expect(context).toEqual({ req, res, user: mockUser })
-      expect(req.header).toHaveBeenCalledWith('Authorization')
       expect(jwt.verify).toHaveBeenCalledWith('validtoken', expect.any(String))
       expect(getUserFromToken).toHaveBeenCalledWith({ user_id: 1 })
     })
 
-    it('should throw UNAUTHORIZED error when token verification fails', async () => {
+    it('should create context without user when token verification fails', async () => {
       const req = {
-        header: vi.fn().mockReturnValue('Bearer invalidtoken'),
+        cookies: { token: 'invalidtoken' },
       } as unknown as CustomRequest
       const res = {} as Response
 
@@ -70,31 +68,28 @@ describe('tRPC Setup', () => {
         throw new jwt.JsonWebTokenError('Invalid token')
       })
 
-      await expect(async () => {
-        await createContext({ req, res } as CreateExpressContextOptions)
-      }).rejects.toThrow(TRPCError)
+      const context = await createContext({
+        req,
+        res,
+      } as CreateExpressContextOptions)
 
-      await expect(async () => {
-        await createContext({ req, res } as CreateExpressContextOptions)
-      }).rejects.toThrow('Invalid token')
+      expect(context).toEqual({ req, res, user: null })
     })
 
-    it('should throw UNAUTHORIZED error when token payload is invalid', async () => {
+    it('should create context without user when token payload is invalid', async () => {
       const req = {
-        header: vi.fn().mockReturnValue('Bearer validtoken'),
+        cookies: { token: 'validtoken' },
       } as unknown as CustomRequest
       const res = {} as Response
 
       vi.mocked(jwt.verify).mockImplementation(() => ({}) as JwtPayload)
-      vi.mocked(getUserFromToken).mockReturnValue(null)
 
-      await expect(async () => {
-        await createContext({ req, res } as CreateExpressContextOptions)
-      }).rejects.toThrow(TRPCError)
+      const context = await createContext({
+        req,
+        res,
+      } as CreateExpressContextOptions)
 
-      await expect(async () => {
-        await createContext({ req, res } as CreateExpressContextOptions)
-      }).rejects.toThrow('Invalid token payload')
+      expect(context).toEqual({ req, res, user: null })
     })
   })
 

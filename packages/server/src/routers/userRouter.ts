@@ -1,42 +1,65 @@
-import { TRPCError } from '@trpc/server'
+import { z } from 'zod'
 import { router, procedure, authedProcedure } from '../trpc'
+import { TRPCError } from '@trpc/server'
 import {
-  signupSchema,
-  loginSchema,
-  changePasswordSchema,
-} from '../schemas/userSchema'
-import {
-  changePassword,
   createUser,
-  getUserById,
   loginUser,
+  getUserById,
+  changePassword,
 } from '../services/userService'
 
+const signupSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  username: z.string().min(3),
+})
+
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string(),
+})
+
+const changePasswordSchema = z.object({
+  oldPassword: z.string(),
+  newPassword: z.string().min(6),
+})
+
 export const userRouter = router({
-  signup: procedure.input(signupSchema).mutation(async ({ input }) => {
+  signup: procedure.input(signupSchema).mutation(async ({ input, ctx }) => {
     try {
-      const user = await createUser(input)
+      const { user, token } = await createUser(input)
+      ctx.res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      })
       return { user }
     } catch (error) {
       console.error('Error in signup:', error)
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
-        message: 'Failed to register user',
-        cause: error,
+        message: 'Failed to register user. Please try again later.',
       })
     }
   }),
 
-  login: procedure.input(loginSchema).mutation(async ({ input }) => {
+  login: procedure.input(loginSchema).mutation(async ({ input, ctx }) => {
     try {
       const result = await loginUser(input.email, input.password)
       if (!result) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
-          message: 'Invalid credentials',
+          message: 'Invalid email or password',
         })
       }
-      return result
+      ctx.res.cookie('token', result.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      })
+      return { user: result.user }
     } catch (error) {
       console.error('Error in login:', error)
       if (error instanceof TRPCError) {
@@ -44,45 +67,64 @@ export const userRouter = router({
       }
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
-        message: 'An unexpected error occurred',
+        message: 'An unexpected error occurred. Please try again later.',
+      })
+    }
+  }),
+
+  logout: authedProcedure.mutation(({ ctx }) => {
+    ctx.res.clearCookie('token')
+    return { success: true }
+  }),
+
+  getCurrentUser: authedProcedure.query(async ({ ctx }) => {
+    try {
+      const user = await getUserById(ctx.user.id)
+      if (!user) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found',
+        })
+      }
+      return user
+    } catch (error) {
+      console.error('Error in getCurrentUser:', error)
+      if (error instanceof TRPCError) {
+        throw error
+      }
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to retrieve user information. Please try again later.',
       })
     }
   }),
 
   changePassword: authedProcedure
     .input(changePasswordSchema)
-    .mutation(async ({ ctx, input }) => {
-      const { oldPassword, newPassword } = input
-
+    .mutation(async ({ input, ctx }) => {
       try {
         const success = await changePassword(
           ctx.user.id,
-          oldPassword,
-          newPassword
+          input.oldPassword,
+          input.newPassword
         )
-        if (success) {
-          return { message: 'Password changed successfully' }
+        if (!success) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message:
+              'Failed to change password. Please check your old password and try again.',
+          })
+        }
+        return { message: 'Password changed successfully' }
+      } catch (error) {
+        console.error('Error in changePassword:', error)
+        if (error instanceof TRPCError) {
+          throw error
         }
         throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Failed to change password',
-        })
-      } catch (error) {
-        throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to change password',
+          message: 'Failed to change password. Please try again later.',
         })
       }
     }),
-
-  getCurrentUser: authedProcedure.query(async ({ ctx }) => {
-    const user = await getUserById(ctx.user.id)
-    if (user) {
-      return user
-    }
-    throw new TRPCError({
-      code: 'NOT_FOUND',
-      message: 'User not found',
-    })
-  }),
 })

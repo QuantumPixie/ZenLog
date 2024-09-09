@@ -18,7 +18,13 @@
         <form @submit.prevent="createMood" class="p-fluid">
           <div class="field">
             <label for="mood_score">Overall Mood Score (1-10)</label>
-            <InputNumber id="mood_score" v-model="newMood.mood_score" :min="1" :max="10" placeholder="Enter mood score" />
+            <InputNumber
+              id="mood_score"
+              v-model="newMood.mood_score"
+              :min="1"
+              :max="10"
+              placeholder="Enter mood score"
+            />
           </div>
           <div class="field">
             <label for="emotions">Emotions</label>
@@ -32,11 +38,20 @@
               :showClear="true"
             >
               <template #footer>
-                <Button label="Add Custom" icon="pi pi-plus" @click="addCustomEmotion" class="p-button-text" />
+                <Button
+                  label="Add Custom"
+                  icon="pi pi-plus"
+                  @click="addCustomEmotion"
+                  class="p-button-text"
+                />
               </template>
             </MultiSelect>
           </div>
-          <Button type="submit" label="Log Mood" class="p-button-raised p-button-rounded custom-button" />
+          <Button
+            type="submit"
+            label="Log Mood"
+            class="p-button-raised p-button-rounded custom-button"
+          />
         </form>
       </div>
     </div>
@@ -46,8 +61,15 @@
       <div class="mood-grid">
         <div v-for="mood in moods" :key="mood.id" class="mood-item">
           <h3>{{ formatDate(mood.date) }}</h3>
-          <p>Score: {{ mood.mood_score !== null && mood.mood_score !== undefined ? mood.mood_score : 'N/A' }}</p>
-          <p>Emotions: {{ Array.isArray(mood.emotions) ? mood.emotions.join(', ') : mood.emotions }}</p>
+          <p>
+            Score:
+            {{
+              mood.mood_score !== null && mood.mood_score !== undefined ? mood.mood_score : 'N/A'
+            }}
+          </p>
+          <p>
+            Emotions: {{ Array.isArray(mood.emotions) ? mood.emotions.join(', ') : mood.emotions }}
+          </p>
         </div>
       </div>
     </div>
@@ -63,7 +85,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useToast } from 'primevue/usetoast'
 import { trpc } from '../utils/trpc'
+import { useAuthStore } from '../stores/authStore'
 import InputNumber from 'primevue/inputnumber'
 import MultiSelect from 'primevue/multiselect'
 import Button from 'primevue/button'
@@ -71,21 +96,25 @@ import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import { formatDate } from '../utils/dateUtils'
 
+const router = useRouter()
+const toast = useToast()
+const authStore = useAuthStore()
+
 interface Mood {
-  id: number;
-  date: string;
-  mood_score: number | null;
-  emotions: string[] | string;
+  id: number
+  date: string
+  mood_score: number | null
+  emotions: string[] | string
 }
 
 interface EmotionOption {
-  name: string;
-  code: string;
+  name: string
+  code: string
 }
 
 const moods = ref<Mood[]>([])
 const newMood = ref({
-  mood_score: null as number | null,
+  mood_score: null as number | null
 })
 
 const selectedEmotions = ref<EmotionOption[]>([])
@@ -95,27 +124,18 @@ const emotionOptions = ref<EmotionOption[]>([
   { name: 'Angry', code: 'angry' },
   { name: 'Excited', code: 'excited' },
   { name: 'Anxious', code: 'anxious' },
-  { name: 'Calm', code: 'calm' },
+  { name: 'Calm', code: 'calm' }
 ])
 
 const displayCustomEmotionDialog = ref(false)
 const customEmotion = ref('')
-
-// const formatDate = (dateString: string) => {
-//   const date = new Date(dateString);
-//   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-//   const zonedDate = toZonedTime(date, timeZone);
-
-//   return format(zonedDate, 'd MMMM yyyy \'at\' h:mm a', { timeZone });
-// }
 
 // Fetch moods from the server
 const getMoods = async () => {
   try {
     const fetchedMoods = await trpc.mood.getMoods.query()
     console.log('Fetched moods:', fetchedMoods)
-    moods.value = fetchedMoods.map(mood => ({
+    moods.value = fetchedMoods.map((mood) => ({
       ...mood,
       mood_score: mood.mood_score ?? null,
       emotions: Array.isArray(mood.emotions) ? mood.emotions : [mood.emotions],
@@ -124,31 +144,58 @@ const getMoods = async () => {
     console.log('Processed moods:', moods.value)
   } catch (error) {
     console.error('Failed to fetch moods:', error)
+    if (error instanceof Error && error.message.includes('You must be logged in')) {
+      toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Please log in to view your moods',
+        life: 5000
+      })
+      authStore.logout(router)
+      router.push('/login-signup')
+    }
   }
 }
 
 const createMood = async () => {
   if (newMood.value.mood_score === null) {
-    console.error('Mood score is required');
-    return;
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Mood score is required', life: 3000 })
+    return
   }
 
   try {
-    const now = new Date();
-
-    const isoDate = now.toISOString();
+    const now = new Date()
+    const isoDate = now.toISOString()
 
     const createdMood = await trpc.mood.createMood.mutate({
       date: isoDate,
       mood_score: newMood.value.mood_score,
-      emotions: selectedEmotions.value.map(e => e.name),
-    });
-    console.log('Created mood:', createdMood);
-    await getMoods();
-    newMood.value.mood_score = null;
-    selectedEmotions.value = [];
+      emotions: selectedEmotions.value.map((e) => e.name)
+    })
+    console.log('Created mood:', createdMood)
+    await getMoods()
+    newMood.value.mood_score = null
+    selectedEmotions.value = []
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: 'Mood logged successfully',
+      life: 3000
+    })
   } catch (error) {
-    console.error('Failed to create mood:', error);
+    console.error('Failed to create mood:', error)
+    if (error instanceof Error && error.message.includes('You must be logged in')) {
+      toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Please log in to log your mood',
+        life: 5000
+      })
+      authStore.logout(router)
+      router.push('/login-signup')
+    } else {
+      toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to log mood', life: 3000 })
+    }
   }
 }
 
@@ -169,7 +216,22 @@ const confirmCustomEmotion = () => {
   }
 }
 
-onMounted(getMoods)
+onMounted(async () => {
+  if (!authStore.isAuthenticated) {
+    await authStore.checkAuth()
+  }
+  if (authStore.isAuthenticated) {
+    await getMoods()
+  } else {
+    toast.add({
+      severity: 'info',
+      summary: 'Info',
+      detail: 'Please log in to view your moods',
+      life: 5000
+    })
+    router.push('/login-signup')
+  }
+})
 </script>
 
 <style scoped>
@@ -225,7 +287,8 @@ onMounted(getMoods)
   margin-bottom: 0.5rem;
 }
 
-.mood-input, .mood-item {
+.mood-input,
+.mood-item {
   background-color: var(--surface-card);
   border-radius: 10px;
   padding: 2rem;
@@ -249,23 +312,24 @@ label {
 }
 
 .p-button-label {
-    flex: 1 1 auto;
-    color: black;
+  flex: 1 1 auto;
+  color: black;
 }
 
-.p-inputnumber, .p-multiselect {
+.p-inputnumber,
+.p-multiselect {
   width: 100%;
 }
 
 .custom-button {
   margin-top: 1rem;
-  background-color: #3a7e77!important;
-  border-color: #3a7e77!important;
+  background-color: #3a7e77 !important;
+  border-color: #3a7e77 !important;
 }
 
 .custom-button:hover {
-  background-color: #3CCDC2 !important;
-  border-color: #3CCDC2 !important;
+  background-color: #3ccdc2 !important;
+  border-color: #3ccdc2 !important;
 }
 
 .mood-list {

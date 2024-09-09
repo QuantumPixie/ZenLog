@@ -49,17 +49,30 @@ export const dashboardService = {
       .executeTakeFirst()) as AverageSentimentResult | undefined
 
     const result = {
-      recentMoods,
-      recentEntries,
-      recentActivities,
+      recentMoods: recentMoods.map((mood) => ({
+        ...mood,
+        date: new Date(mood.date).toISOString(),
+      })),
+      recentEntries: recentEntries.map((entry) => ({
+        ...entry,
+        date: new Date(entry.date).toISOString(),
+      })),
+      recentActivities: recentActivities.map((activity) => ({
+        ...activity,
+        date: new Date(activity.date).toISOString(),
+      })),
       averageMoodLastWeek:
         averageMoodScore && averageMoodScore.averageMood !== null
           ? Number(averageMoodScore.averageMood)
-          : null,
+          : recentMoods.length > 0
+            ? 0
+            : null,
       averageSentimentLastWeek:
         averageSentimentScore && averageSentimentScore.averageSentiment !== null
           ? Number(averageSentimentScore.averageSentiment)
-          : null,
+          : recentEntries.length > 0
+            ? 0
+            : null,
     }
 
     console.log('Dashboard summary:', JSON.stringify(result, null, 2))

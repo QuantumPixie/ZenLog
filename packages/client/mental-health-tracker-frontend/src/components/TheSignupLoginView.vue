@@ -7,8 +7,20 @@
           <i class="pi pi-user-plus custom-icon"></i>
         </h1>
         <ul class="welcome-message">
-          <li>{{ isLoginMode ? 'Welcome back! Please login to access your account.' : 'Create an account to start tracking your mental health journey.' }}</li>
-          <li>{{ isLoginMode ? 'Securely access your personal dashboard and records.' : 'Join our community and take control of your well-being.' }}</li>
+          <li>
+            {{
+              isLoginMode
+                ? 'Welcome back! Please login to access your account.'
+                : 'Create an account to start tracking your mental health journey.'
+            }}
+          </li>
+          <li>
+            {{
+              isLoginMode
+                ? 'Securely access your personal dashboard and records.'
+                : 'Join our community and take control of your well-being.'
+            }}
+          </li>
         </ul>
       </div>
       <div class="login-signup-form">
@@ -24,13 +36,24 @@
           </div>
           <div class="field">
             <label for="password">Password</label>
-            <Password id="password" v-model="password" :feedback="!isLoginMode" required toggleMask />
+            <Password
+              id="password"
+              v-model="password"
+              :feedback="!isLoginMode"
+              required
+              toggleMask
+            />
           </div>
-          <Button type="submit" :label="isLoginMode ? 'Login' : 'Sign Up'" :loading="loading" class="p-button-raised p-button-rounded custom-button" />
+          <Button
+            type="submit"
+            :label="isLoginMode ? 'Login' : 'Sign Up'"
+            :loading="loading"
+            class="p-button-raised p-button-rounded custom-button"
+          />
         </form>
         <div class="mt-3 text-center">
           <a href="#" @click.prevent="toggleMode" class="toggle-mode-link">
-            {{ isLoginMode ? "Don't have an account? Sign up" : "Already have an account? Login" }}
+            {{ isLoginMode ? "Don't have an account? Sign up" : 'Already have an account? Login' }}
           </a>
         </div>
       </div>
@@ -39,64 +62,74 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { useToast } from 'primevue/usetoast';
-import InputText from 'primevue/inputtext';
-import Password from 'primevue/password';
-import Button from 'primevue/button';
-import { trpc } from '../utils/trpc';
-import { useAuthStore } from '../stores/authStore';
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useToast } from 'primevue/usetoast'
+import InputText from 'primevue/inputtext'
+import Password from 'primevue/password'
+import Button from 'primevue/button'
+import { trpc } from '../utils/trpc'
+import { useAuthStore } from '../stores/authStore'
 
-const router = useRouter();
-const toast = useToast();
-const authStore = useAuthStore();
+const router = useRouter()
+const toast = useToast()
+const authStore = useAuthStore()
 
-const isLoginMode = ref(true);
-const username = ref('');
-const email = ref('');
-const password = ref('');
-const loading = ref(false);
+const isLoginMode = ref(true)
+const username = ref('')
+const email = ref('')
+const password = ref('')
+const loading = ref(false)
 
 const toggleMode = () => {
-  isLoginMode.value = !isLoginMode.value;
-  username.value = '';
-  email.value = '';
-  password.value = '';
-};
+  isLoginMode.value = !isLoginMode.value
+  username.value = ''
+  email.value = ''
+  password.value = ''
+}
 
 const handleSubmit = async () => {
-  loading.value = true;
+  loading.value = true
   try {
     if (isLoginMode.value) {
       const result = await trpc.user.login.mutate({
         email: email.value,
-        password: password.value,
-      });
-      authStore.setAuth(true, result.user);
-      localStorage.setItem('auth_token', result.token);
-      toast.add({ severity: 'success', summary: 'Success', detail: 'Logged in successfully', life: 3000 });
-      router.push('/home');
+        password: password.value
+      })
+      authStore.setUser(result.user)
+      toast.add({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'Logged in successfully',
+        life: 3000
+      })
+      router.push('/home')
     } else {
-      await trpc.user.signup.mutate({
+      const result = await trpc.user.signup.mutate({
         username: username.value,
         email: email.value,
-        password: password.value,
-      });
-      toast.add({ severity: 'success', summary: 'Success', detail: 'Account created successfully', life: 3000 });
-      isLoginMode.value = true;
+        password: password.value
+      })
+      authStore.setUser(result.user)
+      toast.add({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'Account created successfully',
+        life: 3000
+      })
+      router.push('/home')
     }
   } catch (error) {
-    console.error('Authentication error:', error);
-    let errorMessage = isLoginMode.value ? 'Failed to login' : 'Failed to create account';
+    console.error('Authentication error:', error)
+    let errorMessage = isLoginMode.value ? 'Failed to login' : 'Failed to create account'
     if (error instanceof Error) {
-      errorMessage += `: ${error.message}`;
+      errorMessage += `: ${error.message}`
     }
-    toast.add({ severity: 'error', summary: 'Error', detail: errorMessage, life: 5000 });
+    toast.add({ severity: 'error', summary: 'Error', detail: errorMessage, life: 5000 })
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 </script>
 
 <style scoped>
