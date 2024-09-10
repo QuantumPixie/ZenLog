@@ -4,12 +4,7 @@
     <header class="header">
       <Menubar :model="menuItems" class="custom-menubar">
         <template #start>
-          <img
-            alt="logo"
-            src="https://www.primefaces.org/wp-content/uploads/2020/05/placeholder.png"
-            height="40"
-            class="mr-2 logo"
-          />
+          <img alt="Mind Bloom Logo" :src="logoImage" height="40" class="mr-2 logo" />
         </template>
         <template #end>
           <Button
@@ -45,6 +40,7 @@ import { useAuthStore } from './stores/authStore'
 import Menubar from 'primevue/menubar'
 import Button from 'primevue/button'
 import Toast from 'primevue/toast'
+import logoImage from '@/assets/logo.webp'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -134,12 +130,24 @@ onMounted(async () => {
   background-color: white !important;
 }
 
-.custom-menubar :deep(.p-menuitem-link:hover .p-menuitem-text) {
+.custom-menubar
+  :deep(
+    .p-menubar-root-list > .p-menuitem > .p-menuitem-content .p-menuitem-link .p-menuitem-text
+  ) {
   color: var(--primary-color) !important;
 }
 
 .custom-menubar :deep(.p-menuitem-icon) {
   color: #1b968a !important;
+}
+
+.p-menubar
+  .p-menubar-root-list
+  > .p-menuitem
+  > .p-menuitem-content
+  .p-menuitem-link
+  .p-menuitem-text {
+  color: var(--primary-color);
 }
 
 .logo {

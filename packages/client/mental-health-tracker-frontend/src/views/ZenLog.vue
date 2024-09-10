@@ -3,7 +3,7 @@
     <div class="header-welcome">
       <h1 class="welcome-title">
         <span>Welcome to ZenLog</span>
-        <i class="pi pi-sun custom-icon"></i>
+        <img alt="Mind Bloom Logo" :src="logoImage" class="welcome-logo" />
       </h1>
       <ul class="welcome-message">
         <li>Track your moods and journal your thoughts to improve your mental well-being.</li>
@@ -13,7 +13,12 @@
     </div>
 
     <div class="feature-grid">
-      <div v-for="feature in features" :key="feature.title" class="feature-item" @click="showFeatureDetails(feature)">
+      <div
+        v-for="feature in features"
+        :key="feature.title"
+        class="feature-item"
+        @click="showFeatureDetails(feature)"
+      >
         <i :class="['pi', feature.icon, 'feature-icon']"></i>
         <h3>{{ feature.title }}</h3>
         <p>{{ feature.description }}</p>
@@ -23,8 +28,18 @@
     <div class="cta-section">
       <h2>Ready to start your journey?</h2>
       <div class="cta-buttons">
-        <Button label="Sign Up" icon="pi pi-user-plus" @click="navigateToSignup" class="p-button-raised p-button-rounded custom-button" />
-        <Button label="Log In" icon="pi pi-sign-in" @click="navigateToLogin" class="p-button-raised p-button-rounded custom-button" />
+        <Button
+          label="Sign Up"
+          icon="pi pi-user-plus"
+          @click="navigateToSignup"
+          class="p-button-raised p-button-rounded custom-button"
+        />
+        <Button
+          label="Log In"
+          icon="pi pi-sign-in"
+          @click="navigateToLogin"
+          class="p-button-raised p-button-rounded custom-button"
+        />
       </div>
     </div>
 
@@ -50,12 +65,13 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
+import logoImage from '@/assets/logo.webp'
 
 interface Feature {
-  icon: string;
-  title: string;
-  description: string;
-  bulletPoints: string[];
+  icon: string
+  title: string
+  description: string
+  bulletPoints: string[]
 }
 
 const router = useRouter()
@@ -190,6 +206,15 @@ const showFeatureDetails = (feature: Feature) => {
   margin-bottom: 2rem;
   display: flex;
   align-items: center;
+  gap: 1rem;
+}
+
+.welcome-logo {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid #1b968a;
+  object-fit: cover;
 }
 
 .custom-icon {
@@ -224,7 +249,9 @@ const showFeatureDetails = (feature: Feature) => {
   padding: 1.5rem;
   text-align: center;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
   cursor: pointer;
   border: 1px solid #1b968a;
 }
