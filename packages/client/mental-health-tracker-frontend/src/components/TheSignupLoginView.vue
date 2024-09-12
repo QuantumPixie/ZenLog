@@ -28,11 +28,11 @@
         <form @submit.prevent="handleSubmit" class="p-fluid">
           <div v-if="!isLoginMode" class="field">
             <label for="username">Username</label>
-            <InputText id="username" v-model="username" required />
+            <InputText id="username" v-model="username" required data-testid="username-input" />
           </div>
           <div class="field">
             <label for="email">Email</label>
-            <InputText id="email" v-model="email" type="email" required />
+            <InputText id="email" v-model="email" type="email" required data-testid="email-input" />
           </div>
           <div class="field">
             <label for="password">Password</label>
@@ -42,17 +42,36 @@
               :feedback="!isLoginMode"
               required
               toggleMask
-            />
+              inputClass="w-full"
+              data-testid="password-input-wrapper"
+              @focus="passwordFocused = true"
+              @blur="passwordFocused = false"
+            >
+              <template #content>
+                <InputText
+                  id="password"
+                  v-model="password"
+                  type="password"
+                  data-testid="password-input"
+                />
+              </template>
+            </Password>
           </div>
           <Button
             type="submit"
             :label="isLoginMode ? 'Login' : 'Sign Up'"
             :loading="loading"
             class="p-button-raised p-button-rounded custom-button"
+            :data-testid="isLoginMode ? 'login-button' : 'signup-button'"
           />
         </form>
         <div class="mt-3 text-center">
-          <a href="#" @click.prevent="toggleMode" class="toggle-mode-link">
+          <a
+            href="#"
+            @click.prevent="toggleMode"
+            class="toggle-mode-link"
+            data-testid="create-account-link"
+          >
             {{ isLoginMode ? "Don't have an account? Sign up" : 'Already have an account? Login' }}
           </a>
         </div>
@@ -62,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import InputText from 'primevue/inputtext'
@@ -80,6 +99,7 @@ const username = ref('')
 const email = ref('')
 const password = ref('')
 const loading = ref(false)
+const passwordFocused = ref(false)
 
 const toggleMode = () => {
   isLoginMode.value = !isLoginMode.value
@@ -87,6 +107,13 @@ const toggleMode = () => {
   email.value = ''
   password.value = ''
 }
+
+watch(passwordFocused, (newValue) => {
+  if (!newValue && !isLoginMode.value) {
+    // Password field lost focus, trigger validation or other actions if needed
+    console.log('Password field lost focus')
+  }
+})
 
 const handleSubmit = async () => {
   loading.value = true
@@ -121,11 +148,18 @@ const handleSubmit = async () => {
     }
   } catch (error) {
     console.error('Authentication error:', error)
-    let errorMessage = isLoginMode.value ? 'Failed to login' : 'Failed to create account'
+
+    let errorMessage = 'An error occurred'
     if (error instanceof Error) {
-      errorMessage += `: ${error.message}`
+      errorMessage = error.message
     }
-    toast.add({ severity: 'error', summary: 'Error', detail: errorMessage, life: 5000 })
+
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: errorMessage,
+      life: 5000
+    })
   } finally {
     loading.value = false
   }
@@ -220,6 +254,10 @@ label {
 
 .toggle-mode-link:hover {
   text-decoration: underline;
+}
+
+:deep(.p-password-panel) {
+  z-index: 1000;
 }
 
 @media (max-width: 1024px) {

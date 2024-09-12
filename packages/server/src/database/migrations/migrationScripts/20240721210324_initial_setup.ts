@@ -1,10 +1,6 @@
 import { Kysely, sql } from 'kysely'
 import type { Database } from '../../../models/database'
 
-// interface ExistsResult {
-//   exists: boolean
-// }
-
 export async function tableExists(
   db: Kysely<Database>,
   tableName: string

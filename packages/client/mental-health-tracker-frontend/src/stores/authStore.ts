@@ -1,5 +1,3 @@
-// client/stores/authStore.ts
-
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Router } from 'vue-router'
@@ -24,7 +22,6 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const result = await trpc.user.login.mutate({ email, password })
       user.value = result.user
-      await checkAuth()
       return true
     } catch (error) {
       console.error('Login error:', error)
@@ -36,7 +33,6 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const result = await trpc.user.signup.mutate({ email, password, username })
       user.value = result.user
-      await checkAuth()
       return true
     } catch (error) {
       console.error('Signup error:', error)
@@ -61,8 +57,10 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = result
       return true
     } catch (error) {
-      // Handle only unexpected errors
-      if (error instanceof Error && !error.message.includes('UNAUTHORIZED')) {
+      // Handle 401 Unauthorized error gracefully
+      if (error instanceof Error && error.message.includes('UNAUTHORIZED')) {
+        console.log('User is not logged in')
+      } else {
         console.error('Check auth error:', error)
       }
       user.value = null

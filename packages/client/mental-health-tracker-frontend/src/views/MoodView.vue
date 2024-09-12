@@ -29,13 +29,13 @@
           <div class="field">
             <label for="emotions">Emotions</label>
             <MultiSelect
-              id="emotions"
               v-model="selectedEmotions"
               :options="emotionOptions"
               optionLabel="name"
               placeholder="Select Emotions"
               :filter="true"
               :showClear="true"
+              display="chip"
             >
               <template #footer>
                 <Button

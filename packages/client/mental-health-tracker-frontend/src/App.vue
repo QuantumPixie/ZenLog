@@ -13,6 +13,7 @@
             icon="pi pi-user"
             @click="navigateToLoginSignup"
             class="p-button-raised p-button-rounded custom-button"
+            data-testid="header-login-signup-button"
           />
           <Button
             v-else
@@ -20,6 +21,7 @@
             icon="pi pi-sign-out"
             @click="handleLogout"
             class="p-button-raised p-button-rounded custom-button"
+            data-testid="header-logout-button"
           />
         </template>
       </Menubar>
@@ -34,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from './stores/authStore'
 import Menubar from 'primevue/menubar'
@@ -45,7 +47,6 @@ import logoImage from '@/assets/logo.webp'
 const router = useRouter()
 const authStore = useAuthStore()
 
-// menu items
 const authenticatedMenuItems = [
   {
     label: 'Home',
@@ -100,10 +101,6 @@ const navigateToLoginSignup = () => {
 const handleLogout = () => {
   authStore.logout(router)
 }
-
-onMounted(async () => {
-  await authStore.checkAuth()
-})
 </script>
 
 <style scoped>

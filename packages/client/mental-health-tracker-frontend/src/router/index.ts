@@ -2,12 +2,12 @@ import { createRouter, createWebHistory } from 'vue-router'
 import ZenLog from '../views/ZenLog.vue'
 import MoodView from '../views/MoodView.vue'
 import TheSignupLoginView from '../components/TheSignupLoginView.vue'
-// import { useAuthStore } from '../stores/authStore'
 import HomeView from '../views/HomeView.vue'
 import JournalView from '../views/JournalView.vue'
 import UserManagement from '../components/UserManagement.vue'
 import TheDashboard from '../components/TheDashboard.vue'
 import ActivityView from '../views/ActivityView.vue'
+import { useAuthStore } from '@/stores/authStore'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.VITE_BASE_URL),
@@ -61,20 +61,33 @@ const router = createRouter({
   ]
 })
 
-// router.beforeEach((to, from, next) => {
-//   const authStore = useAuthStore()
+router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore()
 
-//   // testing
-//   if (import.meta.env.MODE === 'test') {
-//     next()
-//     return
-//   }
+  // Allow access during testing
+  if (import.meta.env.MODE === 'test') {
+    next()
+    return
+  }
 
-//   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-//     next('/login')
-//   } else {
-//     next()
-//   }
-// })
+  // If the route requires authentication
+  if (to.meta.requiresAuth) {
+    // Check if the user is already authenticated
+    if (!authStore.isAuthenticated) {
+      // Perform the async checkAuth to verify if the user is authenticated
+      const isAuthenticated = await authStore.checkAuth()
+
+      if (isAuthenticated) {
+        next() // User is authenticated, allow access
+      } else {
+        next('/login-signup') // User is not authenticated, redirect to login/signup
+      }
+    } else {
+      next() // User is already authenticated, allow access
+    }
+  } else {
+    next() // Route does not require authentication, allow access
+  }
+})
 
 export default router

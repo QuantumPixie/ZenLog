@@ -37,6 +37,16 @@ export const userRouter = router({
       return { user }
     } catch (error) {
       console.error('Error in signup:', error)
+
+      // Check if the error is a PostgreSQL unique constraint violation (code '23505')
+      if (error instanceof Error && 'code' in error && error.code === '23505') {
+        // Handle unique constraint violation (e.g., email already in use)
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'Email already in use. Please use a different email.',
+        })
+      }
+
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to register user. Please try again later.',
@@ -50,7 +60,8 @@ export const userRouter = router({
       if (!result) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
-          message: 'Invalid email or password',
+          message:
+            'Invalid email or password. Please check your credentials and try again.',
         })
       }
       ctx.res.cookie('token', result.token, {
@@ -67,7 +78,8 @@ export const userRouter = router({
       }
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
-        message: 'An unexpected error occurred. Please try again later.',
+        message:
+          'An unexpected error occurred during login. Please try again later.',
       })
     }
   }),
@@ -83,7 +95,7 @@ export const userRouter = router({
       if (!user) {
         throw new TRPCError({
           code: 'NOT_FOUND',
-          message: 'User not found',
+          message: 'User not found. Please log in again.',
         })
       }
       return user
