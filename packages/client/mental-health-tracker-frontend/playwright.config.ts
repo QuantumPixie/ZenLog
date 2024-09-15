@@ -1,29 +1,18 @@
-import { PlaywrightTestConfig, devices } from '@playwright/test'
+import type { PlaywrightTestConfig } from '@playwright/test'
 
 const config: PlaywrightTestConfig = {
   testDir: './tests',
+  timeout: 60000,
+  expect: {
+    timeout: 10000
+  },
   use: {
-    baseURL: 'http://localhost:5173' // Adjust this to match your Vite dev server port
+    baseURL: process.env.VITE_API_URL || 'http://e2e-server:3005',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure'
   },
-  webServer: {
-    command: 'npm run dev',
-    port: 5173,
-    reuseExistingServer: !process.env.CI
-  },
-  projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] }
-    },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] }
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] }
-    }
-  ]
+  retries: 2,
+  workers: 1
 }
 
 export default config

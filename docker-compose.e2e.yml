@@ -1,0 +1,50 @@
+version: "3.8"
+
+services:
+  e2e-client:
+    build:
+      context: ./packages/client/mental-health-tracker-frontend
+      dockerfile: dockerfile.e2e
+    ports:
+      - "5173:3000"
+    environment:
+      - VITE_API_URL=http://e2e-server:3005
+    depends_on:
+      - e2e-server
+    networks:
+      - e2e-network
+
+  e2e-server:
+    build:
+      context: ./packages/server
+      dockerfile: dockerfile
+    ports:
+      - "3007:3005"
+    environment:
+      - DATABASE_URL=postgres://test_user:test_password@e2e-db:5432/test_db
+      - JWT_SECRET=test_secret
+      - PORT=3005
+    depends_on:
+      - e2e-db
+    networks:
+      - e2e-network
+
+  e2e-db:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=test_db
+      - POSTGRES_USER=test_user
+      - POSTGRES_PASSWORD=test_password
+    volumes:
+      - e2e_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - e2e-network
+
+volumes:
+  e2e_postgres_data:
+
+networks:
+  e2e-network:
+    name: mental-health-tracker-e2e-network

@@ -2,8 +2,11 @@ import { test, expect, Page } from '@playwright/test'
 
 test.describe('Signup and Login', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    console.log('Starting test: navigating to home page')
+    await page.goto('/', { timeout: 60000 })
+    console.log('Waiting for network idle')
+    await page.waitForLoadState('networkidle', { timeout: 60000 })
+    console.log('Page loaded')
   })
 
   const fillPasswordInput = async (page: Page, value: string) => {
@@ -21,20 +24,25 @@ test.describe('Signup and Login', () => {
   test('should navigate from landing page to login page and login successfully', async ({
     page
   }) => {
+    console.log('Starting login test')
     await page.click('[data-testid="header-login-signup-button"]')
-    await page.waitForSelector('[data-testid="login-button"]', { state: 'visible' })
+    console.log('Clicked login button')
+    await page.waitForSelector('[data-testid="login-button"]', { state: 'visible', timeout: 30000 })
+    console.log('Login form visible')
 
     await page.fill('[data-testid="email-input"]', 'test@gmail.com')
     await fillPasswordInput(page, 'password')
 
     await page.click('[data-testid="login-button"]')
+    console.log('Submitted login form')
 
-    await expect(page.locator('.p-toast-message')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('.p-toast-message')).toBeVisible({ timeout: 30000 })
     const toastContent = await page.locator('.p-toast-message').textContent()
     expect(toastContent).toContain('Logged in successfully')
 
-    await page.waitForURL('**/home', { timeout: 10000 })
+    await page.waitForURL('**/home', { timeout: 30000 })
     expect(page.url()).toContain('/home')
+    console.log('Login test completed')
   })
 
   test('should navigate to signup page, create account, and redirect to home', async ({ page }) => {

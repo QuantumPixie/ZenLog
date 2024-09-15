@@ -10,17 +10,14 @@
     "esModuleInterop": true,
     "lib": ["ESNext", "DOM"],
     "types": ["vite/client", "node"],
+    "noEmit": true,
+    "skipLibCheck": true,
     "paths": {
       "@/*": ["./src/*"],
-      "@lib/shared/*": ["../../shared/*"]
+      "@lib/shared/*": ["../../shared/*"],
+      "trpc-panel": ["/node_modules/trpc-panel"]
     }
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.d.ts",
-    "src/**/*.tsx",
-    "src/**/*.vue",
-    "vite.config.ts"
-  ],
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue", "vite.config.ts"],
   "exclude": ["node_modules"]
 }

@@ -1,0 +1,24 @@
+FROM node:18
+
+WORKDIR /usr/src/app
+
+COPY package.json package-lock.json ./
+
+RUN npm install
+
+COPY . .
+
+# Install Playwright browsers
+RUN npx playwright install --with-deps
+
+# Install wait-for-it script
+ADD https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh /wait-for-it.sh
+RUN chmod +x /wait-for-it.sh
+
+# Install serve to serve the built app
+RUN npm install -g serve
+
+# Build the app
+RUN npm run build
+
+CMD ["/bin/sh", "-c", "/wait-for-it.sh e2e-server:3005 -t 60 -- serve -s dist -l 3000 & npm run test:e2e"]

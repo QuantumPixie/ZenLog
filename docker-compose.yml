@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   client:
@@ -6,7 +6,7 @@ services:
       context: ./packages/client/mental-health-tracker-frontend
       dockerfile: Dockerfile
     ports:
-      - "${CLIENT_PORT:-5173}:5173"
+      - "${CLIENT_PORT:-5173}:3000"
     environment:
       - VITE_API_URL=${API_URL:-http://localhost:3007}
     depends_on:
@@ -17,7 +17,7 @@ services:
       context: ./packages/server
       dockerfile: Dockerfile
     ports:
-      - "${SERVER_PORT:-3006}:3005"
+      - "${SERVER_PORT:-3007}:3005"
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET=${JWT_SECRET}
