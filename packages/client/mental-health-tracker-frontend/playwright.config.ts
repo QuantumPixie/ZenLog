@@ -9,7 +9,7 @@ const config: PlaywrightTestConfig = {
   webServer: {
     command: 'npm run dev',
     port: parseInt(process.env.PORT || '5173', 10), // Ensure port is a number
-    reuseExistingServer: !process.env.CI
+    reuseExistingServer: true
   },
   projects: [
     {
