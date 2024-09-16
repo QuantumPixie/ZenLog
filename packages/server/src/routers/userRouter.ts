@@ -7,7 +7,7 @@ import {
   getUserById,
   changePassword,
 } from '../services/userService'
-import { db } from 'database'
+import { db } from '../database'
 
 const signupSchema = z.object({
   email: z.string().email(),

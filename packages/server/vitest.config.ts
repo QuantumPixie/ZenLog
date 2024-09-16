@@ -27,7 +27,7 @@ export default defineConfig({
     include: ['src/**/*.test.ts', 'src/tests/**/*.test.ts'],
     alias: {
       '@server': path.resolve(__dirname, './src'),
-      '@tests': path.resolve(__dirname, './tests'),
+      '@tests': path.resolve(__dirname, './src/__tests__'),
       '@': path.resolve(__dirname, './src'),
     },
     env: {
