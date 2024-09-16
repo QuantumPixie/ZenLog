@@ -10,13 +10,10 @@ import {
   afterEach,
 } from 'vitest'
 import request from 'supertest'
-
-import type { MockDatabase } from '../mocks/databaseMock'
-
-import { createMockDatabase } from '../mocks/databaseMock'
-
-import app from '../../server'
 import { AddressInfo } from 'net'
+import type { MockDatabase } from '../mocks/databaseMock'
+import { createMockDatabase } from '../mocks/databaseMock'
+import app from '../../server'
 
 describe('Server', () => {
   let mockDb: MockDatabase
@@ -28,7 +25,6 @@ describe('Server', () => {
       new Promise<void>((resolve) => {
         server = createServer(app)
         server.listen(0, () => {
-          // Use port 0 to get a random available port
           const address = server.address() as AddressInfo
           baseUrl = `http://localhost:${address.port}`
           mockDb = createMockDatabase()
@@ -73,27 +69,44 @@ describe('Server', () => {
 })
 
 describe('CORS', () => {
-  it('should allow CORS for any origin', async () => {
+  const allowedOrigins = ['http://localhost:5173', 'http://localhost:4173']
+
+  it.each(allowedOrigins)('should allow CORS for %s', async (origin) => {
+    const response = await request(app).get('/api/health').set('Origin', origin)
+
+    expect(response.headers['access-control-allow-origin']).toBe(origin)
+  })
+
+  it('should not allow CORS for disallowed origins', async () => {
     const response = await request(app)
       .get('/api/health')
       .set('Origin', 'http://example.com')
 
-    expect(response.headers['access-control-allow-origin']).toBe(
-      'http://localhost:5173'
-    )
+    expect(response.headers['access-control-allow-origin']).toBeUndefined()
   })
 
-  it('should handle preflight requests and include appropriate CORS headers', async () => {
+  it.each(allowedOrigins)(
+    'should handle preflight requests and include appropriate CORS headers for %s',
+    async (origin) => {
+      const response = await request(app)
+        .options('/api/health')
+        .set('Origin', origin)
+        .set('Access-Control-Request-Method', 'GET')
+        .set('Access-Control-Request-Headers', 'Content-Type')
+
+      expect(response.headers['access-control-allow-origin']).toBe(origin)
+      expect(response.headers['access-control-allow-methods']).toBeDefined()
+      expect(response.headers['access-control-allow-headers']).toBeDefined()
+    }
+  )
+
+  it('should not include CORS headers for disallowed origins in preflight requests', async () => {
     const response = await request(app)
       .options('/api/health')
       .set('Origin', 'http://example.com')
       .set('Access-Control-Request-Method', 'GET')
       .set('Access-Control-Request-Headers', 'Content-Type')
 
-    expect(response.headers['access-control-allow-origin']).toBe(
-      'http://localhost:5173'
-    )
-    expect(response.headers['access-control-allow-methods']).toBeDefined()
-    expect(response.headers['access-control-allow-headers']).toBeDefined()
+    expect(response.headers['access-control-allow-origin']).toBeUndefined()
   })
 })
