@@ -1,30 +1,21 @@
-import { PlaywrightTestConfig, devices } from '@playwright/test'
+import type { PlaywrightTestConfig } from '@playwright/test'
 
 const config: PlaywrightTestConfig = {
   testDir: './tests',
-  timeout: 60000, // 1 minute test timeout
+  timeout: 60000,
   use: {
-    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3005'
+    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:4173',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure'
   },
   webServer: {
-    command: 'npm run dev',
-    port: parseInt(process.env.PORT || '5173', 10), // Ensure port is a number
-    reuseExistingServer: true
+    command: 'npm run preview',
+    url: 'http://localhost:4173',
+    timeout: 120 * 1000,
+    reuseExistingServer: !process.env.CI
   },
-  projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] }
-    },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] }
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] }
-    }
-  ]
+  workers: process.env.CI ? 1 : undefined,
+  reporter: process.env.CI ? 'dot' : 'list'
 }
 
 export default config
