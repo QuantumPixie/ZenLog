@@ -11,8 +11,7 @@ const config: PlaywrightTestConfig = {
   webServer: {
     command: 'npm run preview',
     url: 'http://localhost:4173',
-    timeout: 120 * 1000,
-    reuseExistingServer: !process.env.CI
+    reuseExistingServer: true
   },
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? 'dot' : 'list'

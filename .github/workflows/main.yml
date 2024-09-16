@@ -2,9 +2,9 @@ name: Test and E2E
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
@@ -27,125 +27,103 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Use Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
 
-    - name: Install root dependencies
-      run: npm ci
+      - name: Install root dependencies
+        run: npm ci
 
-    # Server-side setup and checks
-    - name: Install server dependencies
-      run: npm ci
-      working-directory: ./packages/server
+      # Server-side setup and checks
+      - name: Install server dependencies
+        run: npm ci
+        working-directory: ./packages/server
 
-    - name: Run server type check
-      run: npm run type-check
-      working-directory: ./packages/server
+      - name: Run server type check
+        run: npm run type-check
+        working-directory: ./packages/server
 
-    - name: Run server lint
-      run: npm run lint
-      working-directory: ./packages/server
+      - name: Run server lint
+        run: npm run lint
+        working-directory: ./packages/server
 
-    - name: Run database migrations
-      run: npm run migrate:latest
-      working-directory: ./packages/server
+      - name: Run database migrations
+        run: npm run migrate:latest
+        working-directory: ./packages/server
 
-    - name: Run server tests
-      run: npm run test
-      working-directory: ./packages/server
+      - name: Run server tests
+        run: npm run test
+        working-directory: ./packages/server
 
-    # Client-side setup and checks
-    - name: Install client dependencies
-      run: npm ci
-      working-directory: ./packages/client/mental-health-tracker-frontend
+      # Client-side setup and checks
+      - name: Install client dependencies
+        run: npm ci
+        working-directory: ./packages/client/mental-health-tracker-frontend
 
-    - name: Run client type check
-      run: npm run type-check
-      working-directory: ./packages/client/mental-health-tracker-frontend
+      - name: Run client type check
+        run: npm run type-check
+        working-directory: ./packages/client/mental-health-tracker-frontend
 
-    - name: Run client lint
-      run: npm run lint
-      working-directory: ./packages/client/mental-health-tracker-frontend
+      - name: Run client lint
+        run: npm run lint
+        working-directory: ./packages/client/mental-health-tracker-frontend
 
-    # - name: Run client unit tests
-    #   run: npm run test:unit
-    #   working-directory: ./packages/client/mental-health-tracker-frontend
+      # - name: Run client unit tests
+      #   run: npm run test:unit
+      #   working-directory: ./packages/client/mental-health-tracker-frontend
 
-    - name: Build client
-      run: npm run build
-      working-directory: ./packages/client/mental-health-tracker-frontend
+      - name: Build client
+        run: npm run build
+        working-directory: ./packages/client/mental-health-tracker-frontend
 
-    # E2E test setup and execution
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
-      working-directory: ./packages/client/mental-health-tracker-frontend
+      # E2E test setup and execution
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+        working-directory: ./packages/client/mental-health-tracker-frontend
 
-    - name: Start server
-      run: |
-        npm run dev > server.log 2>&1 &
-        echo $! > server.pid
-      working-directory: ./packages/server
-      env:
-        NODE_ENV: test
+      - name: Start server
+        run: |
+          npm run dev > server.log 2>&1 &
+          echo $! > server.pid
+        working-directory: ./packages/server
+        env:
+          NODE_ENV: test
 
-    - name: Wait for server
-      run: |
-        timeout=60
-        while ! nc -z localhost 3005; do
-          if [ $timeout -le 0 ]; then
-            echo "Timed out waiting for server"
-            cat server.log
-            exit 1
-          fi
-          timeout=$((timeout - 1))
-          sleep 1
-        done
-        echo "Server is up and running"
+      - name: Wait for server
+        run: |
+          timeout=60
+          while ! nc -z localhost 3005; do
+            if [ $timeout -le 0 ]; then
+              echo "Timed out waiting for server"
+              cat server.log
+              exit 1
+            fi
+            timeout=$((timeout - 1))
+            sleep 1
+          done
+          echo "Server is up and running"
 
-    - name: Start preview server
-      run: |
-        npm run preview > preview.log 2>&1 &
-        echo $! > preview.pid
-      working-directory: ./packages/client/mental-health-tracker-frontend
+      - name: Run Playwright tests
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Listing directory contents:"
+          ls -la
+          echo "Running Playwright tests..."
+          PLAYWRIGHT_TEST_BASE_URL=http://localhost:4173 npm run test:e2e -- --debug
+        working-directory: ./packages/client/mental-health-tracker-frontend
+        env:
+          DEBUG: pw:api,pw:browser*
 
-    - name: Wait for preview server
-      run: |
-        timeout=60
-        while ! nc -z localhost 4173; do
-          if [ $timeout -le 0 ]; then
-            echo "Timed out waiting for preview server"
-            cat preview.log
-            exit 1
-          fi
-          timeout=$((timeout - 1))
-          sleep 1
-        done
-        echo "Preview server is up and running"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: packages/client/mental-health-tracker-frontend/playwright-report/
+          retention-days: 30
 
-    - name: Run Playwright tests
-      run: |
-        echo "Current directory: $(pwd)"
-        echo "Listing directory contents:"
-        ls -la
-        echo "Running Playwright tests..."
-        PLAYWRIGHT_TEST_BASE_URL=http://localhost:4173 npm run test:e2e -- --debug
-      working-directory: ./packages/client/mental-health-tracker-frontend
-      env:
-        DEBUG: pw:api,pw:browser*
-
-    - uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: playwright-report
-        path: packages/client/mental-health-tracker-frontend/playwright-report/
-        retention-days: 30
-
-    - name: Stop servers
-      if: always()
-      run: |
-        kill $(cat packages/server/server.pid)
-        kill $(cat packages/client/mental-health-tracker-frontend/preview.pid)
+      - name: Stop server
+        if: always()
+        run: kill $(cat packages/server/server.pid)
