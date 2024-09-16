@@ -5,7 +5,7 @@ import {
   type inferRouterInputs,
   type inferRouterOutputs,
 } from '@trpc/server'
-import type { CustomRequest } from 'types/customRequest'
+import type { CustomRequest } from '../../types/customRequest'
 
 export type Context = {
   user?: {
