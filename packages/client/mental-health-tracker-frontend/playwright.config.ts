@@ -5,6 +5,7 @@ const config: PlaywrightTestConfig = {
   timeout: 60000,
   use: {
     baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:4173',
+    headless: true,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure'
   },

@@ -14,6 +14,7 @@ jobs:
       DATABASE_URL: postgres://thuppertz:turing_college@localhost:5432/mental_health_tracker_test
       JWT_SECRET: test_secret
       PORT: 3005
+      CI: true
 
     services:
       postgres:
@@ -116,6 +117,7 @@ jobs:
         working-directory: ./packages/client/mental-health-tracker-frontend
         env:
           DEBUG: pw:api,pw:browser*
+          CI: true
 
       - uses: actions/upload-artifact@v4
         if: always()
