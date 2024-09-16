@@ -1,18 +1,30 @@
-import type { PlaywrightTestConfig } from '@playwright/test'
+import { PlaywrightTestConfig, devices } from '@playwright/test'
 
 const config: PlaywrightTestConfig = {
   testDir: './tests',
-  timeout: 60000,
-  expect: {
-    timeout: 10000
-  },
+  timeout: 60000, // 1 minute test timeout
   use: {
-    baseURL: process.env.VITE_API_URL || 'http://e2e-server:3005',
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure'
+    baseURL: 'http://localhost:5173'
   },
-  retries: 2,
-  workers: 1
+  webServer: {
+    command: 'npm run dev',
+    port: parseInt(process.env.PORT || '5173', 10), // Ensure port is a number
+    reuseExistingServer: !process.env.CI
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] }
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] }
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] }
+    }
+  ]
 }
 
 export default config
