@@ -4,7 +4,7 @@ const config: PlaywrightTestConfig = {
   testDir: './tests',
   timeout: 60000, // 1 minute test timeout
   use: {
-    baseURL: 'http://localhost:5173'
+    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3005'
   },
   webServer: {
     command: 'npm run dev',
