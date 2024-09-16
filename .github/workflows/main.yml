@@ -15,6 +15,7 @@ jobs:
       JWT_SECRET: test_secret
       PORT: 3005
       CI: true
+      NODE_ENV: test
 
     services:
       postgres:
@@ -72,16 +73,12 @@ jobs:
         run: npm run lint
         working-directory: ./packages/client/mental-health-tracker-frontend
 
-      # - name: Run client unit tests
-      #   run: npm run test:unit
-      #   working-directory: ./packages/client/mental-health-tracker-frontend
-
       - name: Build client
         run: npm run build
         working-directory: ./packages/client/mental-health-tracker-frontend
 
       # E2E test setup and execution
-      - name: Install Playwright Browsers
+      - name: Install Playwright browsers
         run: npx playwright install --with-deps
         working-directory: ./packages/client/mental-health-tracker-frontend
 
@@ -113,13 +110,15 @@ jobs:
           echo "Listing directory contents:"
           ls -la
           echo "Running Playwright tests..."
-          PLAYWRIGHT_TEST_BASE_URL=http://localhost:4173 npm run test:e2e -- --debug
+          npm run test:e2e
         working-directory: ./packages/client/mental-health-tracker-frontend
         env:
+          PLAYWRIGHT_TEST_BASE_URL: http://localhost:4173
+          VITE_BACKEND_URL: http://localhost:3005/api/trpc
           DEBUG: pw:api,pw:browser*
-          CI: true
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report

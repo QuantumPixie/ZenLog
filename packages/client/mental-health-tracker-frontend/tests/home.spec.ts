@@ -1,26 +1,46 @@
 import { test, expect } from '@playwright/test'
+import { createTestUser, deleteTestUser, loginTestUser } from './testUserUtils'
 
-test('Home page loads correctly and displays features', async ({ page }) => {
-  console.log('Starting home page test')
+test.describe('Home', () => {
+  test.beforeAll(async () => {
+    await createTestUser()
+  })
 
-  await page.goto('/')
-  console.log('Navigated to home page')
+  test.afterAll(async () => {
+    await deleteTestUser()
+  })
 
-  await page.waitForLoadState('networkidle')
-  console.log('Page load state: networkidle')
+  test('Home page loads correctly and displays features', async ({ page }) => {
+    await loginTestUser(page)
 
-  const welcomeTitle = page.locator('.welcome-title')
-  await expect(welcomeTitle).toBeVisible({ timeout: 10000 })
-  console.log('Welcome title is visible')
+    console.log('Starting home page test')
 
-  const welcomeText = await welcomeTitle.textContent()
-  console.log('Welcome title text:', welcomeText)
+    await page.goto('/home')
+    console.log('Navigated to home page')
 
-  expect(welcomeText).toContain('Welcome')
+    test('Home page loads correctly and displays features', async ({ page }) => {
+      console.log('Starting home page test')
 
-  const featureItems = await page.locator('.feature-item').all()
-  console.log('Number of feature items:', featureItems.length)
-  expect(featureItems).toHaveLength(6)
+      await page.goto('/')
+      console.log('Navigated to home page')
 
-  console.log('Home page test completed successfully')
+      await page.waitForLoadState('networkidle')
+      console.log('Page load state: networkidle')
+
+      const welcomeTitle = page.locator('.welcome-title')
+      await expect(welcomeTitle).toBeVisible({ timeout: 10000 })
+      console.log('Welcome title is visible')
+
+      const welcomeText = await welcomeTitle.textContent()
+      console.log('Welcome title text:', welcomeText)
+
+      expect(welcomeText).toContain('Welcome')
+
+      const featureItems = await page.locator('.feature-item').all()
+      console.log('Number of feature items:', featureItems.length)
+      expect(featureItems).toHaveLength(6)
+
+      console.log('Home page test completed successfully')
+    })
+  })
 })

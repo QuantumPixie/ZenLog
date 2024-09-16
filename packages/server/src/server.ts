@@ -13,7 +13,7 @@ const app = express()
 
 app.use(
   cors({
-    origin: 'http://localhost:5173',
+    origin: ['http://localhost:5173', 'http://localhost:4173'],
     credentials: true,
   })
 )
@@ -45,7 +45,7 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Not Found' })
 })
 
-const PORT = process.env.PORT || 3007
+const PORT = process.env.PORT || 3005
 
 const startServer = async () => {
   try {
