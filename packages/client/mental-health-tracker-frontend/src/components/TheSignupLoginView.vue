@@ -25,7 +25,7 @@
       </div>
       <div class="login-signup-form">
         <h2>{{ isLoginMode ? 'Login to Your Account' : 'Create Your Account' }}</h2>
-        <form @submit.prevent="handleSubmit" class="p-fluid">
+        <form class="p-fluid" @submit.prevent="handleSubmit">
           <div v-if="!isLoginMode" class="field">
             <label for="username">Username</label>
             <InputText id="username" v-model="username" required data-testid="username-input" />
@@ -41,8 +41,8 @@
               v-model="password"
               :feedback="!isLoginMode"
               required
-              toggleMask
-              inputClass="w-full"
+              toggle-mask
+              input-class="w-full"
               data-testid="password-input-wrapper"
               @focus="passwordFocused = true"
               @blur="passwordFocused = false"
@@ -68,9 +68,9 @@
         <div class="mt-3 text-center">
           <a
             href="#"
-            @click.prevent="toggleMode"
             class="toggle-mode-link"
             data-testid="create-account-link"
+            @click.prevent="toggleMode"
           >
             {{ isLoginMode ? "Don't have an account? Sign up" : 'Already have an account? Login' }}
           </a>

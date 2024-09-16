@@ -11,17 +11,17 @@
             v-if="!authStore.isAuthenticated"
             label="Login / Signup"
             icon="pi pi-user"
-            @click="navigateToLoginSignup"
             class="p-button-raised p-button-rounded custom-button"
             data-testid="header-login-signup-button"
+            @click="navigateToLoginSignup"
           />
           <Button
             v-else
             label="Logout"
             icon="pi pi-sign-out"
-            @click="handleLogout"
             class="p-button-raised p-button-rounded custom-button"
             data-testid="header-logout-button"
+            @click="handleLogout"
           />
         </template>
       </Menubar>

@@ -16,10 +16,14 @@
       </div>
       <div class="activity-input">
         <h2>Log New Activity</h2>
-        <form @submit.prevent="createActivity" class="p-fluid">
+        <form class="p-fluid" @submit.prevent="createActivity">
           <div class="field">
             <label for="activity">Activity Name</label>
-            <InputText id="activity" v-model="newActivity.activity" placeholder="e.g., Running, Yoga, Reading" />
+            <InputText
+              id="activity"
+              v-model="newActivity.activity"
+              placeholder="e.g., Running, Yoga, Reading"
+            />
           </div>
           <div class="field">
             <label for="duration">Duration (minutes)</label>
@@ -27,9 +31,19 @@
           </div>
           <div class="field">
             <label for="notes">Notes</label>
-            <Textarea id="notes" v-model="newActivity.notes" rows="3" autoResize placeholder="Any additional details or reflections" />
+            <Textarea
+              id="notes"
+              v-model="newActivity.notes"
+              rows="3"
+              auto-resize
+              placeholder="Any additional details or reflections"
+            />
           </div>
-          <Button type="submit" label="Log Activity" class="p-button-raised p-button-rounded custom-button" />
+          <Button
+            type="submit"
+            label="Log Activity"
+            class="p-button-raised p-button-rounded custom-button"
+          />
         </form>
       </div>
     </div>
@@ -39,7 +53,9 @@
       <div class="activity-grid">
         <div v-for="activity in activities" :key="activity.id" class="activity-item">
           <h3>{{ formatDate(activity.date) }}</h3>
-          <p><strong>{{ activity.activity }}</strong></p>
+          <p>
+            <strong>{{ activity.activity }}</strong>
+          </p>
           <p v-if="activity.duration">Duration: {{ activity.duration }} minutes</p>
           <p v-if="activity.notes">{{ truncateText(activity.notes, 100) }}</p>
         </div>
@@ -58,11 +74,11 @@ import InputNumber from 'primevue/inputnumber'
 import Textarea from 'primevue/textarea'
 
 interface Activity {
-  id: number;
-  date: string;
-  activity: string;
-  duration?: number;
-  notes?: string;
+  id: number
+  date: string
+  activity: string
+  duration?: number
+  notes?: string
 }
 
 const activities = ref<Activity[]>([])
@@ -168,7 +184,8 @@ onMounted(getActivities)
   margin-bottom: 0.5rem;
 }
 
-.activity-input, .activity-item {
+.activity-input,
+.activity-item {
   background-color: var(--surface-card);
   border-radius: 10px;
   padding: 2rem;

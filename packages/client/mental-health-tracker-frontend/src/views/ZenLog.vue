@@ -31,14 +31,14 @@
         <Button
           label="Sign Up"
           icon="pi pi-user-plus"
-          @click="navigateToSignup"
           class="p-button-raised p-button-rounded custom-button"
+          @click="navigateToSignup"
         />
         <Button
           label="Log In"
           icon="pi pi-sign-in"
-          @click="navigateToLogin"
           class="p-button-raised p-button-rounded custom-button"
+          @click="navigateToLogin"
         />
       </div>
     </div>

@@ -16,12 +16,22 @@
       </div>
       <div class="journal-input">
         <h2>New Journal Entry</h2>
-        <form @submit.prevent="createJournalEntry" class="p-fluid">
+        <form class="p-fluid" @submit.prevent="createJournalEntry">
           <div class="field">
             <label for="entry">Your Thoughts</label>
-            <Textarea id="entry" v-model="newEntry.entry" rows="6" autoResize placeholder="Write your journal entry here..." />
+            <Textarea
+              id="entry"
+              v-model="newEntry.entry"
+              rows="6"
+              auto-resize
+              placeholder="Write your journal entry here..."
+            />
           </div>
-          <Button type="submit" label="Save Entry" class="p-button-raised p-button-rounded custom-button" />
+          <Button
+            type="submit"
+            label="Save Entry"
+            class="p-button-raised p-button-rounded custom-button"
+          />
         </form>
       </div>
     </div>
@@ -48,10 +58,10 @@ import Textarea from 'primevue/textarea'
 import { useToast } from 'primevue/usetoast'
 
 interface JournalEntry {
-  id: number;
-  date: string;
-  sentiment: number;
-  entry: string;
+  id: number
+  date: string
+  sentiment: number
+  entry: string
 }
 
 const journalEntries = ref<JournalEntry[]>([])
@@ -64,20 +74,30 @@ const getJournalEntries = async () => {
   try {
     const fetchedEntries = await trpc.journalEntry.getJournalEntries.query()
     console.log('Fetched journal entries:', fetchedEntries)
-    journalEntries.value = fetchedEntries.map(entry => ({
+    journalEntries.value = fetchedEntries.map((entry) => ({
       ...entry,
       sentiment: Number(entry.sentiment)
     }))
     console.log('Processed journal entries:', journalEntries.value)
   } catch (error) {
     console.error('Failed to fetch journal entries:', error)
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to fetch journal entries', life: 3000 })
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to fetch journal entries',
+      life: 3000
+    })
   }
 }
 
 const createJournalEntry = async () => {
   if (!newEntry.value.entry.trim()) {
-    toast.add({ severity: 'warn', summary: 'Warning', detail: 'Journal entry is required', life: 3000 })
+    toast.add({
+      severity: 'warn',
+      summary: 'Warning',
+      detail: 'Journal entry is required',
+      life: 3000
+    })
     return
   }
 
@@ -89,10 +109,20 @@ const createJournalEntry = async () => {
     console.log('Created journal entry:', createdEntry)
     await getJournalEntries()
     newEntry.value.entry = ''
-    toast.add({ severity: 'success', summary: 'Success', detail: 'Journal entry created', life: 3000 })
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: 'Journal entry created',
+      life: 3000
+    })
   } catch (error) {
     console.error('Failed to create journal entry:', error)
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to create journal entry', life: 3000 })
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to create journal entry',
+      life: 3000
+    })
   }
 }
 
@@ -165,7 +195,8 @@ onMounted(getJournalEntries)
   margin-bottom: 0.5rem;
 }
 
-.journal-input, .journal-item {
+.journal-input,
+.journal-item {
   background-color: var(--surface-card);
   border-radius: 10px;
   padding: 2rem;

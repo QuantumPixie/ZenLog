@@ -16,9 +16,28 @@
     </div>
 
     <div class="view-toggle">
-      <Button @click="currentView = 'detailed'" :class="['p-button-raised p-button-rounded custom-button', { active: currentView === 'detailed' }]">Detailed View</Button>
-      <Button @click="currentView = 'chart'" :class="['p-button-raised p-button-rounded custom-button', { active: currentView === 'chart' }]">Chart View</Button>
-      <Button @click="refreshData" icon="pi pi-refresh" label="Refresh Data" class="p-button-raised p-button-rounded custom-button refresh-button" />
+      <Button
+        :class="[
+          'p-button-raised p-button-rounded custom-button',
+          { active: currentView === 'detailed' }
+        ]"
+        @click="currentView = 'detailed'"
+        >Detailed View</Button
+      >
+      <Button
+        :class="[
+          'p-button-raised p-button-rounded custom-button',
+          { active: currentView === 'chart' }
+        ]"
+        @click="currentView = 'chart'"
+        >Chart View</Button
+      >
+      <Button
+        icon="pi pi-refresh"
+        label="Refresh Data"
+        class="p-button-raised p-button-rounded custom-button refresh-button"
+        @click="refreshData"
+      />
     </div>
 
     <ProgressSpinner v-if="isLoading" />
@@ -47,7 +66,9 @@
           <h2>Recent Activities</h2>
           <div v-for="activity in summary.recentActivities" :key="activity.id" class="summary-item">
             <h3>{{ formatDate(activity.date) }}</h3>
-            <p><strong>{{ activity.activity }}</strong></p>
+            <p>
+              <strong>{{ activity.activity }}</strong>
+            </p>
             <p v-if="activity.duration">Duration: {{ activity.duration }} minutes</p>
             <p v-if="activity.notes">{{ truncateText(activity.notes, 100) }}</p>
           </div>
@@ -56,8 +77,13 @@
         <div class="summary-section averages">
           <h2>Weekly Averages</h2>
           <div class="summary-item">
-            <p><strong>Average Mood:</strong> {{ summary.averageMoodLastWeek?.toFixed(2) || 'N/A' }}</p>
-            <p><strong>Average Sentiment:</strong> {{ summary.averageSentimentLastWeek?.toFixed(2) || 'N/A' }}</p>
+            <p>
+              <strong>Average Mood:</strong> {{ summary.averageMoodLastWeek?.toFixed(2) || 'N/A' }}
+            </p>
+            <p>
+              <strong>Average Sentiment:</strong>
+              {{ summary.averageSentimentLastWeek?.toFixed(2) || 'N/A' }}
+            </p>
           </div>
         </div>
       </div>
@@ -80,9 +106,7 @@
       </div>
     </div>
 
-    <div v-else class="error-message">
-      Failed to load dashboard data. Please try refreshing.
-    </div>
+    <div v-else class="error-message">Failed to load dashboard data. Please try refreshing.</div>
   </div>
 </template>
 
@@ -121,43 +145,54 @@ const moodChartData = computed(() => {
   const data = summary.value.recentMoods.map((mood: Mood) => mood.mood_score)
   return {
     labels,
-    datasets: [{
-      label: 'Mood Score',
-      data,
-      fill: false,
-      borderColor: '#4bc0c0'
-    }]
+    datasets: [
+      {
+        label: 'Mood Score',
+        data,
+        fill: false,
+        borderColor: '#4bc0c0'
+      }
+    ]
   }
 })
 
 const activityChartData = computed(() => {
   if (!summary.value) return { labels: [], datasets: [] }
-  const activityCounts = summary.value.recentActivities.reduce((acc: Record<string, number>, activity: Activity) => {
-    acc[activity.activity] = (acc[activity.activity] || 0) + 1
-    return acc
-  }, {} as Record<string, number>)
+  const activityCounts = summary.value.recentActivities.reduce(
+    (acc: Record<string, number>, activity: Activity) => {
+      acc[activity.activity] = (acc[activity.activity] || 0) + 1
+      return acc
+    },
+    {} as Record<string, number>
+  )
 
   return {
     labels: Object.keys(activityCounts),
-    datasets: [{
-      data: Object.values(activityCounts),
-      backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
-    }]
+    datasets: [
+      {
+        data: Object.values(activityCounts),
+        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
+      }
+    ]
   }
 })
 
 const sentimentChartData = computed(() => {
   if (!summary.value) return { labels: [], datasets: [] }
-  const labels = summary.value.recentEntries.map((entry: JournalEntry) => format(parseISO(entry.date), 'MMM d'))
+  const labels = summary.value.recentEntries.map((entry: JournalEntry) =>
+    format(parseISO(entry.date), 'MMM d')
+  )
   const data = summary.value.recentEntries.map((entry: JournalEntry) => entry.sentiment)
   return {
     labels,
-    datasets: [{
-      label: 'Sentiment Score',
-      data,
-      fill: false,
-      borderColor: '#FF6384'
-    }]
+    datasets: [
+      {
+        label: 'Sentiment Score',
+        data,
+        fill: false,
+        borderColor: '#FF6384'
+      }
+    ]
   }
 })
 
@@ -186,11 +221,14 @@ const sentimentChartOptions = {
   }
 }
 
-watch(() => dashboardStore.summary, (newSummary) => {
-  if (newSummary) {
-    console.log('Dashboard data updated')
+watch(
+  () => dashboardStore.summary,
+  (newSummary) => {
+    if (newSummary) {
+      console.log('Dashboard data updated')
+    }
   }
-})
+)
 
 onMounted(async () => {
   if (!dashboardStore.summary) {
@@ -275,7 +313,8 @@ onMounted(async () => {
   gap: 2rem;
 }
 
-.summary-section, .chart-container {
+.summary-section,
+.chart-container {
   background-color: var(--surface-card);
   border-radius: 10px;
   padding: 2rem;
@@ -283,7 +322,8 @@ onMounted(async () => {
   border: 2px solid #1b968a;
 }
 
-.summary-section h2, .chart-container h2 {
+.summary-section h2,
+.chart-container h2 {
   color: var(--primary-color);
   margin-bottom: 1rem;
   font-size: 1.5rem;
@@ -334,7 +374,8 @@ onMounted(async () => {
     font-size: 2.5rem;
   }
 
-  .summary-grid, .chart-view {
+  .summary-grid,
+  .chart-view {
     grid-template-columns: 1fr;
   }
 

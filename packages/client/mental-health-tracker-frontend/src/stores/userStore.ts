@@ -1,25 +1,25 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
 
 interface UserData {
-  id: number;
-  username: string;
-  email: string;
+  id: number
+  username: string
+  email: string
 }
 
 export const useUserStore = defineStore('user', () => {
-  const user = ref<UserData | null>(null);
-  const isAuthenticated = ref(false);
+  const user = ref<UserData | null>(null)
+  const isAuthenticated = ref(false)
 
   function setUser(userData: UserData) {
-    user.value = userData;
-    isAuthenticated.value = true;
+    user.value = userData
+    isAuthenticated.value = true
   }
 
   function logout() {
-    user.value = null;
-    isAuthenticated.value = false;
+    user.value = null
+    isAuthenticated.value = false
   }
 
-  return { user, isAuthenticated, setUser, logout };
-});
+  return { user, isAuthenticated, setUser, logout }
+})

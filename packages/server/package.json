@@ -16,11 +16,12 @@
     "start:prod": "node dist/index.js",
     "type-check": "tsc --noEmit",
     "type-check:tests": "tsc --noEmit -p tsconfig.test.json",
-    "lint": "eslint . --ext .ts",
     "prettier": "prettier . --check",
     "test": "NODE_ENV=test vitest",
     "coverage": "vitest run --coverage",
-    "format": "prettier --write \"src/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\" \"*.ts\"",
+    "lint": "eslint . --ext .ts --max-warnings 0",
+    "lint:fix": "npm run format && npm run lint -- --fix"
   },
   "keywords": [],
   "author": "",

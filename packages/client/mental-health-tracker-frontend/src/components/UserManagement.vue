@@ -30,16 +30,20 @@
 
     <div class="password-change-section">
       <h2>Change Password</h2>
-      <form @submit.prevent="changeUserPassword" class="p-fluid">
+      <form class="p-fluid" @submit.prevent="changeUserPassword">
         <div class="field">
           <label for="oldPassword">Old Password</label>
-          <Password id="oldPassword" v-model="passwordChange.oldPassword" toggleMask />
+          <Password id="oldPassword" v-model="passwordChange.oldPassword" toggle-mask />
         </div>
         <div class="field">
           <label for="newPassword">New Password</label>
-          <Password id="newPassword" v-model="passwordChange.newPassword" toggleMask />
+          <Password id="newPassword" v-model="passwordChange.newPassword" toggle-mask />
         </div>
-        <Button type="submit" label="Change Password" class="p-button-raised p-button-rounded custom-button" />
+        <Button
+          type="submit"
+          label="Change Password"
+          class="p-button-raised p-button-rounded custom-button"
+        />
       </form>
     </div>
   </div>
@@ -70,18 +74,33 @@ const getCurrentUser = async () => {
     currentUser.value = await trpc.user.getCurrentUser.query()
   } catch (error) {
     console.error('Failed to fetch current user:', error)
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to fetch user information', life: 3000 })
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to fetch user information',
+      life: 3000
+    })
   }
 }
 
 const changeUserPassword = async () => {
   try {
     await trpc.user.changePassword.mutate(passwordChange.value)
-    toast.add({ severity: 'success', summary: 'Success', detail: 'Password changed successfully', life: 3000 })
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: 'Password changed successfully',
+      life: 3000
+    })
     passwordChange.value = { oldPassword: '', newPassword: '' }
   } catch (error) {
     console.error('Failed to change password:', error)
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to change password', life: 3000 })
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'Failed to change password',
+      life: 3000
+    })
   }
 }
 
@@ -141,7 +160,8 @@ onMounted(getCurrentUser)
   margin-bottom: 0.5rem;
 }
 
-.user-info, .password-change-section {
+.user-info,
+.password-change-section {
   background-color: var(--surface-card);
   border-radius: 10px;
   padding: 2rem;
@@ -149,7 +169,8 @@ onMounted(getCurrentUser)
   border: 2px solid #1b968a;
 }
 
-.user-info h2, .password-change-section h2 {
+.user-info h2,
+.password-change-section h2 {
   color: var(--primary-color);
   margin-bottom: 1rem;
   margin-top: 0;

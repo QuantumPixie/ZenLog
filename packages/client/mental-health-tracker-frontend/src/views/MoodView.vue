@@ -15,7 +15,7 @@
       </div>
       <div class="mood-input">
         <h2>Log Your Mood</h2>
-        <form @submit.prevent="createMood" class="p-fluid">
+        <form class="p-fluid" @submit.prevent="createMood">
           <div class="field">
             <label for="mood_score">Overall Mood Score (1-10)</label>
             <InputNumber
@@ -31,18 +31,18 @@
             <MultiSelect
               v-model="selectedEmotions"
               :options="emotionOptions"
-              optionLabel="name"
+              option-label="name"
               placeholder="Select Emotions"
               :filter="true"
-              :showClear="true"
+              :show-clear="true"
               display="chip"
             >
               <template #footer>
                 <Button
                   label="Add Custom"
                   icon="pi pi-plus"
-                  @click="addCustomEmotion"
                   class="p-button-text"
+                  @click="addCustomEmotion"
                 />
               </template>
             </MultiSelect>
@@ -77,7 +77,7 @@
     <Dialog v-model:visible="displayCustomEmotionDialog" header="Add Custom Emotion" :modal="true">
       <InputText v-model="customEmotion" placeholder="Enter custom emotion" />
       <template #footer>
-        <Button label="Add" icon="pi pi-check" @click="confirmCustomEmotion" autofocus />
+        <Button label="Add" icon="pi pi-check" autofocus @click="confirmCustomEmotion" />
       </template>
     </Dialog>
   </div>

@@ -21,10 +21,8 @@ setup('authenticate', async ({ page }) => {
   await page.goto('/')
   console.log('Navigated to the home page')
 
-
   await page.waitForLoadState('networkidle')
   console.log('Page loaded')
-
 
   await page.click('[data-testid="header-login-signup-button"]')
   await page.waitForSelector('[data-testid="login-button"]', { state: 'visible' })
@@ -35,7 +33,6 @@ setup('authenticate', async ({ page }) => {
 
   await fillPasswordInput(page, 'password')
   console.log('Filled password input')
-
 
   await page.click('[data-testid="login-button"]')
   console.log('Submitted login form')

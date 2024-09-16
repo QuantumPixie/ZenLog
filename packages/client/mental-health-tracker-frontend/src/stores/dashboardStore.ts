@@ -4,7 +4,7 @@ import type { Summary } from '../types/dashboard'
 
 export const useDashboardStore = defineStore('dashboard', {
   state: () => ({
-    summary: null as Summary | null,
+    summary: null as Summary | null
   }),
   actions: {
     async fetchSummary() {
@@ -19,6 +19,6 @@ export const useDashboardStore = defineStore('dashboard', {
       if (this.summary) {
         this.summary = { ...this.summary, ...newData }
       }
-    },
-  },
+    }
+  }
 })
