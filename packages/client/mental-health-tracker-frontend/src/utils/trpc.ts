@@ -1,4 +1,3 @@
-// src/utils/trpc.ts
 import { createTRPCProxyClient, httpBatchLink } from '@trpc/client'
 import type { AppRouter } from '../../../../server/src/server'
 

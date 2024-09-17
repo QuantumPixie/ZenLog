@@ -27,3 +27,5 @@ const config: PlaywrightTestConfig = {
 }
 
 export default config
+
+export const baseURL = config.use?.baseURL || 'http://localhost:4173'
