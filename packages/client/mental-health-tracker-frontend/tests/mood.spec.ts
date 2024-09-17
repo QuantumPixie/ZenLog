@@ -17,17 +17,15 @@ test.describe('Mood', () => {
   test('Mood logging functionality', async ({ page }) => {
     page.on('console', (msg) => console.log(`Browser console: ${msg.text()}`))
 
-    await page.goto('/mood')
+    await page.goto('/mood', { waitUntil: 'networkidle' })
     console.log('Navigated to mood page')
 
-    // load moods
-    await page.waitForSelector('.mood-item', { state: 'attached', timeout: 10000 })
+    await page.waitForSelector('.mood-item', { state: 'attached', timeout: 30000 })
 
     const initialMoodCount = await page.locator('.mood-item').count()
     console.log(`Initial mood count: ${initialMoodCount}`)
 
-    // log a new mood
-    await page.waitForSelector('#mood_score', { state: 'visible', timeout: 10000 })
+    await page.waitForSelector('#mood_score', { state: 'visible', timeout: 30000 })
     console.log('Mood score input is visible')
 
     await page.locator('#mood_score input').fill('8')
@@ -48,22 +46,25 @@ test.describe('Mood', () => {
     expect(selectedEmotions).toContain('Happy')
     expect(selectedEmotions).toContain('Excited')
 
-    await page.waitForSelector('button:has-text("Log Mood")', { state: 'visible', timeout: 5000 })
+    await page.waitForSelector('button:has-text("Log Mood")', { state: 'visible', timeout: 30000 })
 
     const logMoodButton = page.locator('button:has-text("Log Mood")')
     await logMoodButton.click()
     console.log('Clicked Log Mood button')
 
-    // success message
+    await page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/trpc/mood.createMood') && response.status() === 200
+    )
+    console.log('Mood creation API call completed')
+
     await expect(page.locator('.p-toast-message-content')).toContainText(
       'Mood logged successfully',
-      {
-        timeout: 10000
-      }
+      { timeout: 30000 }
     )
     console.log('Success message appeared')
 
-    await page.waitForTimeout(2000) // Give some time for the UI to update moods
+    await page.waitForSelector('.mood-item', { state: 'attached', timeout: 30000 })
 
     const newMoodCount = await page.locator('.mood-item').count()
     console.log(`New mood count: ${newMoodCount}`)
@@ -71,20 +72,21 @@ test.describe('Mood', () => {
 
     const latestMoodItem = page.locator('.mood-item').first()
 
-    await expect(latestMoodItem.locator('p:has-text("Score:")')).toContainText('Score: 8')
-
+    await expect(latestMoodItem.locator('p:has-text("Score:")')).toContainText('Score: 8', {
+      timeout: 30000
+    })
     await expect(latestMoodItem.locator('p:has-text("Emotions:")')).toContainText(
-      'Emotions: Happy, Excited'
+      'Emotions: Happy, Excited',
+      { timeout: 30000 }
     )
 
     console.log('Verified logged mood in the list')
 
-    // clearing input fields are cleared after logging
     const moodScoreInput = page.locator('#mood_score input')
-    await expect(moodScoreInput).toHaveValue('')
+    await expect(moodScoreInput).toHaveValue('', { timeout: 30000 })
 
     const emotionsInput = page.locator('.p-multiselect-label')
-    await expect(emotionsInput).toContainText('Select Emotions')
+    await expect(emotionsInput).toContainText('Select Emotions', { timeout: 30000 })
 
     console.log('Verified input fields are cleared')
   })

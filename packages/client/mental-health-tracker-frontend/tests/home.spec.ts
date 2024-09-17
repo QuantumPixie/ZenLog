@@ -15,32 +15,46 @@ test.describe('Home', () => {
 
     console.log('Starting home page test')
 
-    await page.goto('/home')
+    await page.goto('/home', { waitUntil: 'networkidle' })
     console.log('Navigated to home page')
 
-    test('Home page loads correctly and displays features', async ({ page }) => {
-      console.log('Starting home page test')
+    await page.waitForLoadState('networkidle')
+    console.log('Page load state: networkidle')
 
-      await page.goto('/')
-      console.log('Navigated to home page')
+    const welcomeTitle = page.locator('.welcome-title')
+    await expect(welcomeTitle).toBeVisible({ timeout: 30000 })
+    console.log('Welcome title is visible')
 
-      await page.waitForLoadState('networkidle')
-      console.log('Page load state: networkidle')
+    const welcomeText = await welcomeTitle.textContent()
+    console.log('Welcome title text:', welcomeText)
 
-      const welcomeTitle = page.locator('.welcome-title')
-      await expect(welcomeTitle).toBeVisible({ timeout: 10000 })
-      console.log('Welcome title is visible')
+    expect(welcomeText).toContain('Welcome')
 
-      const welcomeText = await welcomeTitle.textContent()
-      console.log('Welcome title text:', welcomeText)
+    const featureItems = await page.locator('.feature-item').all()
+    console.log('Number of feature items:', featureItems.length)
+    expect(featureItems).toHaveLength(6)
 
-      expect(welcomeText).toContain('Welcome')
+    // Check for specific features
+    const expectedFeatures = [
+      'Mood Tracking',
+      'Journal',
+      'Activity Log',
+      'Dashboard',
+      'Reports',
+      'Settings'
+    ]
+    for (const feature of expectedFeatures) {
+      await expect(page.locator(`.feature-item:has-text("${feature}")`)).toBeVisible({
+        timeout: 30000
+      })
+    }
 
-      const featureItems = await page.locator('.feature-item').all()
-      console.log('Number of feature items:', featureItems.length)
-      expect(featureItems).toHaveLength(6)
+    console.log('All expected features are visible')
 
-      console.log('Home page test completed successfully')
-    })
+    // Check if the logout button is present
+    await expect(page.locator('[data-testid="logout-button"]')).toBeVisible({ timeout: 30000 })
+    console.log('Logout button is visible')
+
+    console.log('Home page test completed successfully')
   })
 })

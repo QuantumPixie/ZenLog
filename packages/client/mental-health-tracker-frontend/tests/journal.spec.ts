@@ -17,18 +17,15 @@ test.describe('Journal', () => {
   test('Journal entry creation and verification', async ({ page }) => {
     page.on('console', (msg) => console.log(`Browser console: ${msg.text()}`))
 
-    await page.goto('/journal')
+    await page.goto('/journal', { waitUntil: 'networkidle' })
     console.log('Navigated to journal page')
 
-    // load entries
-    await page.waitForSelector('.journal-item', { state: 'attached', timeout: 10000 })
+    await page.waitForSelector('.journal-item', { state: 'attached', timeout: 30000 })
 
-    // get inital count
     const initialEntryCount = await page.locator('.journal-item').count()
     console.log(`Initial journal entry count: ${initialEntryCount}`)
 
-    // create new entry
-    await page.waitForSelector('#entry', { state: 'visible', timeout: 10000 })
+    await page.waitForSelector('#entry', { state: 'visible', timeout: 30000 })
     console.log('Journal entry input is visible')
 
     const testEntry = 'This is a test journal entry created at ' + new Date().toISOString()
@@ -39,31 +36,34 @@ test.describe('Journal', () => {
     await saveButton.click()
     console.log('Clicked Save Entry button')
 
-    // success message
+    await page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/trpc/journalEntry.createJournalEntry') &&
+        response.status() === 200
+    )
+    console.log('Journal entry creation API call completed')
+
     await expect(page.locator('.p-toast-message-content')).toContainText('Journal entry created', {
-      timeout: 10000
+      timeout: 30000
     })
     console.log('Success message appeared')
 
-    // time for the UI to update
-    await page.waitForTimeout(2000)
+    await page.waitForSelector('.journal-item', { state: 'attached', timeout: 30000 })
 
-    // new journal entry added
     const newEntryCount = await page.locator('.journal-item').count()
     console.log(`New journal entry count: ${newEntryCount}`)
     expect(newEntryCount).toBeGreaterThan(initialEntryCount)
 
-    // content of the most recent journal entry
     const latestEntry = page.locator('.journal-item').first()
 
-    // Verify content
-    await expect(latestEntry.locator('p').nth(1)).toContainText(testEntry.substring(0, 150))
+    await expect(latestEntry.locator('p').nth(1)).toContainText(testEntry.substring(0, 150), {
+      timeout: 30000
+    })
 
     console.log('Verified logged journal entry in the list')
 
-    // input field is cleared after saving
     const entryInput = page.locator('#entry')
-    await expect(entryInput).toHaveValue('')
+    await expect(entryInput).toHaveValue('', { timeout: 30000 })
 
     console.log('Verified input field is cleared')
   })

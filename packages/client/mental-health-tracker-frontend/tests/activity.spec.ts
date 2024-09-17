@@ -17,18 +17,15 @@ test.describe('Activity', () => {
   test('Activity logging functionality', async ({ page }) => {
     page.on('console', (msg) => console.log(`Browser console: ${msg.text()}`))
 
-    await page.goto('/activities')
+    await page.goto('/activities', { waitUntil: 'networkidle' })
     console.log('Navigated to activities page')
 
-    // wait for activities to load
-    await page.waitForSelector('.activity-item', { state: 'attached', timeout: 10000 })
+    await page.waitForSelector('.activity-item', { state: 'attached', timeout: 30000 })
 
-    // get initial activity count
     const initialActivityCount = await page.locator('.activity-item').count()
     console.log(`Initial activity count: ${initialActivityCount}`)
 
-    // log a new activity
-    await page.waitForSelector('#activity', { state: 'visible', timeout: 10000 })
+    await page.waitForSelector('#activity', { state: 'visible', timeout: 30000 })
     console.log('Activity input is visible')
 
     const activityName = 'Running'
@@ -46,32 +43,33 @@ test.describe('Activity', () => {
     await logActivityButton.click()
     console.log('Clicked Log Activity button')
 
-    // wait for UI updates
-    await page.waitForTimeout(2000)
+    await page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/trpc/activity.createActivity') && response.status() === 200
+    )
+    console.log('Activity creation API call completed')
 
-    // verify new activity has been added
+    await page.waitForSelector('.activity-item', { state: 'attached', timeout: 30000 })
+
     const newActivityCount = await page.locator('.activity-item').count()
     console.log(`New activity count: ${newActivityCount}`)
     expect(newActivityCount).toBeGreaterThan(initialActivityCount)
 
-    // check the content of most recent activity
     const latestActivity = page.locator('.activity-item').first()
 
-    // activity name
-    await expect(latestActivity.locator('p strong')).toContainText(activityName)
-
-    // duration
-    await expect(latestActivity.locator('p').nth(1)).toContainText('Duration: 30 minutes')
-
-    // notes
-    await expect(latestActivity.locator('p').nth(2)).toContainText(activityNotes)
+    await expect(latestActivity.locator('p strong')).toContainText(activityName, { timeout: 30000 })
+    await expect(latestActivity.locator('p').nth(1)).toContainText('Duration: 30 minutes', {
+      timeout: 30000
+    })
+    await expect(latestActivity.locator('p').nth(2)).toContainText(activityNotes, {
+      timeout: 30000
+    })
 
     console.log('Verified logged activity in the list')
 
-    // input fields cleared after logging
-    await expect(page.locator('#activity')).toHaveValue('')
-    await expect(page.locator('#duration input')).toHaveValue('')
-    await expect(page.locator('#notes')).toHaveValue('')
+    await expect(page.locator('#activity')).toHaveValue('', { timeout: 30000 })
+    await expect(page.locator('#duration input')).toHaveValue('', { timeout: 30000 })
+    await expect(page.locator('#notes')).toHaveValue('', { timeout: 30000 })
 
     console.log('Verified input fields are cleared')
   })

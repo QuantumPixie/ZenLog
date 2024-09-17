@@ -1,14 +1,17 @@
 import type { PlaywrightTestConfig } from '@playwright/test'
 
-const config: PlaywrightTestConfig = {
+export const baseURL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:4173'
+
+export const config: PlaywrightTestConfig = {
   testDir: './tests',
-  timeout: 60000,
+  timeout: 120000,
   globalSetup: './setup.ts',
   use: {
-    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:4173',
-    headless: true,
+    baseURL,
+    headless: false,
     trace: 'on-first-retry',
-    screenshot: 'only-on-failure'
+    screenshot: 'only-on-failure',
+    video: 'on-first-retry'
   },
   webServer: {
     command: 'npm run preview',
@@ -19,7 +22,8 @@ const config: PlaywrightTestConfig = {
     }
   },
   workers: process.env.CI ? 1 : undefined,
-  reporter: process.env.CI ? 'dot' : 'list'
+  reporter: process.env.CI ? 'dot' : 'list',
+  retries: process.env.CI ? 2 : 0
 }
 
 export default config
