@@ -1,5 +1,4 @@
 import type { PlaywrightTestConfig } from '@playwright/test'
-import './setup.ts'
 
 const config: PlaywrightTestConfig = {
   testDir: './tests',
@@ -14,7 +13,10 @@ const config: PlaywrightTestConfig = {
   webServer: {
     command: 'npm run preview',
     url: 'http://localhost:4173',
-    reuseExistingServer: true
+    reuseExistingServer: true,
+    env: {
+      VITE_BACKEND_URL: process.env.VITE_BACKEND_URL || 'http://localhost:3005/api/trpc'
+    }
   },
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? 'dot' : 'list'
