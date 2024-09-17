@@ -8,7 +8,7 @@ export const config: PlaywrightTestConfig = {
   globalSetup: './setup.ts',
   use: {
     baseURL,
-    headless: false,
+    headless: true,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'on-first-retry'
