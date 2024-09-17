@@ -1,5 +1,5 @@
 import type { PlaywrightTestConfig } from '@playwright/test'
-import './setup' // This imports and runs the setup file
+import './setup.ts' // This imports and runs the setup file
 
 const config: PlaywrightTestConfig = {
   testDir: './tests',
