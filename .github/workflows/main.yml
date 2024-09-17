@@ -17,7 +17,7 @@ jobs:
       CI: true
       NODE_ENV: test
       VITE_BACKEND_URL: http://localhost:3005/api/trpc
-      PLAYWRIGHT_TEST_BASE_URL: http://localhost:4173
+      PLAYWRIGHT_TEST_BASE_URL: http://localhost:5173
 
     services:
       postgres:
@@ -113,7 +113,7 @@ jobs:
       - name: Wait for client
         run: |
           timeout=60
-          while ! nc -z localhost 4173; do
+          while ! nc -z localhost 5173; do
             if [ $timeout -le 0 ]; then
               echo "Timed out waiting for client"
               cat client.log
@@ -126,7 +126,7 @@ jobs:
 
       - name: Check if application is responding
         run: |
-          curl -sSf http://localhost:4173 || (echo "Application is not running" && exit 1)
+          curl -sSf http://localhost:5173 || (echo "Application is not running" && exit 1)
 
       - name: Run Playwright tests
         run: |
@@ -137,7 +137,7 @@ jobs:
           npm run test:e2e
         working-directory: ./packages/client/mental-health-tracker-frontend
         env:
-          PLAYWRIGHT_TEST_BASE_URL: http://localhost:4173
+          PLAYWRIGHT_TEST_BASE_URL: http://localhost:5173
           VITE_BACKEND_URL: http://localhost:3005/api/trpc
           DEBUG: pw:api,pw:browser*
 

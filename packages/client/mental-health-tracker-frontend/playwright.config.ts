@@ -9,14 +9,14 @@ const config: PlaywrightTestConfig = {
   timeout: 60000,
   globalSetup: './setup.ts',
   use: {
-    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:4173',
+    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5173',
     headless: true,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure'
   },
   webServer: {
     command: 'npm run preview',
-    url: 'http://localhost:4173',
+    url: 'http://localhost:5173',
     reuseExistingServer: true,
     env: {
       VITE_BACKEND_URL: process.env.VITE_BACKEND_URL || 'http://localhost:3005/api/trpc'
@@ -28,4 +28,4 @@ const config: PlaywrightTestConfig = {
 
 export default config
 
-export const baseURL = config.use?.baseURL || 'http://localhost:4173'
+export const baseURL = config.use?.baseURL || 'http://localhost:5173'
