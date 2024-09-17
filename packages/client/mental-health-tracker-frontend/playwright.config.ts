@@ -1,10 +1,10 @@
 import type { PlaywrightTestConfig } from '@playwright/test'
-import './setup.ts' // This imports and runs the setup file
+import './setup.ts'
 
 const config: PlaywrightTestConfig = {
   testDir: './tests',
   timeout: 60000,
-  globalSetup: './tests/setup.ts', // This is for global setup, if needed
+  globalSetup: './setup.ts',
   use: {
     baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:4173',
     headless: true,
