@@ -1,17 +1,18 @@
 import type { PlaywrightTestConfig } from '@playwright/test'
+import dotenv from 'dotenv'
 
-export const baseURL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:4173'
+// Load environment variables from .env file
+dotenv.config()
 
-export const config: PlaywrightTestConfig = {
+const config: PlaywrightTestConfig = {
   testDir: './tests',
-  timeout: 120000,
+  timeout: 60000,
   globalSetup: './setup.ts',
   use: {
-    baseURL,
+    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:4173',
     headless: true,
-    trace: 'on',
-    screenshot: 'only-on-failure',
-    video: 'on-first-retry'
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure'
   },
   webServer: {
     command: 'npm run preview',
@@ -22,8 +23,7 @@ export const config: PlaywrightTestConfig = {
     }
   },
   workers: process.env.CI ? 1 : undefined,
-  reporter: process.env.CI ? 'dot' : 'list',
-  retries: process.env.CI ? 2 : 0
+  reporter: process.env.CI ? 'dot' : 'list'
 }
 
 export default config
