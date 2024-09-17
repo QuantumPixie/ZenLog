@@ -115,7 +115,7 @@ jobs:
           echo "Listing directory contents:"
           ls -la
           echo "Running Playwright tests..."
-          xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" npm run test:e2e
+          npm run test:e2e
         working-directory: ./packages/client/mental-health-tracker-frontend
         env:
           PLAYWRIGHT_TEST_BASE_URL: http://localhost:4173
