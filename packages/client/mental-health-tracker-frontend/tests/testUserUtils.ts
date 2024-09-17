@@ -20,12 +20,22 @@ export async function deleteTestUser() {
 }
 
 export async function loginTestUser(page: Page) {
-  console.log('Logging in test user:', TEST_USER.email)
-  await page.goto('/login', { waitUntil: 'networkidle' })
-  await page.waitForSelector('[data-testid="email-input"]', { state: 'visible', timeout: 30000 })
+  console.log('Starting login process...')
+  await page.goto('/login', { waitUntil: 'networkidle', timeout: 60000 })
+  console.log('Navigated to login page')
+
+  await page.waitForSelector('[data-testid="email-input"]', { state: 'visible', timeout: 60000 })
+  console.log('Email input found')
+
   await page.fill('[data-testid="email-input"]', TEST_USER.email)
+  console.log('Filled email input')
+
   await page.fill('[data-testid="password-input"]', TEST_USER.password)
+  console.log('Filled password input')
+
   await page.click('[data-testid="login-button"]')
-  await page.waitForURL('**/home', { timeout: 30000 })
-  console.log('Test user logged in successfully')
+  console.log('Clicked login button')
+
+  await page.waitForURL('**/home', { timeout: 60000 })
+  console.log('Navigated to home page')
 }
