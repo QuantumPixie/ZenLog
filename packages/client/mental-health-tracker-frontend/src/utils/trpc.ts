@@ -1,7 +1,7 @@
 import { createTRPCProxyClient, httpBatchLink } from '@trpc/client'
 import type { AppRouter } from '../../../../server/src/server'
 
-const backendUrl = process.env.VITE_BACKEND_URL || 'http://localhost:3005/api/trpc'
+const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3005/api/trpc'
 
 export const trpc = createTRPCProxyClient<AppRouter>({
   links: [

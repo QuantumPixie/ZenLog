@@ -20,7 +20,4 @@ app.use(PrimeVue)
 app.use(ToastService)
 app.component('PrimeToast', Toast)
 
-// Wait for the router to be ready before mounting the app
-router.isReady().then(() => {
-  app.mount('#app')
-})
+app.mount('#app')

@@ -9,7 +9,7 @@ export const config: PlaywrightTestConfig = {
   use: {
     baseURL,
     headless: true,
-    trace: 'on-first-retry',
+    trace: 'on',
     screenshot: 'only-on-failure',
     video: 'on-first-retry'
   },
