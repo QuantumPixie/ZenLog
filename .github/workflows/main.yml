@@ -11,13 +11,13 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DATABASE_URL: postgres://thuppertz:turing_college@localhost:5432/mental_health_tracker_test
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
       JWT_SECRET: test_secret
       PORT: 3005
       CI: true
       NODE_ENV: test
-      VITE_BACKEND_URL: http://localhost:3005/api/trpc
-      PLAYWRIGHT_TEST_BASE_URL: http://localhost:5173
+      VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
+      PLAYWRIGHT_TEST_BASE_URL: ${{ secrets.PLAYWRIGHT_TEST_BASE_URL }}
 
     services:
       postgres:
@@ -137,14 +137,9 @@ jobs:
           npm run test:e2e
         working-directory: ./packages/client/mental-health-tracker-frontend
         env:
-          PLAYWRIGHT_TEST_BASE_URL: http://localhost:5173
-          VITE_BACKEND_URL: http://localhost:3005/api/trpc
+          PLAYWRIGHT_TEST_BASE_URL: ${{ secrets.PLAYWRIGHT_TEST_BASE_URL }}
+          VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
           DEBUG: pw:api,pw:browser*
-
-      - name: Print Environment Variables
-        run: |
-          echo "VITE_BACKEND_URL: $VITE_BACKEND_URL"
-          echo "PLAYWRIGHT_TEST_BASE_URL: $PLAYWRIGHT_TEST_BASE_URL"
 
       - name: Upload Playwright report
         if: failure() || success() # Uploads the report in both cases
