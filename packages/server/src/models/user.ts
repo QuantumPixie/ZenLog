@@ -10,6 +10,7 @@ export interface UserTable {
   email: string
   username: string
   password: string
+  deleted_at?: Date
 }
 
 export type NewUser = Omit<UserTable, 'id'>

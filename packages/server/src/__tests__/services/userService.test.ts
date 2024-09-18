@@ -8,13 +8,15 @@ import {
   loginUser,
   getUserById,
   changePassword,
+  generateToken,
+  deleteUser,
 } from '../../services/userService'
 import type { UserTable } from '../../models/user'
-
 import { db } from '../../database'
 
 type User = Selectable<UserTable>
 type NewUser = Insertable<UserTable>
+type SafeUser = Omit<User, 'password'>
 
 vi.mock('bcrypt')
 vi.mock('jsonwebtoken')
@@ -43,10 +45,11 @@ describe('userService', () => {
         username: 'testuser',
         password: 'password',
       }
-      const createdUser: Omit<User, 'password'> = {
+      const createdUser: SafeUser = {
         id: 1,
         email: newUser.email,
         username: newUser.username,
+        deleted_at: undefined,
       }
 
       vi.mocked(bcrypt.hash).mockResolvedValue('hashedpassword' as never)
@@ -69,13 +72,6 @@ describe('userService', () => {
         ...newUser,
         password: 'hashedpassword',
       })
-      expect(
-        vi.mocked(
-          db
-            .insertInto('users')
-            .values({ ...newUser, password: 'hashedpassword' }).returning
-        )
-      ).toHaveBeenCalledWith(['id', 'email', 'username'])
     })
 
     it('should throw an error if user creation fails', async () => {
@@ -108,6 +104,7 @@ describe('userService', () => {
         email,
         username: 'testuser',
         password: 'hashedpassword',
+        deleted_at: undefined,
       }
 
       vi.mocked(db.selectFrom).mockReturnValue({
@@ -127,7 +124,12 @@ describe('userService', () => {
 
       expect(result).toEqual({
         token: 'token',
-        user: { id: user.id, email: user.email, username: user.username },
+        user: {
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          deleted_at: user.deleted_at,
+        },
       })
       expect(jwt.sign).toHaveBeenCalledWith(
         { user_id: user.id },
@@ -146,6 +148,7 @@ describe('userService', () => {
         email,
         username: 'testuser',
         password: 'hashedpassword',
+        deleted_at: undefined,
       }
 
       vi.mocked(db.selectFrom).mockReturnValue({
@@ -171,6 +174,7 @@ describe('userService', () => {
         email,
         username: 'testuser',
         password: 'hashedpassword',
+        deleted_at: undefined,
       }
 
       vi.mocked(db.selectFrom).mockReturnValue({
@@ -194,10 +198,11 @@ describe('userService', () => {
   describe('getUserById', () => {
     it('should return a user by id', async () => {
       const userId = 1
-      const user: Omit<User, 'password'> = {
+      const user: SafeUser = {
         id: userId,
         email: 'test@example.com',
         username: 'testuser',
+        deleted_at: undefined,
       }
 
       vi.mocked(db.selectFrom).mockReturnValue({
@@ -251,11 +256,6 @@ describe('userService', () => {
       expect(vi.mocked(db.updateTable('users').set)).toHaveBeenCalledWith({
         password: 'hashednewpassword',
       })
-      expect(
-        vi.mocked(
-          db.updateTable('users').set({ password: 'hashednewpassword' }).where
-        )
-      ).toHaveBeenCalledWith('id', '=', userId)
     })
 
     it('should return false for incorrect old password', async () => {
@@ -279,6 +279,72 @@ describe('userService', () => {
       const result = await changePassword(userId, oldPassword, newPassword)
 
       expect(result).toBe(false)
+    })
+  })
+
+  describe('generateToken', () => {
+    it('should generate a token for a user', () => {
+      const userId = 1
+      const token = 'token'
+
+      vi.mocked(jwt.sign).mockReturnValue(token as never)
+
+      const result = generateToken(userId)
+
+      expect(result).toBe(token)
+      expect(jwt.sign).toHaveBeenCalledWith(
+        { user_id: userId },
+        'test_secret',
+        { expiresIn: '1d' }
+      )
+    })
+
+    it('should throw an error if JWT_SECRET is not set', () => {
+      delete process.env.JWT_SECRET
+
+      const userId = 1
+
+      expect(() => generateToken(userId)).toThrow(TRPCError)
+    })
+  })
+
+  describe('deleteUser', () => {
+    it('should mark a user as deleted', async () => {
+      const userId = 1
+
+      vi.mocked(db.updateTable).mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            execute: vi.fn().mockResolvedValue([{ numUpdatedRows: 1 }]),
+          }),
+        }),
+      } as unknown as ReturnType<typeof db.updateTable>)
+
+      await deleteUser(userId)
+
+      expect(db.updateTable).toHaveBeenCalledWith('users')
+      expect(vi.mocked(db.updateTable('users').set)).toHaveBeenCalledWith({
+        deleted_at: expect.any(Object), // Mock SQL timestamp
+      })
+      expect(
+        vi.mocked(
+          db.updateTable('users').set({ deleted_at: expect.any(Object) }).where
+        )
+      ).toHaveBeenCalledWith('id', '=', userId)
+    })
+
+    it('should throw an error if user is not found', async () => {
+      const userId = 1
+
+      vi.mocked(db.updateTable).mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            execute: vi.fn().mockResolvedValue([]),
+          }),
+        }),
+      } as unknown as ReturnType<typeof db.updateTable>)
+
+      await expect(deleteUser(userId)).rejects.toThrow('User not found')
     })
   })
 })

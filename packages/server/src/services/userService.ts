@@ -1,4 +1,4 @@
-import type { Selectable, Insertable } from 'kysely'
+import { type Selectable, type Insertable, sql } from 'kysely'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { TRPCError } from '@trpc/server'
@@ -19,7 +19,7 @@ export async function createUser(
     const [createdUser] = await db
       .insertInto('users')
       .values(userToInsert)
-      .returning(['id', 'email', 'username'])
+      .returning(['id', 'email', 'username', 'deleted_at'])
       .execute()
 
     if (!createdUser) {
@@ -54,7 +54,7 @@ export async function loginUser(
 
     const [user] = await db
       .selectFrom('users')
-      .select(['id', 'email', 'username', 'password'])
+      .select(['id', 'email', 'username', 'password', 'deleted_at'])
       .where('email', '=', email)
       .limit(1)
       .execute()
@@ -90,7 +90,10 @@ export async function loginUser(
 
     console.log(`Login successful for email: ${email}`)
 
-    return { user: { id, email: userEmail, username }, token }
+    return {
+      user: { id, email: userEmail, username, deleted_at: user.deleted_at },
+      token,
+    }
   } catch (error) {
     console.error('Error in loginUser:', error)
     throw error
@@ -103,7 +106,7 @@ export async function getUserById(
   try {
     const [user] = await db
       .selectFrom('users')
-      .select(['id', 'email', 'username'])
+      .select(['id', 'email', 'username', 'deleted_at'])
       .where('id', '=', userId)
       .limit(1)
       .execute()
@@ -161,4 +164,18 @@ export function generateToken(userId: number): string {
     })
   }
   return jwt.sign({ user_id: userId }, jwtSecret, { expiresIn: '1d' })
+}
+
+export async function deleteUser(userId: number): Promise<void> {
+  const result = await db
+    .updateTable('users')
+    .set({
+      deleted_at: sql`CURRENT_TIMESTAMP`,
+    })
+    .where('id', '=', userId)
+    .execute()
+
+  if (result.length === 0) {
+    throw new Error('User not found')
+  }
 }

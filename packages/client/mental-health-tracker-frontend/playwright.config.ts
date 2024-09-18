@@ -1,31 +1,44 @@
-import type { PlaywrightTestConfig } from '@playwright/test'
-import dotenv from 'dotenv'
+import { defineConfig, devices } from '@playwright/test'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
-// Load environment variables from .env file
-dotenv.config()
+const currentFilePath = fileURLToPath(import.meta.url)
+const projectRoot = path.dirname(currentFilePath)
 
-const config: PlaywrightTestConfig = {
+export default defineConfig({
   testDir: './tests',
-  timeout: 60000,
-  globalSetup: './setup.ts',
-  use: {
-    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5173',
-    headless: true,
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure'
-  },
-  webServer: {
-    command: 'npm run preview',
-    url: 'http://localhost:5173',
-    reuseExistingServer: true,
-    env: {
-      VITE_BACKEND_URL: process.env.VITE_BACKEND_URL || 'http://localhost:3005/api/trpc'
-    }
-  },
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: process.env.CI ? 'dot' : 'list'
-}
-
-export default config
-
-export const baseURL = config.use?.baseURL || 'http://localhost:5173'
+  reporter: 'html',
+  use: {
+    baseURL: 'http://localhost:5173',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'on-first-retry'
+  },
+  projects: [
+    {
+      name: 'setup',
+      testMatch: /.*\.setup\.ts/
+    },
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 720 }
+      },
+      dependencies: ['setup']
+    }
+  ],
+  globalSetup: path.join(projectRoot, 'tests', 'testUtils', 'global-setup.ts'),
+  globalTeardown: path.join(projectRoot, 'tests', 'testUtils', 'global-teardown.ts'),
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:5173',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000 // Increase timeout to 2 minutes
+  },
+  timeout: 60000 // Increase overall timeout to 60 seconds
+})

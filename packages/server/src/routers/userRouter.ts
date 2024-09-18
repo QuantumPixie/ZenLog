@@ -6,8 +6,8 @@ import {
   loginUser,
   getUserById,
   changePassword,
+  deleteUser,
 } from '../services/userService'
-import { db } from '../database'
 
 const signupSchema = z.object({
   email: z.string().email(),
@@ -140,24 +140,17 @@ export const userRouter = router({
         })
       }
     }),
-  deleteUserByEmail: procedure
-    .input(z.object({ email: z.string().email() }))
-    .mutation(async ({ input }) => {
-      if (process.env.NODE_ENV !== 'test') {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'This operation is only allowed in the test environment',
-        })
-      }
-      try {
-        await db.deleteFrom('users').where('email', '=', input.email).execute()
-        return { success: true }
-      } catch (error) {
-        console.error('Error deleting test user:', error)
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to delete test user',
-        })
-      }
-    }),
+  deleteUser: authedProcedure.mutation(async ({ ctx }) => {
+    try {
+      await deleteUser(ctx.user.id)
+      return { message: 'User deleted successfully' }
+    } catch (error) {
+      if (error instanceof TRPCError) throw error
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to delete user',
+        cause: error,
+      })
+    }
+  }),
 })

@@ -1,18 +1,9 @@
 import { test, expect } from '@playwright/test'
-import { createTestUser, deleteTestUser, loginTestUser } from './testUserUtils'
 
 test.describe('Home', () => {
-  test.beforeAll(async () => {
-    await createTestUser()
-  })
-
-  test.afterAll(async () => {
-    await deleteTestUser()
-  })
+  test.use({ storageState: 'playwright/.auth/user.json' })
 
   test('Home page loads correctly and displays features', async ({ page }) => {
-    await loginTestUser(page)
-
     console.log('Starting home page test')
 
     await page.goto('/home', { waitUntil: 'networkidle' })
@@ -32,17 +23,10 @@ test.describe('Home', () => {
 
     const featureItems = await page.locator('.feature-item').all()
     console.log('Number of feature items:', featureItems.length)
-    expect(featureItems).toHaveLength(6)
+    expect(featureItems).toHaveLength(5)
 
     // Check for specific features
-    const expectedFeatures = [
-      'Mood Tracking',
-      'Journal',
-      'Activity Log',
-      'Dashboard',
-      'Reports',
-      'Settings'
-    ]
+    const expectedFeatures = ['Mood', 'Journal', 'Activities', 'Dashboard', 'User Management']
     for (const feature of expectedFeatures) {
       await expect(page.locator(`.feature-item:has-text("${feature}")`)).toBeVisible({
         timeout: 30000
@@ -52,7 +36,9 @@ test.describe('Home', () => {
     console.log('All expected features are visible')
 
     // Check if the logout button is present
-    await expect(page.locator('[data-testid="logout-button"]')).toBeVisible({ timeout: 30000 })
+    await expect(page.locator('[data-testid="header-logout-button"]')).toBeVisible({
+      timeout: 30000
+    })
     console.log('Logout button is visible')
 
     console.log('Home page test completed successfully')
