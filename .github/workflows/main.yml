@@ -194,7 +194,7 @@ jobs:
 
       - name: Verify AWS credentials
         run: |
-          aws sts get-caller-identity
+          aws sts get-caller-identity --debug
 
       - name: Build server image
         run: docker build -t $SERVER_IMAGE_TAG -f ./packages/server/Dockerfile ./packages/server
