@@ -54,12 +54,12 @@ jobs:
         run: npm run type-check
         working-directory: ./packages/server
 
-      - name: Run server tests
-        run: npm run test
-        working-directory: ./packages/server
-
       - name: Run database migrations
         run: npm run migrate:latest
+        working-directory: ./packages/server
+
+      - name: Run server tests
+        run: npm run test
         working-directory: ./packages/server
 
       # Client-side checks
