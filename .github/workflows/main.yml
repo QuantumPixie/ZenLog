@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  AWS_DEFAULT_REGION: eu-west-2a
+
 jobs:
   # test:
   #   runs-on: ubuntu-latest
@@ -189,7 +192,8 @@ jobs:
           echo "aws_access_key_id = ${{ secrets.AWS_ACCESS_KEY_ID }}" >> ~/.aws/credentials
           echo "aws_secret_access_key = ${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> ~/.aws/credentials
           echo "[default]" > ~/.aws/config
-          echo "region = ${{ secrets.AWS_DEFAULT_REGION }}" >> ~/.aws/config
+          echo "region = ${{ env.AWS_DEFAULT_REGION }}" >> ~/.aws/config
+          echo "region = $AWS_DEFAULT_REGION" >> ~/.aws/config
           echo "output = json" >> ~/.aws/config
 
       - name: Verify AWS credentials
