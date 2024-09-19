@@ -79,6 +79,7 @@ During a task review, you may get asked questions that test your understanding o
 <br>
 
 **Sample questions for a reviewer to ask**
+
 - What are the main features of your application? How did you implement them?
 - What are the main challenges you faced during the development process?
 - What are the remaining issues you need to solve?

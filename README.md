@@ -41,25 +41,30 @@ npm run dev
 2. Create a PostgreSQL database with your username and password
 
 3. Create .env file with with .env.example suggestions in server:
+
 ```
 DATABASE_URL=postgres://username:password@localhost:5432/database_name
 JWT_SECRET=secretpassword
 ```
 
 4. Run migrations
+
 ```
 npm run migrate:latest
 ```
 
 5. Run tests
+
 ```
  npm run test
 ```
 
 6. Run test coverage
+
 ```
 npm run coverage
 ```
+
 ## Usage
 
 The Mental Health Tracker provides a tRPC panel for easy interaction with the API. This interactive interface allows you to explore and test all available endpoints without writing any code.
@@ -67,11 +72,13 @@ The Mental Health Tracker provides a tRPC panel for easy interaction with the AP
 ### Accessing the tRPC Panel
 
 1. Ensure the server is running:
+
 ```
 npm run dev
 ```
 
 2. Open your web browser and navigate to:
+
 ```
 http://localhost:3005/panel
 ```
@@ -83,25 +90,31 @@ Note: Replace `3005` with the actual port number if you've configured a differen
 The tRPC panel provides a user-friendly interface for interacting with all available procedures:
 
 1. Authentication:
+
 - Use `user.signup` to create a new account
 - Use `user.login` to authenticate and receive a JWT token
 
 2. Mood Tracking:
+
 - Use `mood.createMood` to log a new mood entry
 - Use `mood.getMoods` to retrieve mood entries
 
 3. Journal Entries:
+
 - Use `journalEntry.createJournalEntry` to create a new journal entry
 - Use `journalEntry.getJournalEntries` to retrieve journal entries
 
 4. Activity Logging:
+
 - Use `activity.createActivity` to log a new activity
 - Use `activity.getActivities` to retrieve activity logs
 
 5. Dashboard:
+
 - Use `dashboard.getSummary` to get an overview of recent data
 
 6. Date Range Queries:
+
 - Several procedures (e.g., `mood.getMoodsByDateRange`) allow you to retrieve data for specific date ranges
 
 ### Authentication
@@ -118,21 +131,21 @@ All subsequent requests will include this authentication token.
 ### Exploring the API
 
 The tRPC panel allows you to:
+
 - See all available procedures
 - View input schemas for each procedure
 - Test procedures with custom inputs
 - See the raw API responses
 
-
 ## API Documentation
 
 Brief overview of main TRPC procedures:
+
 - `user.signup`: Create a new user account
 - `user.login`: Authenticate a user
 - `mood.createMood`: Log a new mood entry
 - `journalEntry.createJournalEntry`: Create a new journal entry
 - `activity.createActivity`: Log a new activity
-
 
 ## To-Dos
 

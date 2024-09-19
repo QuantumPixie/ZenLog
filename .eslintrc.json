@@ -8,7 +8,8 @@
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
-    "plugin:vue/vue3-recommended"
+    "plugin:vue/vue3-recommended",
+    "plugin:prettier/recommended"
   ],
   "parser": "vue-eslint-parser",
   "parserOptions": {
@@ -16,8 +17,15 @@
     "parser": "@typescript-eslint/parser",
     "sourceType": "module"
   },
-  "plugins": ["@typescript-eslint"],
-  "rules": {},
+  "plugins": ["@typescript-eslint", "prettier"],
+  "rules": {
+    "prettier/prettier": [
+      "error",
+      {
+        "semi": false
+      }
+    ]
+  },
   "settings": {
     "import/resolver": {
       "typescript": {
