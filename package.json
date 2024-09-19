@@ -22,8 +22,10 @@
     "typescript": "^5.5.4"
   },
   "scripts": {
-  "lint": "eslint . --ext .ts,.tsx,.js,.jsx,.vue",
-  "format": "prettier --write .",
-  "type-check": "tsc --noEmit --build packages/*"
-}
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx,.vue",
+    "format": "prettier --write .",
+    "type-check": "tsc --noEmit --build packages/*",
+    "start:server": "cd packages/server && npm start",
+    "start:prod": "node dist/index.js"
+  }
 }

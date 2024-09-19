@@ -201,13 +201,20 @@ jobs:
           chmod 600 lightsail_key
           mkdir -p ~/.ssh
           ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
+          scp -i lightsail_key ./package-lock.json $USERNAME@$HOST:/home/$USERNAME/app/
           scp -i lightsail_key -r ./packages/server/* $USERNAME@$HOST:/home/$USERNAME/app/server
           scp -i lightsail_key -r ./packages/client/mental-health-tracker-frontend/dist/* $USERNAME@$HOST:/home/$USERNAME/app/client
           ssh -i lightsail_key $USERNAME@$HOST << EOF
             set -e
-            cd /home/$USERNAME/app/server
+            cd /home/$USERNAME/app
             npm ci --only=production
+            cd server
+            npm run build  # Ensure the dist folder is up to date
             npm run migrate:latest
-            pm2 describe npm > /dev/null 2>&1 || pm2 start npm -- start
-            pm2 reload all
+            pm2 describe server > /dev/null 2>&1
+            if [ $? -eq 0 ]; then
+              pm2 reload server
+            else
+              pm2 start npm --name "server" -- run start:prod
+            fi
           EOF
