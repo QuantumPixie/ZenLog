@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 env:
-  AWS_DEFAULT_REGION: eu-west-2a
+  AWS_DEFAULT_REGION: eu-west-2
 
 jobs:
   # test:
@@ -192,17 +192,16 @@ jobs:
           echo "aws_access_key_id = ${{ secrets.AWS_ACCESS_KEY_ID }}" >> ~/.aws/credentials
           echo "aws_secret_access_key = ${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> ~/.aws/credentials
           echo "[default]" > ~/.aws/config
-          echo "region = $AWS_DEFAULT_REGION" >> ~/.aws/config
-          echo "output = json" >> ~/.aws/config
+          echo "region=$AWS_DEFAULT_REGION" >> ~/.aws/config
+          echo "output=json" >> ~/.aws/config
 
       - name: Verify AWS config file
         run: |
           cat ~/.aws/config
 
-        #   - name: Verify AWS credentials
-        # run: |
-        #   cat ~/.aws/config |
-        #   aws sts get-caller-identity --debug
+      - name: Verify AWS credentials
+        run: |
+          aws sts get-caller-identity --debug
 
       - name: Build server image
         run: docker build -t $SERVER_IMAGE_TAG -f ./packages/server/Dockerfile ./packages/server
