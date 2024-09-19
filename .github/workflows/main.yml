@@ -209,16 +209,13 @@ jobs:
       - name: Build client image
         run: docker build -t $CLIENT_IMAGE_TAG -f ./packages/client/mental-health-tracker-frontend/Dockerfile ./packages/client/mental-health-tracker-frontend
 
-      - name: Push server image to Lightsail
-        run: |
-          aws lightsail push-container-image \
-          --service-name ${{ secrets.AWS_LIGHTSAIL_SERVICE_NAME }} \
-          --label $SERVER_IMAGE_TAG \
-          --image $SERVER_IMAGE_TAG
-
       - name: Debug service name
         run: |
           echo "Service name is: ${{ secrets.AWS_LIGHTSAIL_SERVICE_NAME }}"
+
+      - name: Push server image to Lightsail
+        run: |
+          run: aws lightsail push-container-image --service-name "${{ secrets.AWS_LIGHTSAIL_SERVICE_NAME }}" --label $SERVER_IMAGE_TAG --image $SERVER_IMAGE_TAG
 
       - name: Push client image to Lightsail
         run: |
