@@ -1,10 +1,8 @@
 import path from 'path'
 import dotenv from 'dotenv'
 
-// Load test environment variables
 dotenv.config({ path: path.resolve(__dirname, '.env.test') })
 
-// Set environment variables for tests
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test_secret'
 process.env.DATABASE_URL =
   process.env.DATABASE_URL ||
@@ -21,7 +19,6 @@ process.exit = ((code?: number) => {
   return undefined as never
 }) as (code?: number) => never
 
-// Cleanup function to restore original process.exit
 export const cleanup = () => {
   process.exit = originalProcessExit
 }
