@@ -168,67 +168,97 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     env:
-      DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+      CLIENT_IMAGE_TAG: client-${{ github.sha }}
+      SERVER_IMAGE_TAG: server-${{ github.sha }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js
-        uses: actions/setup-node@v4
+      - name: Setup AWS CLI and Lightsail
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update
+          sudo curl "https://s3.us-west-2.amazonaws.com/lightsailctl/latest/linux-amd64/lightsailctl" -o "/usr/local/bin/lightsailctl"
+          sudo chmod +x /usr/local/bin/lightsailctl
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          node-version: "20.x"
+          aws-region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: Install and Build Server
-        run: |
-          cd ./packages/server
-          npm ci
-          npm run build
+      - name: Build server image
+        run: docker build -t $SERVER_IMAGE_TAG -f ./packages/server/Dockerfile ./packages/server
 
-      - name: Install and Build Client
+      - name: Build client image
+        run: docker build -t $CLIENT_IMAGE_TAG -f ./packages/client/mental-health-tracker-frontend/Dockerfile ./packages/client/mental-health-tracker-frontend
+
+      - name: Push server image to Lightsail
         run: |
-          cd ./packages/client/mental-health-tracker-frontend
-          npm ci
-          npm run build
+          aws lightsail push-container-image \
+          --service-name ${{ secrets.AWS_LIGHTSAIL_SERVICE_NAME }} \
+          --label $SERVER_IMAGE_TAG \
+          --image $SERVER_IMAGE_TAG
+
+      - name: Push client image to Lightsail
+        run: |
+          aws lightsail push-container-image \
+          --service-name ${{ secrets.AWS_LIGHTSAIL_SERVICE_NAME }} \
+          --label $CLIENT_IMAGE_TAG \
+          --image $CLIENT_IMAGE_TAG
 
       - name: Deploy to Lightsail
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          HOST: "35.178.250.224"
-          USERNAME: "ubuntu"
-          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          echo "$SSH_PRIVATE_KEY" > lightsail_key
-          chmod 600 lightsail_key
-          mkdir -p ~/.ssh
-          ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
-          scp -i lightsail_key ./package-lock.json $USERNAME@$HOST:/home/$USERNAME/app/
-          scp -i lightsail_key -r ./packages/server/* $USERNAME@$HOST:/home/$USERNAME/app/server
-          scp -i lightsail_key -r ./packages/client/mental-health-tracker-frontend/dist/* $USERNAME@$HOST:/home/$USERNAME/app/client
-          ssh -i lightsail_key $USERNAME@$HOST << EOF
-            set -ex
-            cd /home/$USERNAME/app
-            echo "Current directory: \$(pwd)"
-            echo "Contents of current directory:"
-            ls -la
-            echo "Installing dependencies..."
-            npm ci --omit=dev || npm ci --only=prod
-            cd server
-            echo "Current directory: \$(pwd)"
-            echo "Contents of current directory:"
-            ls -la
-            echo "Building server..."
-            npm run build
-            echo "Running migrations..."
-            npm run migrate:latest
-            echo "Checking PM2 status..."
-            pm2 list
-            if pm2 describe server > /dev/null 2>&1; then
-              echo "Reloading server..."
-              pm2 reload server
-            else
-              echo "Starting server..."
-              pm2 start npm --name "server" -- run start:prod
-            fi
-            echo "PM2 status after deployment:"
-            pm2 list
-          EOF
+          aws lightsail create-container-service-deployment \
+          --service-name ${{ secrets.AWS_LIGHTSAIL_SERVICE_NAME }} \
+          --containers '{
+            "server": {
+              "image": "'$SERVER_IMAGE_TAG'",
+              "ports": {"3005": "HTTP"},
+              "environment": {
+                "DATABASE_URL": "${{ env.DATABASE_URL }}",
+                "JWT_SECRET": "${{ env.JWT_SECRET }}",
+                "PORT": "3005"
+              }
+            },
+            "client": {
+              "image": "'$CLIENT_IMAGE_TAG'",
+              "ports": {"5173": "HTTP"},
+              "environment": {
+                "VITE_API_URL": "${{ env.VITE_API_URL }}"
+              }
+            },
+            "db": {
+              "image": "postgres:13",
+              "ports": {"5432": "TCP"},
+              "environment": {
+                "POSTGRES_DB": "${{ env.DB_NAME }}",
+                "POSTGRES_USER": "${{ env.DB_USER }}",
+                "POSTGRES_PASSWORD": "${{ env.DB_PASSWORD }}"
+              }
+            }
+          }' \
+          --public-endpoint '{
+            "containerName": "client",
+            "containerPort": 5173,
+            "healthCheck": {
+              "path": "/",
+              "intervalSeconds": 10
+            }
+          }'
+
+      - name: Wait for deployment to complete
+        run: |
+          aws lightsail get-container-service-deployments \
+          --service-name ${{ secrets.AWS_LIGHTSAIL_SERVICE_NAME }} \
+          --query 'deployments[0].state' \
+          --output text
