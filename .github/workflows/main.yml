@@ -195,10 +195,14 @@ jobs:
           echo "region = $AWS_DEFAULT_REGION" >> ~/.aws/config
           echo "output = json" >> ~/.aws/config
 
-      - name: Verify AWS credentials
+      - name: Verify AWS config file
         run: |
-          cat ~/.aws/config |
-          aws sts get-caller-identity --debug
+          cat ~/.aws/config
+
+        #   - name: Verify AWS credentials
+        # run: |
+        #   cat ~/.aws/config |
+        #   aws sts get-caller-identity --debug
 
       - name: Build server image
         run: docker build -t $SERVER_IMAGE_TAG -f ./packages/server/Dockerfile ./packages/server
