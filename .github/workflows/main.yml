@@ -183,17 +183,15 @@ jobs:
         with:
           node-version: "20.x"
 
-      - name: Install dependencies for deploy
+      - name: Install and Build for Deploy
         run: |
           npm ci
           cd ./packages/server
           npm ci --production
           npm install typescript --save-dev
-        working-directory: ./packages/client/mental-health-tracker-frontend
-
-      - name: Build application
-        run: |
+          cd ../..
           cd ./packages/client/mental-health-tracker-frontend
+          npm ci
           npm run build
         working-directory: ./packages/client/mental-health-tracker-frontend
 
