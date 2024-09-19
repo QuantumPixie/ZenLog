@@ -216,9 +216,9 @@ jobs:
           --label $SERVER_IMAGE_TAG \
           --image $SERVER_IMAGE_TAG
 
-      # - name: Debug service name
-      #   run: |
-      #     echo "Service name is: ${{ secrets.AWS_LIGHTSAIL_SERVICE_NAME }}"
+      - name: Debug service name
+        run: |
+          echo "Service name is: ${{ secrets.AWS_LIGHTSAIL_SERVICE_NAME }}"
 
       - name: Push client image to Lightsail
         run: |
