@@ -204,8 +204,10 @@ jobs:
           scp -i lightsail_key -r ./packages/server/* $USERNAME@$HOST:/home/$USERNAME/app/server
           scp -i lightsail_key -r ./packages/client/mental-health-tracker-frontend/dist/* $USERNAME@$HOST:/home/$USERNAME/app/client
           ssh -i lightsail_key $USERNAME@$HOST << EOF
+            set -e
             cd /home/$USERNAME/app/server
-            npm ci --production
+            npm ci --only=production
             npm run migrate:latest
-            pm2 restart all || pm2 start npm -- start
+            pm2 describe npm > /dev/null 2>&1 || pm2 start npm -- start
+            pm2 reload all
           EOF
