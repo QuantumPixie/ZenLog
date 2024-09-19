@@ -205,16 +205,30 @@ jobs:
           scp -i lightsail_key -r ./packages/server/* $USERNAME@$HOST:/home/$USERNAME/app/server
           scp -i lightsail_key -r ./packages/client/mental-health-tracker-frontend/dist/* $USERNAME@$HOST:/home/$USERNAME/app/client
           ssh -i lightsail_key $USERNAME@$HOST << EOF
-            set -e
+            set -ex
             cd /home/$USERNAME/app
-            npm ci --only=production
+            echo "Current directory: \$(pwd)"
+            echo "Contents of current directory:"
+            ls -la
+            echo "Installing dependencies..."
+            npm ci --omit=dev || npm ci --only=prod
             cd server
-            npm run build  # Ensure the dist folder is up to date
+            echo "Current directory: \$(pwd)"
+            echo "Contents of current directory:"
+            ls -la
+            echo "Building server..."
+            npm run build
+            echo "Running migrations..."
             npm run migrate:latest
-            pm2 describe server > /dev/null 2>&1
-            if [ $? -eq 0 ]; then
+            echo "Checking PM2 status..."
+            pm2 list
+            if pm2 describe server > /dev/null 2>&1; then
+              echo "Reloading server..."
               pm2 reload server
             else
+              echo "Starting server..."
               pm2 start npm --name "server" -- run start:prod
             fi
+            echo "PM2 status after deployment:"
+            pm2 list
           EOF
