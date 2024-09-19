@@ -197,6 +197,7 @@ jobs:
 
       - name: Verify AWS credentials
         run: |
+          cat ~/.aws/config |
           aws sts get-caller-identity --debug
 
       - name: Build server image
