@@ -72,7 +72,6 @@ jobs:
   #     # Add client-side checks and E2E tests here if needed
 
   deploy:
-    # needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
@@ -92,7 +91,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
 
       - name: Build server image
         run: |
@@ -103,17 +102,14 @@ jobs:
       - name: Push server image to Lightsail
         run: |
           echo "Pushing server image to Lightsail..."
-          aws lightsail push-container-image \
-          --service-name $LIGHTSAIL_SERVICE_NAME\
-          --label "server-${{ github.sha }}" \
-          --image "server-${{ github.sha }}"
+          aws lightsail push-container-image --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} --label "server-${{ github.sha }}" --image "server-${{ github.sha }}"
           echo "Server image pushed successfully"
 
       - name: Deploy to Lightsail
         run: |
           echo "Deploying server and database to Lightsail..."
           aws lightsail create-container-service-deployment \
-          --service-name $LIGHTSAIL_SERVICE_NAME \
+          --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} \
           --containers '{
             "server": {
               "image": "server-${{ github.sha }}",
@@ -157,7 +153,7 @@ jobs:
               exit 1
             fi
 
-            SERVICE_INFO=$(aws lightsail get-container-services --service-name $LIGHTSAIL_SERVICE_NAME }})
+            SERVICE_INFO=$(aws lightsail get-container-services --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }})
             STATUS=$(echo $SERVICE_INFO | jq -r '.containerServices[0].state')
             CONTAINERS_INFO=$(echo $SERVICE_INFO | jq -r '.containerServices[0].currentDeployment.containers')
 
@@ -193,16 +189,16 @@ jobs:
         if: always()
         run: |
           echo "Fetching server logs..."
-          aws lightsail get-container-log --service-name $LIGHTSAIL_SERVICE_NAME }} --container-name server
+          aws lightsail get-container-log --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} --container-name server
           echo "Server logs retrieved"
           echo "Fetching database logs..."
-          aws lightsail get-container-log --service-name $LIGHTSAIL_SERVICE_NAME }} --container-name db
+          aws lightsail get-container-log --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} --container-name db
           echo "Database logs retrieved"
 
       - name: Check server health
         if: success()
         run: |
-          ENDPOINT=$(aws lightsail get-container-services --service-name $LIGHTSAIL_SERVICE_NAME }} --query 'containerServices[0].url' --output text)
+          ENDPOINT=$(aws lightsail get-container-services --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} --query 'containerServices[0].url' --output text)
           echo "Checking server health at $ENDPOINT/health"
           curl -sSf "$ENDPOINT/health" || (echo "Server health check failed" && exit 1)
           echo "Server health check passed"
