@@ -274,19 +274,47 @@ jobs:
           }'
           echo "Deployment command executed"
 
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
       - name: Wait for deployment to complete
         run: |
           echo "Waiting for deployment to complete..."
+          TIMEOUT=1800  # 30 minutes timeout
+          START_TIME=$SECONDS
           while true; do
-            STATUS=$(aws lightsail get-container-services --service-name $LIGHTSAIL_SERVICE_NAME --query 'containerServices[0].state' --output text)
+            ELAPSED_TIME=$((SECONDS - START_TIME))
+            if [ $ELAPSED_TIME -ge $TIMEOUT ]; then
+              echo "Deployment timed out after 30 minutes"
+              exit 1
+            fi
+            
+            SERVICE_INFO=$(aws lightsail get-container-services --service-name $LIGHTSAIL_SERVICE_NAME)
+            STATUS=$(echo $SERVICE_INFO | jq -r '.containerServices[0].state')
+            CONTAINERS_INFO=$(echo $SERVICE_INFO | jq -r '.containerServices[0].currentDeployment.containers')
+            
             echo "Current status: $STATUS"
+            echo "Containers info: $CONTAINERS_INFO"
+            
             if [ "$STATUS" = "RUNNING" ]; then
               echo "Deployment completed successfully"
               break
             elif [ "$STATUS" = "FAILED" ]; then
               echo "Deployment failed"
               exit 1
+            elif [ "$STATUS" = "READY" ]; then
+              # Check individual container states
+              SERVER_STATE=$(echo $CONTAINERS_INFO | jq -r '.server.state')
+              DB_STATE=$(echo $CONTAINERS_INFO | jq -r '.db.state')
+              echo "Server container state: $SERVER_STATE"
+              echo "Database container state: $DB_STATE"
+              
+              if [ "$SERVER_STATE" = "RUNNING" ] && [ "$DB_STATE" = "RUNNING" ]; then
+                echo "All containers are running. Deployment successful."
+                break
+              fi
             fi
+            
             sleep 30
           done
 
@@ -296,6 +324,9 @@ jobs:
           echo "Fetching server logs..."
           aws lightsail get-container-log --service-name $LIGHTSAIL_SERVICE_NAME --container-name server
           echo "Server logs retrieved"
+          echo "Fetching database logs..."
+          aws lightsail get-container-log --service-name $LIGHTSAIL_SERVICE_NAME --container-name db
+          echo "Database logs retrieved"
 
       - name: Check server health
         if: success()
