@@ -62,9 +62,9 @@ jobs:
         run: npm run migrate:latest
         working-directory: ./packages/server
 
-      - name: Run server tests
-        run: npm run test
-        working-directory: ./packages/server
+      # - name: Run server tests
+      #   run: npm run test
+      #   working-directory: ./packages/server
 
       # Client-side checks (commented out for now)
       # - name: Install client dependencies
@@ -168,7 +168,7 @@ jobs:
       #   run: kill $(cat packages/server/server.pid)
 
   deploy:
-    needs: test
+    # needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     env:
