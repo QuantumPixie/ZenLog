@@ -132,6 +132,12 @@ jobs:
             sleep 30
           done
 
+      - name: Check Lightsail container service configuration
+        run: |
+          echo "Checking Lightsail container service configuration..."
+          aws lightsail get-container-services --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} | jq '.'
+          echo "Configuration check complete"
+
       - name: Deploy to Lightsail
         run: |
           echo "Deploying server and database to Lightsail..."
@@ -206,6 +212,7 @@ jobs:
           echo "Waiting for deployment to complete..."
           TIMEOUT=1800  # 30 minutes timeout
           START_TIME=$SECONDS
+          PREVIOUS_STATUS=""
           while true; do
             ELAPSED_TIME=$((SECONDS - START_TIME))
             if [ $ELAPSED_TIME -ge $TIMEOUT ]; then
@@ -217,24 +224,49 @@ jobs:
             STATUS=$(echo $SERVICE_INFO | jq -r '.containerServices[0].state')
             CURRENT_DEPLOYMENT=$(echo $SERVICE_INFO | jq -r '.containerServices[0].currentDeployment')
             NEXT_DEPLOYMENT=$(echo $SERVICE_INFO | jq -r '.containerServices[0].nextDeployment')
-
-            echo "Current status: $STATUS"
+            
+            if [ "$STATUS" != "$PREVIOUS_STATUS" ]; then
+              echo "Status changed from $PREVIOUS_STATUS to $STATUS"
+              echo "Full service info:"
+              echo "$SERVICE_INFO" | jq '.'
+              PREVIOUS_STATUS=$STATUS
+            else
+              echo "Current status: $STATUS"
+            fi
             echo "Elapsed time: $ELAPSED_TIME seconds"
-
+            
             if [ "$STATUS" = "RUNNING" ]; then
               echo "Deployment completed successfully"
               echo "Current deployment details:"
               echo "$CURRENT_DEPLOYMENT" | jq '.'
               break
             elif [ "$STATUS" = "DEPLOYING" ]; then
-              echo "Deployment still in progress. Next deployment details:"
+              echo "Deployment in progress. Next deployment details:"
               echo "$NEXT_DEPLOYMENT" | jq '.'
+            elif [ "$STATUS" = "READY" ]; then
+              echo "Service is READY. Checking container states:"
+              CONTAINERS=$(echo $SERVICE_INFO | jq -r '.containerServices[0].currentDeployment.containers')
+              echo "$CONTAINERS" | jq '.'
+              
+              SERVER_STATE=$(echo $CONTAINERS | jq -r '.server.state // "N/A"')
+              DB_STATE=$(echo $CONTAINERS | jq -r '.db.state // "N/A"')
+              echo "Server container state: $SERVER_STATE"
+              echo "Database container state: $DB_STATE"
+              
+              if [ "$SERVER_STATE" = "RUNNING" ] && [ "$DB_STATE" = "RUNNING" ]; then
+                echo "All containers are running. Deployment successful."
+                break
+              elif [ "$SERVER_STATE" = "N/A" ] || [ "$DB_STATE" = "N/A" ]; then
+                echo "Container information not available. Waiting for update..."
+              else
+                echo "Containers not yet running. Continuing to wait..."
+              fi
             elif [ "$STATUS" = "FAILED" ]; then
               echo "Deployment failed. Service info:"
               echo "$SERVICE_INFO" | jq '.'
               exit 1
             fi
-
+            
             sleep 30
           done
 
@@ -254,6 +286,23 @@ jobs:
 
           if [ "$SERVER_STATE" != "RUNNING" ] || [ "$DB_STATE" != "RUNNING" ]; then
             echo "One or more containers are not in the RUNNING state"
+            exit 1
+          fi
+
+      - name: Verify Lightsail service health
+        if: success()
+        run: |
+          echo "Verifying Lightsail service health..."
+          SERVICE_INFO=$(aws lightsail get-container-services --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }})
+          echo "$SERVICE_INFO" | jq '.'
+
+          PUBLIC_ENDPOINT=$(echo $SERVICE_INFO | jq -r '.containerServices[0].url')
+          if [ -n "$PUBLIC_ENDPOINT" ]; then
+            echo "Checking public endpoint: $PUBLIC_ENDPOINT"
+            curl -sSf "${PUBLIC_ENDPOINT}/health" || (echo "Health check failed" && exit 1)
+            echo "Health check passed"
+          else
+            echo "Public endpoint not available"
             exit 1
           fi
 
