@@ -138,6 +138,22 @@ jobs:
           aws lightsail get-container-services --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} | jq '.'
           echo "Configuration check complete"
 
+      - name: Check Lightsail Container Service Capacity
+        run: |
+          echo "Checking Lightsail Container Service capacity..."
+          SERVICE_INFO=$(aws lightsail get-container-services --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }})
+          echo "$SERVICE_INFO" | jq '.containerServices[0] | {power, scale, state, isDisabled}'
+
+          POWER=$(echo "$SERVICE_INFO" | jq -r '.containerServices[0].power')
+          SCALE=$(echo "$SERVICE_INFO" | jq -r '.containerServices[0].scale')
+
+          echo "Current power: $POWER"
+          echo "Current scale: $SCALE"
+
+          if [ "$POWER" = "nano" ] || [ "$SCALE" -lt 1 ]; then
+            echo "Warning: Container service may not have sufficient resources. Consider upgrading power or increasing scale."
+          fi
+
       - name: Deploy to Lightsail
         run: |
           echo "Deploying server and database to Lightsail..."
@@ -213,6 +229,7 @@ jobs:
           TIMEOUT=1800  # 30 minutes timeout
           START_TIME=$SECONDS
           PREVIOUS_STATUS=""
+          READY_COUNT=0
           while true; do
             ELAPSED_TIME=$((SECONDS - START_TIME))
             if [ $ELAPSED_TIME -ge $TIMEOUT ]; then
@@ -225,14 +242,7 @@ jobs:
             CURRENT_DEPLOYMENT=$(echo $SERVICE_INFO | jq -r '.containerServices[0].currentDeployment')
             NEXT_DEPLOYMENT=$(echo $SERVICE_INFO | jq -r '.containerServices[0].nextDeployment')
             
-            if [ "$STATUS" != "$PREVIOUS_STATUS" ]; then
-              echo "Status changed from $PREVIOUS_STATUS to $STATUS"
-              echo "Full service info:"
-              echo "$SERVICE_INFO" | jq '.'
-              PREVIOUS_STATUS=$STATUS
-            else
-              echo "Current status: $STATUS"
-            fi
+            echo "Current status: $STATUS"
             echo "Elapsed time: $ELAPSED_TIME seconds"
             
             if [ "$STATUS" = "RUNNING" ]; then
@@ -240,52 +250,68 @@ jobs:
               echo "Current deployment details:"
               echo "$CURRENT_DEPLOYMENT" | jq '.'
               break
-            elif [ "$STATUS" = "DEPLOYING" ]; then
-              echo "Deployment in progress. Next deployment details:"
-              echo "$NEXT_DEPLOYMENT" | jq '.'
             elif [ "$STATUS" = "READY" ]; then
+              READY_COUNT=$((READY_COUNT + 1))
               echo "Service is READY. Checking container states:"
-              CONTAINERS=$(echo $SERVICE_INFO | jq -r '.containerServices[0].currentDeployment.containers')
+              CONTAINERS=$(echo $CURRENT_DEPLOYMENT | jq -r '.containers')
               echo "$CONTAINERS" | jq '.'
               
-              SERVER_STATE=$(echo $CONTAINERS | jq -r '.server.state // "N/A"')
-              DB_STATE=$(echo $CONTAINERS | jq -r '.db.state // "N/A"')
-              echo "Server container state: $SERVER_STATE"
-              echo "Database container state: $DB_STATE"
-              
-              if [ "$SERVER_STATE" = "RUNNING" ] && [ "$DB_STATE" = "RUNNING" ]; then
-                echo "All containers are running. Deployment successful."
-                break
-              elif [ "$SERVER_STATE" = "N/A" ] || [ "$DB_STATE" = "N/A" ]; then
-                echo "Container information not available. Waiting for update..."
+              if [ "$CONTAINERS" = "null" ] || [ -z "$CONTAINERS" ]; then
+                echo "Container information not available."
+                if [ $READY_COUNT -ge 5 ]; then
+                  echo "Container information still not available after multiple checks. Fetching detailed logs..."
+                  aws lightsail get-container-log --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} --container-name server
+                  aws lightsail get-container-log --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} --container-name db
+                  echo "Deployment seems stuck. Please check the Lightsail console for more information."
+                  exit 1
+                fi
               else
-                echo "Containers not yet running. Continuing to wait..."
+                SERVER_STATE=$(echo $CONTAINERS | jq -r '.server.state // "N/A"')
+                DB_STATE=$(echo $CONTAINERS | jq -r '.db.state // "N/A"')
+                echo "Server container state: $SERVER_STATE"
+                echo "Database container state: $DB_STATE"
+                
+                if [ "$SERVER_STATE" = "RUNNING" ] && [ "$DB_STATE" = "RUNNING" ]; then
+                  echo "All containers are running. Deployment successful."
+                  break
+                fi
               fi
             elif [ "$STATUS" = "FAILED" ]; then
               echo "Deployment failed. Service info:"
               echo "$SERVICE_INFO" | jq '.'
+              aws lightsail get-container-log --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} --container-name server
+              aws lightsail get-container-log --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} --container-name db
               exit 1
             fi
             
             sleep 30
           done
 
-      - name: Check container health
+      - name: Check Container Health
         if: success()
         run: |
           echo "Checking container health..."
           SERVICE_INFO=$(aws lightsail get-container-services --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }})
           CONTAINERS=$(echo $SERVICE_INFO | jq -r '.containerServices[0].currentDeployment.containers')
+
+          if [ "$CONTAINERS" = "null" ] || [ -z "$CONTAINERS" ]; then
+            echo "Container information not available. Deployment may have failed."
+            exit 1
+          fi
+
+          echo "Container information:"
           echo "$CONTAINERS" | jq '.'
 
-          SERVER_STATE=$(echo $CONTAINERS | jq -r '.server.state')
-          DB_STATE=$(echo $CONTAINERS | jq -r '.db.state')
+          SERVER_STATE=$(echo $CONTAINERS | jq -r '.server.state // "N/A"')
+          DB_STATE=$(echo $CONTAINERS | jq -r '.db.state // "N/A"')
 
           echo "Server container state: $SERVER_STATE"
           echo "Database container state: $DB_STATE"
 
           if [ "$SERVER_STATE" != "RUNNING" ] || [ "$DB_STATE" != "RUNNING" ]; then
             echo "One or more containers are not in the RUNNING state"
+            aws lightsail get-container-log --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} --container-name server
+            aws lightsail get-container-log --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} --container-name db
             exit 1
           fi
 
