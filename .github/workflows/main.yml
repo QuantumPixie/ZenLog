@@ -234,21 +234,22 @@ jobs:
 
       - name: Deploy to Lightsail
         env:
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          # VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          SERVER_IMAGE_TAG: server-${{ github.sha }}
         run: |
           echo "Deploying server and database to Lightsail..."
           aws lightsail create-container-service-deployment \
-          --service-name $LIGHTSAIL_SERVICE_NAME \
+          --service-name ${{ secrets.LIGHTSAIL_SERVICE_NAME }} \
           --containers '{
             "server": {
               "image": "'$SERVER_IMAGE_TAG'",
               "ports": {"3005": "HTTP"},
               "environment": {
-                "DATABASE_URL": "postgres://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@db:5432/${{ secrets.DB_NAME }}",
+                "DB_NAME": "${{ secrets.DB_NAME }}",
+                "DB_USER": "${{ secrets.DB_USER }}",
+                "DB_PASSWORD": "${{ secrets.DB_PASSWORD }}",
+                "DB_PORT": "${{ secrets.DB_PORT }}",
+                "DB_HOST": "${{ secrets.DB_HOST }}",
+                "DATABASE_URL": "postgres://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }}",
                 "JWT_SECRET": "${{ secrets.JWT_SECRET }}",
                 "PORT": "3005",
                 "NODE_ENV": "production"
