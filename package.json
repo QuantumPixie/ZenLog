@@ -28,6 +28,9 @@
     "type-check": "tsc --noEmit --build packages/*",
     "start:server": "cd packages/server && npm start",
     "start:prod": "node dist/index.js",
-    "migrate:latest": "cd packages/server && npm run migrate:latest"
+    "migrate:latest": "cd packages/server && npm run migrate:latest",
+    "start": "cd packages/server && node index.js",
+    "postinstall": "cd packages/server && npm install",
+    "heroku-postbuild": "cd packages/server && npm install && npm run build"
   }
 }
