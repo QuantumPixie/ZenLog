@@ -238,18 +238,13 @@ jobs:
         run: |
           echo "Deploying server and database to Lightsail..."
           aws lightsail create-container-service-deployment \
-          --service-name ${{ secrets.LIGHTSAIL_SERVICE_NAME }} \
+          --service-name $secrets.LIGHTSAIL_SERVICE_NAME \
           --containers '{
             "server": {
               "image": "'$SERVER_IMAGE_TAG'",
               "ports": {"3005": "HTTP"},
               "environment": {
-                "DB_NAME": "${{ secrets.DB_NAME }}",
-                "DB_USER": "${{ secrets.DB_USER }}",
-                "DB_PASSWORD": "${{ secrets.DB_PASSWORD }}",
-                "DB_PORT": "${{ secrets.DB_PORT }}",
-                "DB_HOST": "${{ secrets.DB_HOST }}",
-                "DATABASE_URL": "postgres://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }}",
+                "DATABASE_URL": "${{ secrets.PROD_DATABASE_URL }}",
                 "JWT_SECRET": "${{ secrets.JWT_SECRET }}",
                 "PORT": "3005",
                 "NODE_ENV": "production"
@@ -259,8 +254,8 @@ jobs:
               "image": "postgres:13",
               "ports": {"5432": "TCP"},
               "environment": {
-                "POSTGRES_DB": "${{ secrets.DB_NAME }}",
-                "POSTGRES_USER": "${{ secrets.DB_USER }}",
+                "POSTGRES_DB": "mental_health_tracker_db",
+                "POSTGRES_USER": "thuppertz",
                 "POSTGRES_PASSWORD": "${{ secrets.DB_PASSWORD }}"
               }
             }
@@ -289,7 +284,7 @@ jobs:
               echo "Deployment timed out after 30 minutes"
               exit 1
             fi
-            
+
             SERVICE_INFO=$(aws lightsail get-container-services --service-name $LIGHTSAIL_SERVICE_NAME)
             STATUS=$(echo $SERVICE_INFO | jq -r '.containerServices[0].state')
             CURRENT_DEPLOYMENT=$(echo $SERVICE_INFO | jq -r '.containerServices[0].currentDeployment')
