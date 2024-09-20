@@ -166,13 +166,30 @@ jobs:
               "intervalSeconds": 10
             }
           }' 2>&1)
-          if [ $? -ne 0 ]; then
-            echo "Deployment failed. Error output:"
-            echo "$DEPLOY_OUTPUT"
+          
+          DEPLOY_EXIT_CODE=$?
+          echo "Deployment command output:"
+          echo "$DEPLOY_OUTPUT"
+
+          if [ $DEPLOY_EXIT_CODE -ne 0 ]; then
+            echo "Deployment failed with exit code $DEPLOY_EXIT_CODE"
+            echo "Checking Lightsail service status..."
+            aws lightsail get-container-services --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} | jq '.'
             exit 1
           else
             echo "Deployment command executed successfully"
-            echo "$DEPLOY_OUTPUT"
+          fi
+
+      - name: Check deployment status
+        if: success()
+        run: |
+          echo "Checking deployment status..."
+          DEPLOYMENT_INFO=$(aws lightsail get-container-services --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }})
+          echo "$DEPLOYMENT_INFO" | jq '.'
+          CURRENT_DEPLOYMENT=$(echo "$DEPLOYMENT_INFO" | jq -r '.containerServices[0].currentDeployment')
+          if [ "$CURRENT_DEPLOYMENT" = "null" ]; then
+            echo "No current deployment found. Deployment may have failed to start."
+            exit 1
           fi
 
       - name: Wait for deployment to complete
