@@ -44,9 +44,9 @@
     "start:prod": "node packages/server/dist/index.js",
     "migrate:latest": "cd packages/server && npm run migrate:latest",
     "start": "cd packages/server && node dist/index.js",
-    "heroku-postbuild": "npm run build:server && npm run build:client",
     "build:server": "cd packages/server && npm install && npm run build",
-    "build:client": "cd packages/client && npm install && npm run build"
+    "build:client": "cd packages/client && npm install && npm run build",
+    "heroku-postbuild": "npm run build:server && npm run build:client"
   },
   "dependencies": {
     "chance": "^1.1.12",
