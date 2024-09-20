@@ -291,30 +291,44 @@ jobs:
             
             SERVICE_INFO=$(aws lightsail get-container-services --service-name $LIGHTSAIL_SERVICE_NAME)
             STATUS=$(echo $SERVICE_INFO | jq -r '.containerServices[0].state')
-            CONTAINERS_INFO=$(echo $SERVICE_INFO | jq -r '.containerServices[0].currentDeployment.containers')
-            
+            CURRENT_DEPLOYMENT=$(echo $SERVICE_INFO | jq -r '.containerServices[0].currentDeployment')
+
             echo "Current status: $STATUS"
-            echo "Containers info: $CONTAINERS_INFO"
-            
-            if [ "$STATUS" = "RUNNING" ]; then
+            echo "Elapsed time: $ELAPSED_TIME seconds"
+
+            if [ "$STATUS" = "DEPLOYING" ]; then
+              echo "Deployment in progress. Details:"
+              echo "$CURRENT_DEPLOYMENT" | jq '.'
+            elif [ "$STATUS" = "RUNNING" ]; then
               echo "Deployment completed successfully"
               break
             elif [ "$STATUS" = "FAILED" ]; then
-              echo "Deployment failed"
+              echo "Deployment failed. Details:"
+              echo "$SERVICE_INFO" | jq '.'
               exit 1
             elif [ "$STATUS" = "READY" ]; then
-              # Check individual container states
-              SERVER_STATE=$(echo $CONTAINERS_INFO | jq -r '.server.state')
-              DB_STATE=$(echo $CONTAINERS_INFO | jq -r '.db.state')
-              echo "Server container state: $SERVER_STATE"
-              echo "Database container state: $DB_STATE"
-              
-              if [ "$SERVER_STATE" = "RUNNING" ] && [ "$DB_STATE" = "RUNNING" ]; then
-                echo "All containers are running. Deployment successful."
-                break
+              CONTAINERS_INFO=$(echo $CURRENT_DEPLOYMENT | jq -r '.containers')
+              if [ "$CONTAINERS_INFO" != "null" ]; then
+                echo "Container info available:"
+                echo "$CONTAINERS_INFO" | jq '.'
+
+                SERVER_STATE=$(echo $CONTAINERS_INFO | jq -r '.server.state')
+                DB_STATE=$(echo $CONTAINERS_INFO | jq -r '.db.state')
+                echo "Server container state: $SERVER_STATE"
+                echo "Database container state: $DB_STATE"
+
+                if [ "$SERVER_STATE" = "RUNNING" ] && [ "$DB_STATE" = "RUNNING" ]; then
+                  echo "All containers are running. Deployment successful."
+                  break
+                fi
+              else
+                echo "Container info not available yet"
               fi
+            else
+              echo "Unexpected status: $STATUS"
+              echo "Full service info:"
+              echo "$SERVICE_INFO" | jq '.'
             fi
-            
             sleep 30
           done
 
