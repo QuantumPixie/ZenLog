@@ -92,7 +92,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+          aws-region: $AWS_DEFAULT_REGION
 
       - name: Build server image
         run: |
@@ -104,7 +104,7 @@ jobs:
         run: |
           echo "Pushing server image to Lightsail..."
           aws lightsail push-container-image \
-          --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} \
+          --service-name $LIGHTSAIL_SERVICE_NAME }} \
           --label "server-${{ github.sha }}" \
           --image "server-${{ github.sha }}"
           echo "Server image pushed successfully"
@@ -113,7 +113,7 @@ jobs:
         run: |
           echo "Deploying server and database to Lightsail..."
           aws lightsail create-container-service-deployment \
-          --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} \
+          --service-name $LIGHTSAIL_SERVICE_NAME \
           --containers '{
             "server": {
               "image": "server-${{ github.sha }}",
@@ -148,16 +148,44 @@ jobs:
       - name: Wait for deployment to complete
         run: |
           echo "Waiting for deployment to complete..."
+          TIMEOUT=1800  # 30 minutes timeout
+          START_TIME=$SECONDS
           while true; do
-            STATUS=$(aws lightsail get-container-services --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} --query 'containerServices[0].state' --output text)
+            ELAPSED_TIME=$((SECONDS - START_TIME))
+            if [ $ELAPSED_TIME -ge $TIMEOUT ]; then
+              echo "Deployment timed out after 30 minutes"
+              exit 1
+            fi
+
+            SERVICE_INFO=$(aws lightsail get-container-services --service-name $LIGHTSAIL_SERVICE_NAME }})
+            STATUS=$(echo $SERVICE_INFO | jq -r '.containerServices[0].state')
+            CONTAINERS_INFO=$(echo $SERVICE_INFO | jq -r '.containerServices[0].currentDeployment.containers')
+
             echo "Current status: $STATUS"
+            echo "Elapsed time: $ELAPSED_TIME seconds"
+
             if [ "$STATUS" = "RUNNING" ]; then
               echo "Deployment completed successfully"
               break
             elif [ "$STATUS" = "FAILED" ]; then
-              echo "Deployment failed"
+              echo "Deployment failed. Details:"
+              echo "$SERVICE_INFO" | jq '.'
               exit 1
+            elif [ "$STATUS" = "READY" ]; then
+              echo "Service is READY. Checking individual container states:"
+              echo "$CONTAINERS_INFO" | jq '.'
+
+              SERVER_STATE=$(echo $CONTAINERS_INFO | jq -r '.server.state')
+              DB_STATE=$(echo $CONTAINERS_INFO | jq -r '.db.state')
+              echo "Server container state: $SERVER_STATE"
+              echo "Database container state: $DB_STATE"
+
+              if [ "$SERVER_STATE" = "RUNNING" ] && [ "$DB_STATE" = "RUNNING" ]; then
+                echo "All containers are running. Deployment successful."
+                break
+              fi
             fi
+
             sleep 30
           done
 
@@ -165,14 +193,16 @@ jobs:
         if: always()
         run: |
           echo "Fetching server logs..."
-          aws lightsail get-container-log --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} --container-name server
+          aws lightsail get-container-log --service-name $LIGHTSAIL_SERVICE_NAME }} --container-name server
+          echo "Server logs retrieved"
           echo "Fetching database logs..."
-          aws lightsail get-container-log --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} --container-name db
+          aws lightsail get-container-log --service-name $LIGHTSAIL_SERVICE_NAME }} --container-name db
+          echo "Database logs retrieved"
 
       - name: Check server health
         if: success()
         run: |
-          ENDPOINT=$(aws lightsail get-container-services --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} --query 'containerServices[0].url' --output text)
+          ENDPOINT=$(aws lightsail get-container-services --service-name $LIGHTSAIL_SERVICE_NAME }} --query 'containerServices[0].url' --output text)
           echo "Checking server health at $ENDPOINT/health"
           curl -sSf "$ENDPOINT/health" || (echo "Server health check failed" && exit 1)
           echo "Server health check passed"
