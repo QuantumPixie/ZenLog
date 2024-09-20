@@ -27,9 +27,9 @@ jobs:
       postgres:
         image: postgres:16.1-alpine
         env:
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_DB: "mental_health_tracker_db"
+          POSTGRES_USER": "thuppertz"
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
         ports:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
@@ -238,7 +238,7 @@ jobs:
         run: |
           echo "Deploying server and database to Lightsail..."
           aws lightsail create-container-service-deployment \
-          --service-name $secrets.LIGHTSAIL_SERVICE_NAME \
+          --service-name $LIGHTSAIL_SERVICE_NAME \
           --containers '{
             "server": {
               "image": "'$SERVER_IMAGE_TAG'",
