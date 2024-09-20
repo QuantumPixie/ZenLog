@@ -1,0 +1,114 @@
+name: Test, E2E, and Deploy to Heroku
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: postgres://thuppertz:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/mental_health_tracker_db
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      PORT: 3005
+      CI: true
+      NODE_ENV: test
+      VITE_BACKEND_URL: http://localhost:3005/api/trpc
+      PLAYWRIGHT_TEST_BASE_URL: http://localhost:3005
+      POSTGRES_DB: mental_health_tracker_db
+      POSTGRES_USER: thuppertz
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+
+    services:
+      postgres:
+        image: postgres:16.1-alpine
+        env:
+          POSTGRES_DB: mental_health_tracker_db
+          POSTGRES_USER: thuppertz
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
+      - name: Install root dependencies
+        run: npm ci
+
+      # Server-side checks
+      - name: Install server dependencies
+        run: npm ci
+        working-directory: ./packages/server
+
+      - name: Run server lint
+        run: npm run lint
+        working-directory: ./packages/server
+
+      - name: Run server type check
+        run: npm run type-check
+        working-directory: ./packages/server
+
+      - name: Run database migrations
+        run: npm run migrate:latest
+        working-directory: ./packages/server
+
+      - name: Run server tests
+        run: npm run test
+        working-directory: ./packages/server
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
+      - name: Install Heroku CLI
+        run: curl https://cli-assets.heroku.com/install.sh | sh
+
+      - name: Login to Heroku
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: heroku container:login
+
+      - name: Build and push server
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: |
+          cd ./packages/server
+          heroku container:push web --app $HEROKU_APP_NAME
+
+      - name: Release server
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: |
+          heroku container:release web --app $HEROKU_APP_NAME
+
+      - name: Run database migrations
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: |
+          heroku run --app $HEROKU_APP_NAME npm run migrate:latest
+
+      - name: Verify deployment
+        run: |
+          echo "Deployed to https://${{ secrets.HEROKU_APP_NAME }}.herokuapp.com"
+          curl -sSf https://${{ secrets.HEROKU_APP_NAME }}.herokuapp.com/health || (echo "Health check failed" && exit 1)
