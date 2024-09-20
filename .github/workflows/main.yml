@@ -166,7 +166,7 @@ jobs:
               "intervalSeconds": 10
             }
           }' 2>&1)
-          
+
           DEPLOY_EXIT_CODE=$?
           echo "Deployment command output:"
           echo "$DEPLOY_OUTPUT"
@@ -181,14 +181,23 @@ jobs:
           fi
 
       - name: Check deployment status
-        if: success()
         run: |
           echo "Checking deployment status..."
           DEPLOYMENT_INFO=$(aws lightsail get-container-services --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }})
           echo "$DEPLOYMENT_INFO" | jq '.'
-          CURRENT_DEPLOYMENT=$(echo "$DEPLOYMENT_INFO" | jq -r '.containerServices[0].currentDeployment')
-          if [ "$CURRENT_DEPLOYMENT" = "null" ]; then
-            echo "No current deployment found. Deployment may have failed to start."
+
+          SERVICE_STATE=$(echo "$DEPLOYMENT_INFO" | jq -r '.containerServices[0].state')
+          NEXT_DEPLOYMENT=$(echo "$DEPLOYMENT_INFO" | jq -r '.containerServices[0].nextDeployment')
+
+          if [ "$SERVICE_STATE" = "DEPLOYING" ]; then
+            echo "Deployment is in progress. Current state: $SERVICE_STATE"
+            echo "Next deployment details:"
+            echo "$NEXT_DEPLOYMENT" | jq '.'
+          elif [ "$NEXT_DEPLOYMENT" != "null" ]; then
+            echo "New deployment is queued. Details:"
+            echo "$NEXT_DEPLOYMENT" | jq '.'
+          else
+            echo "No active deployment found. Service state: $SERVICE_STATE"
             exit 1
           fi
 
@@ -203,52 +212,50 @@ jobs:
               echo "Deployment timed out after 30 minutes"
               exit 1
             fi
-
+            
             SERVICE_INFO=$(aws lightsail get-container-services --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }})
-            echo "Full service info:"
-            echo "$SERVICE_INFO" | jq '.'
-
             STATUS=$(echo $SERVICE_INFO | jq -r '.containerServices[0].state')
             CURRENT_DEPLOYMENT=$(echo $SERVICE_INFO | jq -r '.containerServices[0].currentDeployment')
-            PENDING_DEPLOYMENT=$(echo $SERVICE_INFO | jq -r '.containerServices[0].nextDeployment')
+            NEXT_DEPLOYMENT=$(echo $SERVICE_INFO | jq -r '.containerServices[0].nextDeployment')
 
             echo "Current status: $STATUS"
             echo "Elapsed time: $ELAPSED_TIME seconds"
-            echo "Current deployment info:"
-            echo "$CURRENT_DEPLOYMENT" | jq '.'
-            echo "Pending deployment info:"
-            echo "$PENDING_DEPLOYMENT" | jq '.'
 
             if [ "$STATUS" = "RUNNING" ]; then
               echo "Deployment completed successfully"
+              echo "Current deployment details:"
+              echo "$CURRENT_DEPLOYMENT" | jq '.'
               break
-            elif [ "$STATUS" = "FAILED" ]; then
-              echo "Deployment failed. Check the service info above for details."
-              exit 1
             elif [ "$STATUS" = "DEPLOYING" ]; then
-              echo "Deployment in progress. Waiting..."
-            elif [ "$STATUS" = "READY" ]; then
-              CONTAINERS_INFO=$(echo $CURRENT_DEPLOYMENT | jq -r '.containers')
-              if [ "$CONTAINERS_INFO" != "null" ]; then
-                echo "Container info available:"
-                echo "$CONTAINERS_INFO" | jq '.'
-
-                SERVER_STATE=$(echo $CONTAINERS_INFO | jq -r '.server.state // "N/A"')
-                DB_STATE=$(echo $CONTAINERS_INFO | jq -r '.db.state // "N/A"')
-                echo "Server container state: $SERVER_STATE"
-                echo "Database container state: $DB_STATE"
-
-                if [ "$SERVER_STATE" = "RUNNING" ] && [ "$DB_STATE" = "RUNNING" ]; then
-                  echo "All containers are running. Deployment successful."
-                  break
-                fi
-              else
-                echo "Container info not available yet"
-              fi
+              echo "Deployment still in progress. Next deployment details:"
+              echo "$NEXT_DEPLOYMENT" | jq '.'
+            elif [ "$STATUS" = "FAILED" ]; then
+              echo "Deployment failed. Service info:"
+              echo "$SERVICE_INFO" | jq '.'
+              exit 1
             fi
 
             sleep 30
           done
+
+      - name: Check container health
+        if: success()
+        run: |
+          echo "Checking container health..."
+          SERVICE_INFO=$(aws lightsail get-container-services --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }})
+          CONTAINERS=$(echo $SERVICE_INFO | jq -r '.containerServices[0].currentDeployment.containers')
+          echo "$CONTAINERS" | jq '.'
+
+          SERVER_STATE=$(echo $CONTAINERS | jq -r '.server.state')
+          DB_STATE=$(echo $CONTAINERS | jq -r '.db.state')
+
+          echo "Server container state: $SERVER_STATE"
+          echo "Database container state: $DB_STATE"
+
+          if [ "$SERVER_STATE" != "RUNNING" ] || [ "$DB_STATE" != "RUNNING" ]; then
+            echo "One or more containers are not in the RUNNING state"
+            exit 1
+          fi
 
       - name: Check IAM permissions
         run: |
