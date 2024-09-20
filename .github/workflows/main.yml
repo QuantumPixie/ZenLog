@@ -154,21 +154,28 @@ jobs:
             fi
 
             SERVICE_INFO=$(aws lightsail get-container-services --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }})
+            echo "Full service info:"
+            echo "$SERVICE_INFO" | jq '.'
+
             STATUS=$(echo $SERVICE_INFO | jq -r '.containerServices[0].state')
             CURRENT_DEPLOYMENT=$(echo $SERVICE_INFO | jq -r '.containerServices[0].currentDeployment')
+            PENDING_DEPLOYMENT=$(echo $SERVICE_INFO | jq -r '.containerServices[0].nextDeployment')
 
             echo "Current status: $STATUS"
             echo "Elapsed time: $ELAPSED_TIME seconds"
             echo "Current deployment info:"
             echo "$CURRENT_DEPLOYMENT" | jq '.'
+            echo "Pending deployment info:"
+            echo "$PENDING_DEPLOYMENT" | jq '.'
 
             if [ "$STATUS" = "RUNNING" ]; then
               echo "Deployment completed successfully"
               break
             elif [ "$STATUS" = "FAILED" ]; then
-              echo "Deployment failed. Full service info:"
-              echo "$SERVICE_INFO" | jq '.'
+              echo "Deployment failed. Check the service info above for details."
               exit 1
+            elif [ "$STATUS" = "DEPLOYING" ]; then
+              echo "Deployment in progress. Waiting..."
             elif [ "$STATUS" = "READY" ]; then
               CONTAINERS_INFO=$(echo $CURRENT_DEPLOYMENT | jq -r '.containers')
               if [ "$CONTAINERS_INFO" != "null" ]; then
