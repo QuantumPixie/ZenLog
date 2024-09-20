@@ -27,10 +27,11 @@
     "format": "prettier --write .",
     "type-check": "tsc --noEmit --build packages/*",
     "start:server": "cd packages/server && npm start",
-    "start:prod": "node dist/index.js",
+    "start:prod": "node packages/server/dist/index.js",
     "migrate:latest": "cd packages/server && npm run migrate:latest",
-    "start": "cd packages/server && node index.js",
-    "postinstall": "cd packages/server && npm install",
-    "heroku-postbuild": "cd packages/server && npm install && npm run build"
+    "start": "cd packages/server && node dist/index.js",
+    "heroku-postbuild": "npm run build:server && npm run build:client",
+    "build:server": "cd packages/server && npm install && npm run build",
+    "build:client": "cd packages/client && npm install && npm run build"
   }
 }
