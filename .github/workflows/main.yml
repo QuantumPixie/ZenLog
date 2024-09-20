@@ -105,10 +105,37 @@ jobs:
           aws lightsail push-container-image --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} --label "server-${{ github.sha }}" --image "server-${{ github.sha }}"
           echo "Server image pushed successfully"
 
+      - name: Check for ongoing deployments
+        id: check_deployment
+        run: |
+          echo "Checking for ongoing deployments..."
+          DEPLOYMENT_STATUS=$(aws lightsail get-container-services --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} | jq -r '.containerServices[0].currentDeployment.state')
+          if [ "$DEPLOYMENT_STATUS" = "ACTIVATING" ]; then
+            echo "ongoing_deployment=true" >> $GITHUB_OUTPUT
+            echo "An ongoing deployment was found. Will wait for it to complete."
+          else
+            echo "ongoing_deployment=false" >> $GITHUB_OUTPUT
+            echo "No ongoing deployment found. Proceeding with new deployment."
+          fi
+
+      - name: Wait for ongoing deployment
+        if: steps.check_deployment.outputs.ongoing_deployment == 'true'
+        run: |
+          echo "Waiting for ongoing deployment to complete..."
+          while true; do
+            DEPLOYMENT_STATUS=$(aws lightsail get-container-services --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} | jq -r '.containerServices[0].currentDeployment.state')
+            if [ "$DEPLOYMENT_STATUS" != "ACTIVATING" ]; then
+              echo "Ongoing deployment completed. Proceeding with new deployment."
+              break
+            fi
+            echo "Deployment still in progress. Waiting..."
+            sleep 30
+          done
+
       - name: Deploy to Lightsail
         run: |
           echo "Deploying server and database to Lightsail..."
-          aws lightsail create-container-service-deployment \
+          DEPLOY_OUTPUT=$(aws lightsail create-container-service-deployment \
           --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} \
           --containers '{
             "server": {
@@ -138,8 +165,15 @@ jobs:
               "path": "/health",
               "intervalSeconds": 10
             }
-          }'
-          echo "Deployment command executed"
+          }' 2>&1)
+          if [ $? -ne 0 ]; then
+            echo "Deployment failed. Error output:"
+            echo "$DEPLOY_OUTPUT"
+            exit 1
+          else
+            echo "Deployment command executed successfully"
+            echo "$DEPLOY_OUTPUT"
+          fi
 
       - name: Wait for deployment to complete
         run: |
