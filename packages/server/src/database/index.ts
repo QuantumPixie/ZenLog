@@ -3,7 +3,7 @@ import { dirname, resolve } from 'path'
 import { Kysely, ParseJSONResultsPlugin, PostgresDialect } from 'kysely'
 import dotenv from 'dotenv'
 import pg from 'pg'
-import type { Database } from '../models/database'
+import type { Database } from '../models/database.ts'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -43,4 +43,4 @@ export function createDatabase(options: pg.PoolConfig): Kysely<Database> {
 const db = createDatabase({ connectionString: databaseUrl })
 
 export { db }
-export * from '../models/database'
+export * from '../models/database.ts'

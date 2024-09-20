@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { idSchema } from '../shared/idSchema'
+import { idSchema } from '../shared/idSchema.ts'
 
 export const userSchema = z.object({
   id: idSchema,

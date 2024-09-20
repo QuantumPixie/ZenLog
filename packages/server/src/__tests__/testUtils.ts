@@ -1,5 +1,5 @@
 import { vi } from 'vitest'
-import { mockKysely } from './mocks/databaseMock'
+import { mockKysely } from './mocks/databaseMock.ts'
 
 export function resetMocks() {
   vi.resetAllMocks()

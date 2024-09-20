@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { router, procedure, authedProcedure } from '../trpc'
+import { router, procedure, authedProcedure } from '../trpc.ts'
 import { TRPCError } from '@trpc/server'
 import {
   createUser,
@@ -7,7 +7,7 @@ import {
   getUserById,
   changePassword,
   deleteUser,
-} from '../services/userService'
+} from '../services/userService.ts'
 
 const signupSchema = z.object({
   email: z.string().email(),

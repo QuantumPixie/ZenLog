@@ -1,5 +1,5 @@
 import { Kysely, sql } from 'kysely'
-import type { Database } from '../../../models/database'
+import type { Database } from '../../../models/database.ts'
 
 export async function tableExists(
   db: Kysely<Database>,

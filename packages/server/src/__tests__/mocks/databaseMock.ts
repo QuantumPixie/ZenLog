@@ -1,6 +1,6 @@
 import { vi } from 'vitest'
 import type { Kysely } from 'kysely'
-import type { Database } from '../../models/database'
+import type { Database } from '../../models/database.ts'
 
 export type MockDatabase = Partial<Kysely<Database>> & {
   insert: (data: { id: number }) => void

@@ -1,9 +1,9 @@
 import { sql } from 'kysely'
 import dotenv from 'dotenv'
-import { db } from '../database'
-import { migrate } from '../database/migrations/migrateLatest'
-import { seed } from '../database/seed/seed'
-import type { Database } from '../models/database'
+import { db } from '../database/index.ts'
+import { migrate } from '../database/migrations/migrateLatest.ts'
+import { seed } from '../database/seed/seed.ts'
+import type { Database } from '../models/database.ts'
 
 // Load environment variables
 dotenv.config()

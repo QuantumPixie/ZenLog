@@ -2,8 +2,8 @@ import { type Selectable, type Insertable, sql } from 'kysely'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { TRPCError } from '@trpc/server'
-import { db } from '../database'
-import type { UserTable } from '../models/user'
+import { db } from '../database/index.ts'
+import type { UserTable } from '../models/user.ts'
 
 type User = Selectable<UserTable>
 type NewUser = Insertable<UserTable>

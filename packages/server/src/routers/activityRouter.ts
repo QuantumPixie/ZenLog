@@ -1,10 +1,10 @@
 import { z } from 'zod'
-import { router, authedProcedure } from '../trpc'
-import { activityService } from '../services/activityService'
+import { router, authedProcedure } from '../trpc.ts'
+import { activityService } from '../services/activityService.ts'
 import {
   activityInputSchema,
   isValidDateString,
-} from '../schemas/activitySchema'
+} from '../schemas/activitySchema.ts'
 import { TRPCError } from '@trpc/server'
 
 export const activityRouter = router({

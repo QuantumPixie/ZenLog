@@ -1,5 +1,5 @@
-import { db } from '../database'
-import type { MoodTable } from '../models/mood'
+import { db } from '../database/index.ts'
+import type { MoodTable } from '../models/mood.ts'
 
 export const moodService = {
   async getMoods(userId: number) {
