@@ -192,6 +192,13 @@ jobs:
             sleep 30
           done
 
+      - name: Check IAM permissions
+        run: |
+          echo "Checking IAM permissions..."
+          aws iam get-user
+          aws iam simulate-principal-policy --policy-source-arn $(aws iam get-user --query 'User.Arn' --output text) --action-names lightsail:GetContainerServices lightsail:CreateContainerServiceDeployment lightsail:GetContainerServiceDeployments lightsail:GetContainerLog lightsail:GetContainerServiceMetricData lightsail:GetContainerImages lightsail:PushContainerImage lightsail:RegisterContainerImage
+          echo "IAM permissions check complete"
+
       - name: Get Lightsail container logs
         if: always()
         run: |
