@@ -29,5 +29,6 @@
         "project": "./tsconfig.json"
       }
     }
-  }
+  },
+  "ignorePatterns": ["**/dist/**", "*.test.js", "*.spec.js"]
 }

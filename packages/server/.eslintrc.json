@@ -32,5 +32,6 @@
     "import/resolver": {
       "typescript": {}
     }
-  }
+  },
+  "ignorePatterns": ["**/dist/**", "*.test.js", "*.spec.js"]
 }
