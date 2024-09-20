@@ -10,7 +10,11 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "engines": {
+    "node": "20.x"
+  },
   "devDependencies": {
+    "@tsconfig/node20": "^20.1.4",
     "dotenv": "^16.4.5",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
@@ -23,6 +27,10 @@
     "vue-tsc": "^2.0.21"
   },
   "scripts": {
+    "prepare": "npm run install-all",
+    "install-all": "npm install && npm run install-server && npm run install-client",
+    "install-server": "cd packages/server && npm install",
+    "install-client": "cd packages/client && npm install",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx,.vue",
     "format": "prettier --write .",
     "type-check": "tsc --noEmit --build packages/*",
