@@ -15,21 +15,24 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      JWT_SECRET: test_secret
+      DATABASE_URL: postgres://thuppertz:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/mental_health_tracker_db
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
       PORT: 3005
       CI: true
       NODE_ENV: test
-      VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
-      PLAYWRIGHT_TEST_BASE_URL: ${{ secrets.PLAYWRIGHT_TEST_BASE_URL }}
+      VITE_BACKEND_URL: http://localhost:3005/api/trpc
+      PLAYWRIGHT_TEST_BASE_URL: http://localhost:3005
+      POSTGRES_DB: mental_health_tracker_db
+      POSTGRES_USER: thuppertz
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
 
     services:
       postgres:
         image: postgres:16.1-alpine
         env:
-          POSTGRES_DB: "mental_health_tracker_db"
-          POSTGRES_USER": "thuppertz"
-          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          POSTGRES_DB: mental_health_tracker_db
+          POSTGRES_USER: thuppertz
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         ports:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
@@ -62,118 +65,16 @@ jobs:
         run: npm run migrate:latest
         working-directory: ./packages/server
 
-      # - name: Run server tests
-      #   run: npm run test
-      #   working-directory: ./packages/server
+      - name: Run server tests
+        run: npm run test
+        working-directory: ./packages/server
 
-      # Client-side checks (commented out for now)
-      # - name: Install client dependencies
-      #   run: npm ci
-      #   working-directory: ./packages/client/mental-health-tracker-frontend
-
-      # - name: Run client lint
-      #   run: npm run lint
-      #   working-directory: ./packages/client/mental-health-tracker-frontend
-
-      # - name: Run client type check
-      #   run: npm run type-check
-      #   working-directory: ./packages/client/mental-health-tracker-frontend
-
-      # - name: Build client
-      #   run: npm run build
-      #   working-directory: ./packages/client/mental-health-tracker-frontend
-
-      # E2E test setup and execution (commented out for now)
-      # - name: Install Playwright browsers
-      #   run: npx playwright install --with-deps
-      #   working-directory: ./packages/client/mental-health-tracker-frontend
-
-      # - name: Start server
-      #   run: |
-      #     npm run dev > server.log 2>&1 &
-      #     echo $! > server.pid
-      #   working-directory: ./packages/server
-      #   env:
-      #     NODE_ENV: test
-
-      # - name: Wait for server
-      #   run: |
-      #     timeout=60
-      #     while ! nc -z localhost 3005; do
-      #       if [ $timeout -le 0 ]; then
-      #         echo "Timed out waiting for server"
-      #         cat server.log
-      #         exit 1
-      #       fi
-      #       timeout=$((timeout - 1))
-      #       sleep 1
-      #     done
-      #     echo "Server is up and running"
-
-      # - name: Serve client
-      #   run: npm run preview > client.log 2>&1 &
-      #   working-directory: ./packages/client/mental-health-tracker-frontend
-
-      # - name: Wait for client
-      #   run: |
-      #     timeout=60
-      #     while ! nc -z localhost 5173; do
-      #       if [ $timeout -le 0 ]; then
-      #         echo "Timed out waiting for client"
-      #         cat client.log
-      #         exit 1
-      #       fi
-      #       timeout=$((timeout - 1))
-      #       sleep 1
-      #     done
-      #     echo "Client is up and running"
-
-      # - name: Check if application is responding
-      #   run: |
-      #     curl -sSf http://localhost:5173 || (echo "Application is not running" && exit 1)
-
-      # - name: Run Playwright tests
-      #   run: npm run test:e2e
-      #   working-directory: ./packages/client/mental-health-tracker-frontend
-      #   env:
-      #     PLAYWRIGHT_TEST_BASE_URL: ${{ secrets.PLAYWRIGHT_TEST_BASE_URL }}
-      #     VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
-      #     DEBUG: pw:api,pw:browser*
-
-      # - name: Upload Playwright report
-      #   if: failure() || success()
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: playwright-report
-      #     path: packages/client/mental-health-tracker-frontend/playwright-report
-
-      # - name: Upload server logs
-      #   uses: actions/upload-artifact@v4
-      #   if: always()
-      #   with:
-      #     name: server-logs
-      #     path: packages/server/server.log
-      #     retention-days: 30
-
-      # - name: Upload client logs
-      #   uses: actions/upload-artifact@v4
-      #   if: always()
-      #   with:
-      #     name: client-logs
-      #     path: packages/client/mental-health-tracker-frontend/client.log
-      #     retention-days: 30
-
-      # - name: Stop server
-      #   if: always()
-      #   run: kill $(cat packages/server/server.pid)
+      # Add client-side checks and E2E tests here if needed
 
   deploy:
-    # needs: test
+    needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    env:
-      SERVER_IMAGE_TAG: server-${{ github.sha }}
-      # CLIENT_IMAGE_TAG: client-${{ github.sha }}
 
     steps:
       - uses: actions/checkout@v4
@@ -186,66 +87,40 @@ jobs:
           sudo curl "https://s3.us-west-2.amazonaws.com/lightsailctl/latest/linux-amd64/lightsailctl" -o "/usr/local/bin/lightsailctl"
           sudo chmod +x /usr/local/bin/lightsailctl
 
-      - name: Configure AWS credentials manually
-        run: |
-          mkdir -p ~/.aws
-          echo "[default]" > ~/.aws/credentials
-          echo "aws_access_key_id = ${{ secrets.AWS_ACCESS_KEY_ID }}" >> ~/.aws/credentials
-          echo "aws_secret_access_key = ${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> ~/.aws/credentials
-          echo "[default]" > ~/.aws/config
-          echo "region=$AWS_DEFAULT_REGION" >> ~/.aws/config
-          echo "output=json" >> ~/.aws/config
-
-      - name: Verify AWS config file
-        run: cat ~/.aws/config
-
-      - name: Verify AWS credentials
-        run: aws sts get-caller-identity --debug
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
 
       - name: Build server image
         run: |
           echo "Building server image..."
-          docker build -t $SERVER_IMAGE_TAG -f ./packages/server/Dockerfile ./packages/server
+          docker build -t server-${{ github.sha }} -f ./packages/server/Dockerfile ./packages/server
           echo "Server image built successfully"
-
-      # - name: Build client image
-      #   run: |
-      #     echo "Building client image..."
-      #     docker build -t $CLIENT_IMAGE_TAG -f ./packages/client/mental-health-tracker-frontend/Dockerfile ./packages/client/mental-health-tracker-frontend
-      #     echo "Client image built successfully"
 
       - name: Push server image to Lightsail
         run: |
           echo "Pushing server image to Lightsail..."
           aws lightsail push-container-image \
-          --service-name $LIGHTSAIL_SERVICE_NAME \
-          --label "$SERVER_IMAGE_TAG" \
-          --image "$SERVER_IMAGE_TAG"
+          --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} \
+          --label "server-${{ github.sha }}" \
+          --image "server-${{ github.sha }}"
           echo "Server image pushed successfully"
 
-      # - name: Push client image to Lightsail
-      #   run: |
-      #     echo "Pushing client image to Lightsail..."
-      #     aws lightsail push-container-image \
-      #     --service-name $LIGHTSAIL_SERVICE_NAME \
-      #     --label "$CLIENT_IMAGE_TAG" \
-      #     --image "$CLIENT_IMAGE_TAG"
-      #     echo "Client image pushed successfully"
-
       - name: Deploy to Lightsail
-        env:
-          SERVER_IMAGE_TAG: server-${{ github.sha }}
         run: |
           echo "Deploying server and database to Lightsail..."
           aws lightsail create-container-service-deployment \
-          --service-name $LIGHTSAIL_SERVICE_NAME \
+          --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} \
           --containers '{
             "server": {
-              "image": "'$SERVER_IMAGE_TAG'",
+              "image": "server-${{ github.sha }}",
               "ports": {"3005": "HTTP"},
               "environment": {
                 "DATABASE_URL": "${{ secrets.PROD_DATABASE_URL }}",
-                "JWT_SECRET": "${{ secrets.JWT_SECRET }}",
+                "JWT_SECRET": "${{ secrets.PROD_JWT_SECRET }}",
                 "PORT": "3005",
                 "NODE_ENV": "production"
               }
@@ -254,9 +129,9 @@ jobs:
               "image": "postgres:13",
               "ports": {"5432": "TCP"},
               "environment": {
-                "POSTGRES_DB": "mental_health_tracker_db",
-                "POSTGRES_USER": "thuppertz",
-                "POSTGRES_PASSWORD": "${{ secrets.DB_PASSWORD }}"
+                "POSTGRES_DB": "${{ secrets.PROD_DB_NAME }}",
+                "POSTGRES_USER": "${{ secrets.PROD_DB_USER }}",
+                "POSTGRES_PASSWORD": "${{ secrets.PROD_DB_PASSWORD }}"
               }
             }
           }' \
@@ -270,60 +145,18 @@ jobs:
           }'
           echo "Deployment command executed"
 
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-
       - name: Wait for deployment to complete
         run: |
           echo "Waiting for deployment to complete..."
-          TIMEOUT=1800  # 30 minutes timeout
-          START_TIME=$SECONDS
           while true; do
-            ELAPSED_TIME=$((SECONDS - START_TIME))
-            if [ $ELAPSED_TIME -ge $TIMEOUT ]; then
-              echo "Deployment timed out after 30 minutes"
-              exit 1
-            fi
-
-            SERVICE_INFO=$(aws lightsail get-container-services --service-name $LIGHTSAIL_SERVICE_NAME)
-            STATUS=$(echo $SERVICE_INFO | jq -r '.containerServices[0].state')
-            CURRENT_DEPLOYMENT=$(echo $SERVICE_INFO | jq -r '.containerServices[0].currentDeployment')
-
+            STATUS=$(aws lightsail get-container-services --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} --query 'containerServices[0].state' --output text)
             echo "Current status: $STATUS"
-            echo "Elapsed time: $ELAPSED_TIME seconds"
-
-            if [ "$STATUS" = "DEPLOYING" ]; then
-              echo "Deployment in progress. Details:"
-              echo "$CURRENT_DEPLOYMENT" | jq '.'
-            elif [ "$STATUS" = "RUNNING" ]; then
+            if [ "$STATUS" = "RUNNING" ]; then
               echo "Deployment completed successfully"
               break
             elif [ "$STATUS" = "FAILED" ]; then
-              echo "Deployment failed. Details:"
-              echo "$SERVICE_INFO" | jq '.'
+              echo "Deployment failed"
               exit 1
-            elif [ "$STATUS" = "READY" ]; then
-              CONTAINERS_INFO=$(echo $CURRENT_DEPLOYMENT | jq -r '.containers')
-              if [ "$CONTAINERS_INFO" != "null" ]; then
-                echo "Container info available:"
-                echo "$CONTAINERS_INFO" | jq '.'
-
-                SERVER_STATE=$(echo $CONTAINERS_INFO | jq -r '.server.state')
-                DB_STATE=$(echo $CONTAINERS_INFO | jq -r '.db.state')
-                echo "Server container state: $SERVER_STATE"
-                echo "Database container state: $DB_STATE"
-
-                if [ "$SERVER_STATE" = "RUNNING" ] && [ "$DB_STATE" = "RUNNING" ]; then
-                  echo "All containers are running. Deployment successful."
-                  break
-                fi
-              else
-                echo "Container info not available yet"
-              fi
-            else
-              echo "Unexpected status: $STATUS"
-              echo "Full service info:"
-              echo "$SERVICE_INFO" | jq '.'
             fi
             sleep 30
           done
@@ -332,16 +165,14 @@ jobs:
         if: always()
         run: |
           echo "Fetching server logs..."
-          aws lightsail get-container-log --service-name $LIGHTSAIL_SERVICE_NAME --container-name server
-          echo "Server logs retrieved"
+          aws lightsail get-container-log --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} --container-name server
           echo "Fetching database logs..."
-          aws lightsail get-container-log --service-name $LIGHTSAIL_SERVICE_NAME --container-name db
-          echo "Database logs retrieved"
+          aws lightsail get-container-log --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} --container-name db
 
       - name: Check server health
         if: success()
         run: |
-          ENDPOINT=$(aws lightsail get-container-services --service-name $LIGHTSAIL_SERVICE_NAME --query 'containerServices[0].url' --output text)
+          ENDPOINT=$(aws lightsail get-container-services --service-name ${{ env.LIGHTSAIL_SERVICE_NAME }} --query 'containerServices[0].url' --output text)
           echo "Checking server health at $ENDPOINT/health"
           curl -sSf "$ENDPOINT/health" || (echo "Server health check failed" && exit 1)
           echo "Server health check passed"
