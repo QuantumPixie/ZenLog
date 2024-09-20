@@ -3,9 +3,10 @@ import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import * as trpcExpress from '@trpc/server/adapters/express'
 import { renderTrpcPanel } from 'trpc-panel'
-import { createContext } from './trpc'
-import { appRouter } from './routers'
-import { db } from './database'
+import { createContext } from './trpc.ts'
+import { appRouter } from '../src/routers/index.ts'
+import { db } from '../src/database/index.ts'
+import type { Request, Response } from 'express'
 
 export type AppRouter = typeof appRouter
 
@@ -50,7 +51,8 @@ app.use(
   '/api/trpc',
   trpcExpress.createExpressMiddleware({
     router: appRouter,
-    createContext: ({ req, res }) => createContext({ req, res }),
+    createContext: ({ req, res }: { req: Request; res: Response }) =>
+      createContext({ req, res }),
   })
 )
 
