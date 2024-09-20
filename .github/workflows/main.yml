@@ -8,7 +8,7 @@ on:
 
 env:
   AWS_DEFAULT_REGION: eu-west-2
-  LIGHTSAIL_SERVICE_NAME: container-service-1
+  LIGHTSAIL_SERVICE_NAME: container-service-2
 
 jobs:
   # test:
