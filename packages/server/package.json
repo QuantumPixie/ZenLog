@@ -70,11 +70,5 @@
     "supertest": "^7.0.0",
     "tsc-alias": "^1.8.10",
     "tsconfig-paths": "^4.2.0"
-  },
-  "resolutions": {
-    "@trpc/server": "^x.x.x"
-  },
-  "alias": {
-    "@routers": "./src/routers"
   }
 }
