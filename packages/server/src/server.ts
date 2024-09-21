@@ -7,22 +7,41 @@ import { createContext } from './trpc'
 import { appRouter } from './routers'
 import { db } from './database'
 import type { Request, Response } from 'express'
+import path from 'path'
 
 export type AppRouter = typeof appRouter
 
 const app = express()
+
+// serve static files
+app.use(
+  express.static(
+    path.join(__dirname, '../../../client/mental-health-tracker-frontend/dist')
+  )
+)
+
+// handle routing
+app.get('*', (req, res) => {
+  res.sendFile(
+    path.join(
+      __dirname,
+      '../../../client/mental-health-tracker-frontend/dist/index.html'
+    )
+  )
+})
 
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:4173',
   'http://localhost:5182',
   'http://localhost:5177',
+  'https://zenlog-frontend.herokuapp.com',
 ]
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true)
       } else {
         callback(new Error('Not allowed by CORS'))
@@ -43,7 +62,7 @@ app.use('/api/health', (_, res) => {
 app.use('/panel', (_, res) =>
   res.send(
     renderTrpcPanel(appRouter, {
-      url: 'http://localhost:3007/api/trpc',
+      url: `${process.env.VITE_BACKEND_URL || 'http://localhost:3005'}/api/trpc`,
     })
   )
 )

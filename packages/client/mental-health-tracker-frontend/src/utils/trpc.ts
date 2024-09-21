@@ -7,11 +7,11 @@ const getBaseUrl = () => {
     return ''
   }
   if (import.meta.env.VITE_BACKEND_URL) {
-    // SSR should use backend URL
+    // Use the environment variable if set
     return import.meta.env.VITE_BACKEND_URL
   }
   // fallback to localhost
-  return `http://localhost:${process.env.PORT ?? 3005}`
+  return `http://localhost:${import.meta.env.VITE_PORT || 3005}`
 }
 
 const url = `${getBaseUrl()}/api/trpc`

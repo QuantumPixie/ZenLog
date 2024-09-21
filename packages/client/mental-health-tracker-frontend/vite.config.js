@@ -3,6 +3,7 @@ import path from 'path'
 
 export default {
   plugins: [vue()],
+  base: process.env.VITE_BASE_URL || '/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
