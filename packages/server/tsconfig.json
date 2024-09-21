@@ -29,7 +29,9 @@
     ],
     "verbatimModuleSyntax": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@trpc/*": ["trpc/*"],
+      "@routers/*": ["routers/*"],
+      "@database/*": ["database/*"]
     },
     "resolveJsonModule": true
   },
