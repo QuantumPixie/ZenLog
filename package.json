@@ -29,6 +29,7 @@
     "eslint-import-resolver-typescript": "^3.6.3",
     "eslint-plugin-prettier": "^5.2.1",
     "prettier": "^3.3.3",
+    "tsc-alias": "^1.8.10",
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.19.1",
     "typescript": "^5.6.2",
@@ -49,6 +50,8 @@
     "heroku-postbuild": "npm run build:server && npm run build:client"
   },
   "dependencies": {
+    "@trpc/client": "^10.45.2",
+    "@trpc/server": "^10.45.2",
     "chance": "^1.1.12",
     "pg": "^8.13.0"
   }
