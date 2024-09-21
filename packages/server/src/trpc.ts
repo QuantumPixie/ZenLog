@@ -3,8 +3,8 @@ import type { inferAsyncReturnType } from '@trpc/server'
 import jwt from 'jsonwebtoken'
 import type { JwtPayload } from 'jsonwebtoken'
 import type { CreateExpressContextOptions } from '@trpc/server/adapters/express'
-import type { CustomRequest, User } from './types/customRequest.ts'
-import { getUserFromToken } from './utils/tokenUtils.ts'
+import type { CustomRequest, User } from './types/customRequest'
+import { getUserFromToken } from './utils/tokenUtils'
 
 const { JWT_SECRET } = process.env
 if (!JWT_SECRET) {

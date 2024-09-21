@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { router, authedProcedure } from '../trpc.ts'
-import { dashboardService } from '../services/dashboardService.ts'
+import { router, authedProcedure } from '../trpc'
+import { dashboardService } from '../services/dashboardService'
 
 export const dashboardRouter = router({
   getSummary: authedProcedure.query(async ({ ctx }) => {

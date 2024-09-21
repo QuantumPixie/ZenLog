@@ -1,11 +1,11 @@
 import type { Insertable } from 'kysely'
-import { db } from '../database/index.ts'
+import { db } from '../database/index'
 import type {
   ActivityTable,
   NewActivity,
   ActivityInput,
 } from '../models/activity.ts'
-import { isValidDateString } from '../schemas/activitySchema.ts'
+import { isValidDateString } from '../schemas/activitySchema'
 
 type DbInsertableActivity = Omit<ActivityTable, 'id'>
 

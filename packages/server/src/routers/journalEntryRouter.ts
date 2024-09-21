@@ -1,7 +1,7 @@
 import { z } from 'zod'
-import { router, authedProcedure } from '../trpc.ts'
-import { journalEntryService } from '../services/journalEntryService.ts'
-import { journalEntrySchema } from '../schemas/journalEntrySchema.ts'
+import { router, authedProcedure } from '../trpc'
+import { journalEntryService } from '../services/journalEntryService'
+import { journalEntrySchema } from '../schemas/journalEntrySchema'
 
 const dateRangeSchema = z.object({
   startDate: z.string().refine((val) => !Number.isNaN(Date.parse(val)), {

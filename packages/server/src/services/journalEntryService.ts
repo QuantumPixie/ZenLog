@@ -1,6 +1,6 @@
-import { db } from '../database/index.ts'
-import type { NewJournalEntry } from '../models/journalEntry.ts'
-import { sentimentService } from './sentimentService.ts'
+import { db } from '../database/index'
+import type { NewJournalEntry } from '../models/journalEntry'
+import { sentimentService } from './sentimentService'
 
 export const journalEntryService = {
   async createJournalEntry(

@@ -4,7 +4,8 @@ node_modules
 
 # Generated tRPC types
 packages/client/src/types/trpc/
+
 # Generated test converage
 packages/server/coverage
-/dist
 /node_modules
+/dist

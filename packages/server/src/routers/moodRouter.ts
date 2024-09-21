@@ -1,7 +1,7 @@
 import { z } from 'zod'
-import { router, authedProcedure } from '../trpc.ts'
-import { moodService } from '../services/moodService.ts'
-import { moodSchema } from '../schemas/moodSchema.ts'
+import { router, authedProcedure } from '../trpc'
+import { moodService } from '../services/moodService'
+import { moodSchema } from '../schemas/moodSchema'
 
 const dateRangeSchema = z.object({
   startDate: z.string().refine((val) => !Number.isNaN(Date.parse(val)), {

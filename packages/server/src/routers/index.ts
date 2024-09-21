@@ -1,9 +1,9 @@
-import { router } from '../trpc.ts'
-import { userRouter } from './userRouter.ts'
-import { activityRouter } from './activityRouter.ts'
-import { journalEntryRouter } from './journalEntryRouter.ts'
-import { moodRouter } from './moodRouter.ts'
-import { dashboardRouter } from './dashboardRouter.ts'
+import { router } from '../trpc'
+import { userRouter } from './userRouter'
+import { activityRouter } from './activityRouter'
+import { journalEntryRouter } from './journalEntryRouter'
+import { moodRouter } from './moodRouter'
+import { dashboardRouter } from './dashboardRouter'
 
 export const appRouter = router({
   user: userRouter,

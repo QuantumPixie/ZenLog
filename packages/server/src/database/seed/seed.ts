@@ -5,10 +5,10 @@ import type { PoolClient } from 'pg'
 import dotenv from 'dotenv'
 import Chance from 'chance'
 import bcrypt from 'bcrypt'
-import { journalEntrySchema } from '../../schemas/journalEntrySchema.ts'
-import { moodSchema } from '../../schemas/moodSchema.ts'
-import { signupSchema } from '../../schemas/userSchema.ts'
-import { activityInputSchema } from '../../schemas/activitySchema.ts'
+import { journalEntrySchema } from '../../schemas/journalEntrySchema'
+import { moodSchema } from '../../schemas/moodSchema'
+import { signupSchema } from '../../schemas/userSchema'
+import { activityInputSchema } from '../../schemas/activitySchema'
 
 export const { Pool } = pg
 

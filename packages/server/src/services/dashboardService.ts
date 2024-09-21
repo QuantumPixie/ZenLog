@@ -1,4 +1,4 @@
-import { db } from '../database/index.ts'
+import { db } from '../database/index'
 
 type AverageMoodResult = { averageMood: string | null }
 type AverageSentimentResult = { averageSentiment: string | null }

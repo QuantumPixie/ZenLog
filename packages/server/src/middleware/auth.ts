@@ -2,8 +2,8 @@ import { TRPCError } from '@trpc/server'
 import type { Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 import type { JwtPayload } from 'jsonwebtoken'
-import type { CustomRequest } from '../types/customRequest.ts'
-import { getUserFromToken } from '../utils/tokenUtils.ts'
+import type { CustomRequest } from '../types/customRequest'
+import { getUserFromToken } from '../utils/tokenUtils'
 
 const { JWT_SECRET } = process.env
 

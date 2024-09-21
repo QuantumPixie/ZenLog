@@ -10,8 +10,8 @@
     "**/__tests__/**/*.ts"
   ],
   "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "dist",
+    "rootDir": "./src",
+    "outDir": "/.dist",
     "sourceMap": true,
     "paths": {
       "@server/*": ["./src/*"],
