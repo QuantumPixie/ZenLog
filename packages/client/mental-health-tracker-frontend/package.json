@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vue-tsc --noEmit && vite build",
+    "postinstall": "npm run build",
+    "start": "node server.js",
     "preview": "vite preview --port 5173 --host",
     "test:unit": "vitest",
     "test:e2e": "NODE_ENV=test playwright test",

@@ -8,5 +8,9 @@ export default {
       '@': path.resolve(__dirname, './src'),
       '@lib/shared': path.resolve(__dirname, '../../shared')
     }
+  },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets'
   }
 }
