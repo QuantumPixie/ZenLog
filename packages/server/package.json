@@ -4,7 +4,7 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "start": "node --loader ./loader.js dist/index.js",
+    "start": "node ./dist/index.js",
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'tsx -r tsconfig-paths/register ./src/index.ts'",
     "migrate:up": "dotenv -e .env tsx src/database/migrations/migrateLatest.ts",
     "migrate:down": "dotenv -e .env tsx src/database/migrations/migrateDown.ts",
@@ -12,7 +12,7 @@
     "create-migration": "tsx --tsconfig tsconfig.json src/database/migrations/createMigration.ts",
     "seed": "dotenv -e .env tsx src/database/seed/seed.ts",
     "node-es": "node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL from \"node:url\"; register(\"./loader.js\", pathToFileURL(\"./\"));'",
-    "build": "tsc",
+    "build": "tsc && tsc-alias",
     "start:prod": "node dist/index.js",
     "type-check": "tsc --noEmit",
     "type-check:tests": "tsc --noEmit -p tsconfig.test.json",
