@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { router, authedProcedure } from '../trpc.ts'
 import { dashboardService } from '../services/dashboardService.ts'
 
