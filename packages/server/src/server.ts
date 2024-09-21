@@ -3,9 +3,9 @@ import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import * as trpcExpress from '@trpc/server/adapters/express'
 import { renderTrpcPanel } from 'trpc-panel'
-import { createContext } from '../src/trpc'
-import { appRouter } from '../src/routers/index'
-import { db } from '../src/database/index'
+import { createContext } from './trpc'
+import { appRouter } from './routers'
+import { db } from './database'
 import type { Request, Response } from 'express'
 
 export type AppRouter = typeof appRouter
