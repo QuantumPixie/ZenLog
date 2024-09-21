@@ -4,7 +4,7 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "start": "node -r tsconfig-paths/register dist/index.js",
+    "start": "node --loader ./loader.js dist/index.js",
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'tsx -r tsconfig-paths/register ./src/index.ts'",
     "migrate:up": "dotenv -e .env tsx src/database/migrations/migrateLatest.ts",
     "migrate:down": "dotenv -e .env tsx src/database/migrations/migrateDown.ts",
