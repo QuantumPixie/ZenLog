@@ -1,2 +1,2 @@
-web: web: cd packages/server && npm run build-client && node dist/index.js
+web: cd packages/server && node dist/index.js && cd ../../client/mental-health-tracker-frontend && npm run start
 release: npm run migrate:latest
