@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Router } from 'vue-router'
-import { trpc } from '../utils/trpc'
+import { trpc } from '../utils/trpc.ts'
 
 interface User {
   id: number

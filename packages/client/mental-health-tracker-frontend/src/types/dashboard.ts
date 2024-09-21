@@ -1,3 +1,5 @@
+import { RecentEntry } from './recentEntry.ts'
+
 export interface Mood {
   id: number
   date: string
@@ -21,9 +23,21 @@ export interface Activity {
 }
 
 export interface Summary {
-  recentMoods: Mood[]
-  recentEntries: JournalEntry[]
-  recentActivities: Activity[]
+  recentMoods: Array<{
+    id: number
+    user_id: number
+    date: string
+    mood_score: number
+    emotions: string[]
+  }>
+  recentEntries: RecentEntry[]
+  recentActivities: Array<{
+    id?: number
+    date: string
+    activity: string
+    duration?: number
+    notes?: string
+  }>
   averageMoodLastWeek: number | null
   averageSentimentLastWeek: number | null
 }

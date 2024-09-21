@@ -1,5 +1,5 @@
 import { createTRPCProxyClient, httpBatchLink } from '@trpc/client'
-import type { AppRouter } from '../../../../server/src/server'
+import type { AppRouter } from '../../../../server/src/server.ts'
 
 const backendUrl =
   typeof import.meta.env !== 'undefined' && import.meta.env.VITE_BACKEND_URL

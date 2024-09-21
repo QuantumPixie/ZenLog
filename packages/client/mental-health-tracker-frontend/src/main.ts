@@ -16,8 +16,8 @@ const pinia = createPinia()
 
 app.use(pinia)
 app.use(router)
-app.use(PrimeVue)
-app.use(ToastService)
+app.use(PrimeVue as never)
+app.use(ToastService as never)
 app.component('PrimeToast', Toast)
 
 app.mount('#app')

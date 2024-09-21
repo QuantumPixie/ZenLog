@@ -1,8 +1,7 @@
-import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
-export default defineConfig({
+export default {
   plugins: [vue()],
   resolve: {
     alias: {
@@ -10,4 +9,4 @@ export default defineConfig({
       '@lib/shared': path.resolve(__dirname, '../../shared')
     }
   }
-})
+}
