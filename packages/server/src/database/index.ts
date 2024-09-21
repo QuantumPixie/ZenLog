@@ -23,7 +23,14 @@ console.log(
 )
 
 export function createDatabase(options: pg.PoolConfig): Kysely<Database> {
-  const pool = new pg.Pool(options)
+  // SSL configuration for Heroku
+  const sslOptions = {
+    ssl: {
+      rejectUnauthorized: false,
+    },
+  }
+
+  const pool = new pg.Pool({ ...options, ...sslOptions })
 
   pool.on('error', (err) => {
     console.error('Unexpected error on idle client', err)
@@ -40,7 +47,10 @@ export function createDatabase(options: pg.PoolConfig): Kysely<Database> {
   })
 }
 
-const db = createDatabase({ connectionString: databaseUrl })
+const db = createDatabase({
+  connectionString: databaseUrl,
+  ssl: { rejectUnauthorized: false },
+})
 
 export { db }
 export * from '../models/database.ts'
