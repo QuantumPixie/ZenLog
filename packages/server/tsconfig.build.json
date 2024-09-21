@@ -12,6 +12,7 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
+    "moduleResolution": "node",
     "sourceMap": true,
     "paths": {
       "@server/*": ["./src/*"],
