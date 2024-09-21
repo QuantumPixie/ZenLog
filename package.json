@@ -45,7 +45,7 @@
     "migrate:latest": "cd packages/server && npm run migrate:latest",
     "start": "cd packages/server && node dist/index.js",
     "build:server": "cd packages/server && npm install && npm run build",
-    "build:client": "cd packages/mental-health-tracker-frontend/client && npm install && npm run build",
+    "build:client": "cd packages/client/mental-health-tracker-frontend && npm install && npm run build",
     "heroku-postbuild": "npm run build:server && npm run build:client"
   },
   "dependencies": {
