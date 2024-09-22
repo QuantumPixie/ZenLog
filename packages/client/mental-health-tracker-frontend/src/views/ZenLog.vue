@@ -94,9 +94,9 @@ const features: Feature[] = [
       'Track duration and intensity of activities',
       'Add notes to provide context for each activity',
       'Correlate activities with mood changes',
-      'Identify activities that positively impact your mental health',
-      'Receive suggestions for mood-boosting activities',
-      'Set and track activity goals'
+      'Identify activities that positively impact your mental health'
+      // 'Receive suggestions for mood-boosting activities',
+      // 'Set and track activity goals'
     ]
   },
   {
@@ -119,7 +119,7 @@ const features: Feature[] = [
     bulletPoints: [
       'Safe and private space for self-expression',
       'Create entries of any length',
-      'Attach entries to specific moods or events',
+      // 'Attach entries to specific moods or events',
       'Automatic sentiment analysis of your entries',
       'Track emotional tone over time',
       'Gain insights into your thought patterns',
@@ -133,7 +133,7 @@ const features: Feature[] = [
     bulletPoints: [
       'Transform your data into intuitive charts and graphs',
       'Track mood trends over time',
-      'Correlate journal entries with emotional states',
+      // 'Correlate journal entries with emotional states',
       'Identify factors affecting your mental well-being',
       'Recognize improvements in your mental health',
       'Pinpoint areas that need attention'
@@ -144,12 +144,12 @@ const features: Feature[] = [
     title: 'User Management',
     description: 'Manage your account settings and preferences.',
     bulletPoints: [
-      'Update your personal information',
+      // 'Update your personal information',
       'Change your password for enhanced security',
-      'Customize your notification preferences',
-      'Manage your privacy settings',
-      'Control data sharing options',
-      'Access and export your data',
+      // 'Customize your notification preferences',
+      // 'Manage your privacy settings',
+      // 'Control data sharing options',
+      // 'Access and export your data',
       'Delete your account if needed'
     ]
   },
@@ -158,11 +158,11 @@ const features: Feature[] = [
     title: 'Dashboard',
     description: 'Get a comprehensive overview of your mental health journey.',
     bulletPoints: [
-      'View a summary of your recent moods and activities',
-      'See your progress towards goals',
-      'Get insights and recommendations based on your data',
-      'Access quick links to frequently used features',
-      'Customize your dashboard layout',
+      'View a summary of your recent moods and activities and journal entries',
+      // 'See your progress towards goals',
+      // 'Get insights and recommendations based on your data',
+      // 'Access quick links to frequently used features',
+      // 'Customize your dashboard layout',
       'Set and track personal wellness goals',
       'Receive motivational messages and tips'
     ]

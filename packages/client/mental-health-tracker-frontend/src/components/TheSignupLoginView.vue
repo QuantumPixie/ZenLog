@@ -217,6 +217,7 @@ label {
 
 .custom-button {
   margin-top: 1rem;
+  margin-bottom: 1rem;
   background-color: #1b968a !important;
   border-color: #1b968a !important;
 }
