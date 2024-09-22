@@ -8,10 +8,14 @@ import { appRouter } from './routers'
 import { db } from './database'
 import type { Request, Response } from 'express'
 import path from 'path'
+import { fileURLToPath } from 'url'
 
 export type AppRouter = typeof appRouter
 
 const app = express()
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 // serve static files
 app.use(
