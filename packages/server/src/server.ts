@@ -45,7 +45,7 @@ const allowedOrigins = [
   'http://localhost:4173',
   'http://localhost:5182',
   'http://localhost:5177',
-  'https://zenlog-frontend.herokuapp.com',
+  'https://zenlog-b49a02b5774a.herokuapp.com',
 ]
 
 app.use(
