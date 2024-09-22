@@ -20,7 +20,7 @@ const __dirname = path.dirname(__filename)
 // serve static files
 app.use(
   express.static(
-    path.join(__dirname, '../../../client/mental-health-tracker-frontend/dist')
+    path.join(__dirname, '../../client/mental-health-tracker-frontend/dist')
   )
 )
 
@@ -29,10 +29,16 @@ app.get('*', (req, res) => {
   res.sendFile(
     path.join(
       __dirname,
-      '../../../client/mental-health-tracker-frontend/dist/index.html'
+      '../../client/mental-health-tracker-frontend/dist/index.html'
     )
   )
 })
+
+const frontendPath = path.join(
+  __dirname,
+  '../../client/mental-health-tracker-frontend/dist'
+)
+console.log('Frontend path:', frontendPath)
 
 const allowedOrigins = [
   'http://localhost:5173',
