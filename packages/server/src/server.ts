@@ -6,9 +6,10 @@ import { renderTrpcPanel } from 'trpc-panel'
 import { createContext } from './trpc'
 import { appRouter } from './routers'
 import { db } from './database'
-import type { Request, Response } from 'express'
+import type { Request, Response, NextFunction } from 'express'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import fs from 'fs'
 
 export type AppRouter = typeof appRouter
 
@@ -16,29 +17,6 @@ const app = express()
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-
-// serve static files
-app.use(
-  express.static(
-    path.join(__dirname, '../../client/mental-health-tracker-frontend/dist')
-  )
-)
-
-// handle routing
-app.get('*', (req, res) => {
-  res.sendFile(
-    path.join(
-      __dirname,
-      '../../client/mental-health-tracker-frontend/dist/index.html'
-    )
-  )
-})
-
-const frontendPath = path.join(
-  __dirname,
-  '../../client/mental-health-tracker-frontend/dist'
-)
-console.log('Frontend path:', frontendPath)
 
 const allowedOrigins = [
   'http://localhost:5173',
@@ -62,7 +40,6 @@ app.use(
 )
 
 app.use(express.json())
-
 app.use(cookieParser())
 
 app.use('/api/health', (_, res) => {
@@ -86,9 +63,29 @@ app.use(
   })
 )
 
-app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Not Found' })
+// static files
+const frontendPath = path.join(
+  __dirname,
+  '../../client/mental-health-tracker-frontend/dist'
+)
+console.log('Frontend path:', frontendPath)
+console.log('Frontend path exists:', fs.existsSync(frontendPath))
+
+app.use(express.static(frontendPath))
+
+// catch all route
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'))
 })
+
+app.use(
+  (err: unknown, req: Request, res: Response, _next: NextFunction): void => {
+    console.error('Server error:', err)
+    console.error('Request URL:', req.url)
+    console.error('Request method:', req.method)
+    res.status(500).json({ error: 'Internal Server Error' })
+  }
+)
 
 const PORT = process.env.PORT || 3005
 
