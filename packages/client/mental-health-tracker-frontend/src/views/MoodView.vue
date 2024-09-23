@@ -130,17 +130,23 @@ const emotionOptions = ref<EmotionOption[]>([
 const displayCustomEmotionDialog = ref(false)
 const customEmotion = ref('')
 
-// Fetch moods from the server
 const getMoods = async () => {
   try {
     const fetchedMoods = await trpc.mood.getMoods.query()
     console.log('Fetched moods:', fetchedMoods)
-    moods.value = fetchedMoods.map((mood) => ({
-      ...mood,
-      mood_score: mood.mood_score ?? null,
-      emotions: Array.isArray(mood.emotions) ? mood.emotions : [mood.emotions],
-      date: mood.date
-    }))
+    moods.value = fetchedMoods.map(
+      (mood: {
+        id: number
+        date: string
+        mood_score: number | null
+        emotions: string[] | string
+      }) => ({
+        ...mood,
+        mood_score: mood.mood_score ?? null,
+        emotions: Array.isArray(mood.emotions) ? mood.emotions : [mood.emotions],
+        date: mood.date
+      })
+    )
     console.log('Processed moods:', moods.value)
   } catch (error) {
     console.error('Failed to fetch moods:', error)
@@ -238,17 +244,16 @@ onMounted(async () => {
 .mood-view {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
   background-color: var(--surface-ground);
   color: var(--text-color);
 }
 
 .top-section {
-  display: grid;
-  grid-template-columns: 1fr 500px;
-  gap: 12rem;
-  margin-bottom: 5rem;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-bottom: 3rem;
 }
 
 .header-welcome {
@@ -256,30 +261,24 @@ onMounted(async () => {
   flex-direction: column;
 }
 
-.mood-input {
-  align-self: end;
-  margin-top: 3rem;
-}
-
 .welcome-title {
-  font-size: 3.3rem;
+  font-size: 2.5rem;
   color: var(--primary-color);
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   display: flex;
   align-items: center;
-  white-space: nowrap;
+  flex-wrap: wrap;
 }
 
 .custom-icon {
   color: #1b968a;
   margin-left: 0.5rem;
-  font-size: 3rem;
+  font-size: 2.5rem;
 }
 
 .welcome-message {
-  font-size: 1.2rem;
+  font-size: 1rem;
   margin-bottom: 1rem;
-  max-width: 600px;
   padding-left: 1.5rem;
 }
 
@@ -291,15 +290,17 @@ onMounted(async () => {
 .mood-item {
   background-color: var(--surface-card);
   border-radius: 10px;
-  padding: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 2px solid #3a7e77;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #1b968a;
 }
 
-.mood-input h2 {
+.mood-input h2,
+.mood-list h2 {
   color: var(--primary-color);
   margin-bottom: 1rem;
   margin-top: 0;
+  font-size: 1.3rem;
 }
 
 .field {
@@ -311,11 +312,6 @@ label {
   margin-bottom: 0.5rem;
 }
 
-.p-button-label {
-  flex: 1 1 auto;
-  color: black;
-}
-
 .p-inputnumber,
 .p-multiselect {
   width: 100%;
@@ -323,29 +319,23 @@ label {
 
 .custom-button {
   margin-top: 1rem;
-  background-color: #3a7e77 !important;
-  border-color: #3a7e77 !important;
+  background-color: #1b968a !important;
+  border-color: #1b968a !important;
 }
 
 .custom-button:hover {
-  background-color: #3ccdc2 !important;
-  border-color: #3ccdc2 !important;
+  background-color: #22b8a8 !important;
+  border-color: #22b8a8 !important;
 }
 
 .mood-list {
-  margin-top: 3rem;
-}
-
-.mood-list h2 {
-  color: var(--primary-color);
-  margin-bottom: 2rem;
+  margin-top: 2rem;
 }
 
 .mood-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
-  width: 100%;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
 }
 
 .mood-item {
@@ -354,11 +344,11 @@ label {
 }
 
 .mood-item:hover {
-  transform: translateY(-5px);
+  transform: translateY(-3px);
 }
 
 .mood-item h3 {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   margin-bottom: 0.5rem;
   color: var(--primary-color);
 }
@@ -368,20 +358,90 @@ label {
   color: var(--text-color-secondary);
 }
 
-@media (max-width: 1024px) {
+@media (min-width: 768px) {
+  .mood-view {
+    padding: 2rem;
+  }
+
   .top-section {
-    grid-template-columns: 1fr;
-    gap: 2rem;
+    flex-direction: row;
+    gap: 4rem;
+    align-items: flex-start;
+  }
+
+  .welcome-title {
+    font-size: 3rem;
+  }
+
+  .custom-icon {
+    font-size: 3rem;
+  }
+
+  .welcome-message {
+    font-size: 1.2rem;
+  }
+
+  .mood-input,
+  .mood-item {
+    padding: 2rem;
   }
 
   .mood-input {
-    margin-top: 2rem;
+    flex: 1;
+  }
+
+  .mood-list {
+    flex-basis: 400px;
+  }
+
+  .mood-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+  }
+
+  .mood-input h2,
+  .mood-list h2 {
+    font-size: 1.5rem;
+  }
+
+  .mood-item h3 {
+    font-size: 1.2rem;
+  }
+
+  .mood-item p {
+    font-size: 1rem;
   }
 }
 
-@media (max-width: 768px) {
+@media (min-width: 1024px) {
+  .top-section {
+    gap: 6rem;
+  }
+
   .welcome-title {
-    font-size: 2.5rem;
+    font-size: 3.3rem;
+  }
+
+  .custom-icon {
+    font-size: 3.3rem;
+  }
+
+  .mood-input,
+  .mood-item {
+    border: 2px solid #1b968a;
+  }
+
+  .mood-input h2,
+  .mood-list h2 {
+    font-size: 1.8rem;
+  }
+
+  .mood-item h3 {
+    font-size: 1.3rem;
+  }
+
+  .mood-item p {
+    font-size: 1.1rem;
   }
 }
 </style>

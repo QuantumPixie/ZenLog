@@ -149,17 +149,15 @@ const handleSubmit = async () => {
 .login-signup-view {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
   background-color: var(--surface-ground);
   color: var(--text-color);
 }
 
 .form-container {
-  display: grid;
-  grid-template-columns: 1fr 500px;
-  gap: 12rem;
-  margin-bottom: 5rem;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 .header-welcome {
@@ -168,23 +166,23 @@ const handleSubmit = async () => {
 }
 
 .welcome-title {
-  font-size: 3.3rem;
+  font-size: 2.5rem;
   color: var(--primary-color);
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .custom-icon {
   color: #1b968a;
-  margin-left: 1rem;
-  font-size: 3.3rem;
+  margin-left: 0.5rem;
+  font-size: 2.5rem;
 }
 
 .welcome-message {
-  font-size: 1.2rem;
+  font-size: 1rem;
   margin-bottom: 1rem;
-  max-width: 600px;
   padding-left: 1.5rem;
 }
 
@@ -195,15 +193,16 @@ const handleSubmit = async () => {
 .login-signup-form {
   background-color: var(--surface-card);
   border-radius: 10px;
-  padding: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 2px solid #1b968a;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #1b968a;
 }
 
 .login-signup-form h2 {
   color: var(--primary-color);
   margin-bottom: 1rem;
   margin-top: 0;
+  font-size: 1.5rem;
 }
 
 .field {
@@ -236,16 +235,49 @@ label {
   text-decoration: underline;
 }
 
-@media (max-width: 1024px) {
+@media (min-width: 768px) {
+  .login-signup-view {
+    padding: 2rem;
+  }
+
   .form-container {
-    grid-template-columns: 1fr;
-    gap: 2rem;
+    flex-direction: row;
+    gap: 4rem;
+  }
+
+  .welcome-title {
+    font-size: 3rem;
+  }
+
+  .custom-icon {
+    font-size: 3rem;
+  }
+
+  .welcome-message {
+    font-size: 1.5rem;
+  }
+
+  .login-signup-form {
+    padding: 2rem;
+    flex-basis: 400px;
   }
 }
 
-@media (max-width: 768px) {
+@media (min-width: 1024px) {
+  .form-container {
+    gap: 8rem;
+  }
+
   .welcome-title {
-    font-size: 2.5rem;
+    font-size: 3.3rem;
+  }
+
+  .custom-icon {
+    font-size: 3.3rem;
+  }
+
+  .login-signup-form {
+    border: 2px solid #1b968a;
   }
 }
 </style>

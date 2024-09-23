@@ -23,6 +23,7 @@ const allowedOrigins = [
   'http://localhost:4173',
   'http://localhost:5182',
   'http://localhost:5177',
+  'http://localhost:3005',
   'https://zenlog-b49a02b5774a.herokuapp.com',
 ]
 

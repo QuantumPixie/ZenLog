@@ -111,48 +111,42 @@ onMounted(getCurrentUser)
 .user-management-view {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
   background-color: var(--surface-ground);
   color: var(--text-color);
 }
 
 .top-section {
-  display: grid;
-  grid-template-columns: 1fr 500px;
-  gap: 3rem;
-  margin-bottom: 5rem;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-bottom: 2rem;
 }
 
 .header-welcome {
   display: flex;
   flex-direction: column;
-}
-
-.user-info {
-  align-self: end;
-  margin-top: 3rem;
+  margin-bottom: 2rem;
 }
 
 .welcome-title {
-  font-size: 3.3rem;
+  font-size: 2.5rem;
   color: var(--primary-color);
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   display: flex;
   align-items: center;
-  white-space: nowrap;
+  flex-wrap: wrap;
 }
 
 .custom-icon {
   color: #1b968a;
-  margin-left: 1rem;
-  font-size: 3.3rem;
+  margin-left: 0.5rem;
+  font-size: 2.5rem;
 }
 
 .welcome-message {
-  font-size: 1.2rem;
+  font-size: 1rem;
   margin-bottom: 1rem;
-  max-width: 600px;
   padding-left: 1.5rem;
 }
 
@@ -164,9 +158,9 @@ onMounted(getCurrentUser)
 .password-change-section {
   background-color: var(--surface-card);
   border-radius: 10px;
-  padding: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 2px solid #1b968a;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #1b968a;
 }
 
 .user-info h2,
@@ -174,6 +168,7 @@ onMounted(getCurrentUser)
   color: var(--primary-color);
   margin-bottom: 1rem;
   margin-top: 0;
+  font-size: 1.5rem;
 }
 
 .field {
@@ -196,24 +191,59 @@ label {
   border-color: #22b8a8 !important;
 }
 
-.password-change-section {
-  margin-top: 3rem;
-}
+@media (min-width: 768px) {
+  .user-management-view {
+    padding: 2rem;
+  }
 
-@media (max-width: 1024px) {
   .top-section {
-    grid-template-columns: 1fr;
-    gap: 2rem;
+    flex-direction: row;
+    gap: 4rem;
+    align-items: flex-start;
+  }
+
+  .welcome-title {
+    font-size: 3rem;
+  }
+
+  .custom-icon {
+    font-size: 3rem;
+  }
+
+  .welcome-message {
+    font-size: 1.2rem;
+  }
+
+  .user-info,
+  .password-change-section {
+    padding: 2rem;
   }
 
   .user-info {
-    margin-top: 2rem;
+    flex: 1;
+  }
+
+  .password-change-section {
+    flex-basis: 400px;
   }
 }
 
-@media (max-width: 768px) {
+@media (min-width: 1024px) {
+  .top-section {
+    gap: 6rem;
+  }
+
   .welcome-title {
-    font-size: 2.5rem;
+    font-size: 3.3rem;
+  }
+
+  .custom-icon {
+    font-size: 3.3rem;
+  }
+
+  .user-info,
+  .password-change-section {
+    border: 2px solid #1b968a;
   }
 }
 </style>

@@ -74,7 +74,7 @@ const getJournalEntries = async () => {
   try {
     const fetchedEntries = await trpc.journalEntry.getJournalEntries.query()
     console.log('Fetched journal entries:', fetchedEntries)
-    journalEntries.value = fetchedEntries.map((entry) => ({
+    journalEntries.value = fetchedEntries.map((entry: JournalEntry) => ({
       ...entry,
       sentiment: Number(entry.sentiment)
     }))
@@ -277,9 +277,51 @@ label {
   }
 }
 
-@media (max-width: 768px) {
+@media (min-width: 768px) {
+  .journal-view {
+    padding: 2rem;
+  }
+
   .welcome-title {
     font-size: 2.5rem;
+  }
+
+  .custom-icon {
+    font-size: 2.5rem;
+  }
+
+  .welcome-message {
+    font-size: 1.2rem;
+  }
+
+  .journal-input,
+  .journal-item {
+    padding: 2rem;
+  }
+
+  .journal-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .welcome-title {
+    font-size: 3rem;
+  }
+
+  .custom-icon {
+    font-size: 3rem;
+  }
+
+  .journal-input,
+  .journal-item {
+    border: 2px solid #1b968a;
+  }
+
+  .journal-input h2,
+  .journal-list h2 {
+    font-size: 1.8rem;
   }
 }
 </style>
