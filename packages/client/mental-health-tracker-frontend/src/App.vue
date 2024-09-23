@@ -120,11 +120,11 @@ const handleLogout = () => {
 .custom-menubar {
   background-color: transparent !important;
   border: none !important;
-  padding: 0.5rem 2rem;
+  padding: 0.5rem 1rem;
 }
 
 .custom-menubar :deep(.p-menuitem-link:hover) {
-  background-color: white !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 .custom-menubar
@@ -150,6 +150,8 @@ const handleLogout = () => {
 .logo {
   border-radius: 50%;
   border: 2px solid #1b968a;
+  max-height: 40px;
+  width: auto;
 }
 
 .custom-button {
@@ -164,7 +166,7 @@ const handleLogout = () => {
 
 main {
   flex: 1;
-  padding: 2rem;
+  padding: 1rem;
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
@@ -176,5 +178,45 @@ main {
   text-align: center;
   background-color: var(--surface-card);
   border-top: 2px solid #1b968a;
+}
+
+@media (max-width: 768px) {
+  .custom-menubar {
+    padding: 0.5rem;
+  }
+
+  .custom-menubar :deep(.p-menubar-button) {
+    margin-left: 0.5rem;
+  }
+
+  .custom-menubar :deep(.p-menubar-root-list) {
+    padding: 0.5rem 0;
+  }
+
+  .custom-button {
+    padding: 0.5rem !important;
+  }
+
+  .custom-button .p-button-label {
+    display: none;
+  }
+
+  main {
+    padding: 1rem 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo {
+    max-height: 30px;
+  }
+
+  .custom-menubar {
+    padding: 0.25rem;
+  }
+
+  .custom-button {
+    padding: 0.25rem !important;
+  }
 }
 </style>

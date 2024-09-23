@@ -3,7 +3,7 @@ import path from 'path'
 
 export default {
   plugins: [vue()],
-  base: '/',
+  base: process.env.VITE_BASE_URL || '/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -13,5 +13,15 @@ export default {
   build: {
     outDir: 'dist',
     assetsDir: 'assets'
+  },
+  server: {
+    port: 5177,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3005',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/trpc/, '/api/trpc')
+      }
+    }
   }
 }

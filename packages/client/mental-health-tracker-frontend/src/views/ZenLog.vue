@@ -187,7 +187,7 @@ const showFeatureDetails = (feature: Feature) => {
 .zen-log-view {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
   background-color: var(--surface-ground);
   color: var(--text-color);
 }
@@ -197,37 +197,33 @@ const showFeatureDetails = (feature: Feature) => {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
 }
 
 .welcome-title {
-  font-size: 3.3rem;
+  font-size: 2.5rem;
   color: var(--primary-color);
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .welcome-logo {
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   border: 2px solid #1b968a;
   object-fit: cover;
 }
 
-.custom-icon {
-  color: #1b968a;
-  margin-left: 1rem;
-  font-size: 3.3rem;
-}
-
 .welcome-message {
-  font-size: 1.2rem;
+  font-size: 1rem;
   margin-bottom: 1rem;
-  max-width: 800px;
-  padding-left: 1.5rem;
+  max-width: 100%;
+  padding-left: 0;
   list-style-type: none;
 }
 
@@ -237,18 +233,18 @@ const showFeatureDetails = (feature: Feature) => {
 
 .feature-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
+  grid-template-columns: 1fr;
+  gap: 1rem;
   width: 100%;
-  margin-bottom: 4rem;
+  margin-bottom: 2rem;
 }
 
 .feature-item {
   background-color: var(--surface-card);
   border-radius: 10px;
-  padding: 1.5rem;
+  padding: 1rem;
   text-align: center;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease;
@@ -256,122 +252,125 @@ const showFeatureDetails = (feature: Feature) => {
   border: 1px solid #1b968a;
 }
 
-.feature-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-}
-
 .feature-icon {
-  font-size: 2.5rem;
+  font-size: 2rem;
   color: #1b968a;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .feature-item h3 {
-  font-size: 1.4rem;
-  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+  margin-bottom: 0.3rem;
   color: var(--primary-color);
 }
 
 .feature-item p {
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: var(--text-color-secondary);
 }
 
 .cta-section {
   background-color: var(--surface-card);
   border-radius: 10px;
-  padding: 3rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   border: 2px solid #1b968a;
   text-align: center;
-  margin-top: 4rem;
+  margin-top: 2rem;
 }
 
 .cta-section h2 {
   color: var(--primary-color);
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   margin-top: 0;
-  font-size: 2.2rem;
+  font-size: 1.8rem;
 }
 
 .cta-buttons {
   display: flex;
-  justify-content: center;
-  gap: 2rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
 }
 
 .custom-button {
   background-color: #1b968a !important;
   border-color: #1b968a !important;
-  font-size: 1.2rem !important;
-  padding: 1rem 2rem !important;
-}
-
-.custom-button:hover {
-  background-color: #22b8a8 !important;
-  border-color: #22b8a8 !important;
+  font-size: 1rem !important;
+  padding: 0.8rem 1.5rem !important;
+  width: 100%;
+  max-width: 250px;
 }
 
 :deep(.feature-dialog) {
-  width: 90%;
+  width: 95%;
   max-width: 500px;
   border-radius: 10px;
 }
 
-:deep(.feature-dialog .p-dialog-header) {
-  background-color: var(--surface-card);
-  color: var(--primary-color);
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
-}
+@media (min-width: 768px) {
+  .zen-log-view {
+    padding: 2rem;
+  }
 
-:deep(.feature-dialog .p-dialog-content) {
-  background-color: var(--surface-card) !important;
-  color: var(--text-color) !important;
-  border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
-  padding: 1.5rem;
-}
-
-:deep(.feature-dialog ul) {
-  list-style-type: none;
-  padding-left: 0;
-}
-
-:deep(.feature-dialog li) {
-  margin-bottom: 0.75rem;
-  position: relative;
-  padding-left: 1.5rem;
-}
-
-:deep(.feature-dialog li::before) {
-  content: '•';
-  color: #1b968a !important;
-  font-weight: bold;
-  position: absolute;
-  left: 0;
-}
-
-:deep(.feature-dialog .p-dialog-header-close) {
-  color: var(--text-color) !important;
-}
-
-:deep(.feature-dialog .p-dialog-header-close:hover) {
-  background-color: var(--surface-hover) !important;
-}
-
-@media (max-width: 768px) {
   .welcome-title {
+    font-size: 3.3rem;
+    gap: 1rem;
+  }
+
+  .welcome-logo {
+    width: 80px;
+    height: 80px;
+  }
+
+  .welcome-message {
+    font-size: 1.2rem;
+    padding-left: 1.5rem;
+  }
+
+  .feature-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+  }
+
+  .feature-item {
+    padding: 1.5rem;
+  }
+
+  .feature-icon {
     font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .feature-item h3 {
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .feature-item p {
+    font-size: 1rem;
+  }
+
+  .cta-section {
+    padding: 3rem;
+    margin-top: 4rem;
+  }
+
+  .cta-section h2 {
+    font-size: 2.2rem;
+    margin-bottom: 2rem;
   }
 
   .cta-buttons {
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: center;
+    gap: 2rem;
   }
 
   .custom-button {
-    width: 100%;
+    font-size: 1.2rem !important;
+    padding: 1rem 2rem !important;
+    width: auto;
   }
 }
 </style>

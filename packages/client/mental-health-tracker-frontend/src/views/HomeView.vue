@@ -84,84 +84,129 @@ const features: Feature[] = [
 .dashboard {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
   background-color: var(--surface-ground);
   color: var(--text-color);
 }
 
 .header-welcome {
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
 }
 
 .welcome-title {
-  font-size: 3.3rem;
+  font-size: 2rem;
   color: var(--primary-color);
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .custom-icon {
   color: #1b968a;
-  margin-left: 1rem;
-  font-size: 3.3rem;
+  margin-left: 0.5rem;
+  font-size: 2rem;
 }
 
 .welcome-message {
-  font-size: 1.2rem;
-  margin-bottom: 2rem;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
   color: var(--text-color-secondary);
 }
 
 .feature-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
+  grid-template-columns: 1fr;
+  gap: 1rem;
   width: 100%;
 }
 
 .feature-item {
   background-color: var(--surface-card);
   border-radius: 10px;
-  padding: 2rem;
+  padding: 1.5rem;
   text-align: center;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease;
   cursor: pointer;
-  border: 2px solid #1b968a;
+  border: 1px solid #1b968a;
 }
 
 .feature-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .feature-icon {
-  font-size: 2.5rem;
+  font-size: 2rem;
   color: #1b968a;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .feature-item h3 {
-  font-size: 1.2rem;
-  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  margin-bottom: 0.3rem;
   color: var(--primary-color);
 }
 
 .feature-item p {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--text-color-secondary);
 }
 
-@media (max-width: 768px) {
+@media (min-width: 768px) {
+  .dashboard {
+    padding: 2rem;
+  }
+
+  .header-welcome {
+    margin-bottom: 3rem;
+  }
+
   .welcome-title {
-    font-size: 2.5rem;
+    font-size: 3.3rem;
+    margin-bottom: 1rem;
+  }
+
+  .custom-icon {
+    margin-left: 1rem;
+    font-size: 3.3rem;
   }
 
   .welcome-message {
-    font-size: 1rem;
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+  }
+
+  .feature-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+  }
+
+  .feature-item {
+    padding: 2rem;
+    border: 2px solid #1b968a;
+  }
+
+  .feature-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .feature-item h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .feature-item p {
+    font-size: 0.9rem;
   }
 }
 </style>

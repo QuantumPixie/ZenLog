@@ -241,38 +241,39 @@ onMounted(async () => {
 .dashboard-view {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
   background-color: var(--surface-ground);
   color: var(--text-color);
 }
 
 .top-section {
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
 }
 
 .header-welcome {
   display: flex;
   flex-direction: column;
+  margin-bottom: 1rem;
 }
 
 .welcome-title {
-  font-size: 3.3rem;
+  font-size: 2.5rem;
   color: var(--primary-color);
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .custom-icon {
   color: #1b968a;
-  margin-left: 1rem;
-  font-size: 3.3rem;
+  margin-left: 0.5rem;
+  font-size: 2.5rem;
 }
 
 .welcome-message {
-  font-size: 1.2rem;
+  font-size: 1rem;
   margin-bottom: 1rem;
-  max-width: 600px;
   padding-left: 1.5rem;
 }
 
@@ -282,15 +283,16 @@ onMounted(async () => {
 
 .view-toggle {
   display: flex;
-  justify-content: center;
-  margin-bottom: 2rem;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .view-toggle .custom-button {
-  margin: 0 0.5rem;
   background-color: #1b968a !important;
   border-color: #1b968a !important;
   color: white !important;
+  text-align: left;
 }
 
 .view-toggle .custom-button:hover {
@@ -303,30 +305,26 @@ onMounted(async () => {
   border-color: #19635c !important;
 }
 
-.refresh-button {
-  margin-left: 1rem;
-}
-
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
 }
 
 .summary-section,
 .chart-container {
   background-color: var(--surface-card);
   border-radius: 10px;
-  padding: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 2px solid #1b968a;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #1b968a;
 }
 
 .summary-section h2,
 .chart-container h2 {
   color: var(--primary-color);
   margin-bottom: 1rem;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
 }
 
 .summary-item {
@@ -341,7 +339,7 @@ onMounted(async () => {
 }
 
 .summary-item h3 {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   margin-bottom: 0.5rem;
   color: var(--primary-color);
 }
@@ -352,47 +350,106 @@ onMounted(async () => {
   margin-bottom: 0.3rem;
 }
 
-.averages {
-  grid-column: 1 / -1;
-}
-
 .chart-view {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.chart-container :deep(canvas) {
+  max-width: 100%;
+  height: auto !important;
 }
 
 .error-message {
   text-align: center;
   color: var(--red-500);
-  font-size: 1.2rem;
-  margin-top: 2rem;
+  font-size: 1.1rem;
+  margin-top: 1.5rem;
 }
 
-@media (max-width: 768px) {
-  .welcome-title {
-    font-size: 2.5rem;
+@media (min-width: 768px) {
+  .dashboard-view {
+    padding: 2rem;
   }
 
-  .summary-grid,
-  .chart-view {
-    grid-template-columns: 1fr;
+  .welcome-title {
+    font-size: 3rem;
+  }
+
+  .custom-icon {
+    font-size: 3rem;
+  }
+
+  .welcome-message {
+    font-size: 1.2rem;
   }
 
   .view-toggle {
-    flex-direction: column;
-    align-items: center;
+    flex-direction: row;
+    justify-content: center;
+    margin-bottom: 3rem;
   }
 
-  .view-toggle .custom-button {
-    margin: 0.5rem 0;
-    width: 100%;
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  .refresh-button {
-    margin-left: 0;
-    margin-top: 0.5rem;
-    width: 100%;
+  .chart-view {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .summary-section h2,
+  .chart-container h2 {
+    font-size: 1.5rem;
+  }
+
+  .summary-item h3 {
+    font-size: 1.2rem;
+  }
+
+  .summary-item p {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .welcome-title {
+    font-size: 3.3rem;
+  }
+
+  .custom-icon {
+    font-size: 3.3rem;
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .summary-section.averages {
+    grid-column: span 3;
+  }
+
+  .chart-view {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .summary-section,
+  .chart-container {
+    border: 2px solid #1b968a;
+  }
+
+  .summary-section h2,
+  .chart-container h2 {
+    font-size: 1.8rem;
+  }
+
+  .summary-item h3 {
+    font-size: 1.3rem;
+  }
+
+  .summary-item p {
+    font-size: 1.1rem;
   }
 }
 </style>

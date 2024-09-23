@@ -136,17 +136,16 @@ onMounted(getActivities)
 .activity-view {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
   background-color: var(--surface-ground);
   color: var(--text-color);
 }
 
 .top-section {
-  display: grid;
-  grid-template-columns: 1fr 500px;
-  gap: 12rem;
-  margin-bottom: 5rem;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-bottom: 3rem;
 }
 
 .header-welcome {
@@ -154,29 +153,24 @@ onMounted(getActivities)
   flex-direction: column;
 }
 
-.activity-input {
-  align-self: end;
-  margin-top: 3rem;
-}
-
 .welcome-title {
-  font-size: 3.3rem;
+  font-size: 2.5rem;
   color: var(--primary-color);
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .custom-icon {
   color: #1b968a;
-  margin-left: 1rem;
-  font-size: 3.3rem;
+  margin-left: 0.5rem;
+  font-size: 2.5rem;
 }
 
 .welcome-message {
-  font-size: 1.2rem;
+  font-size: 1rem;
   margin-bottom: 1rem;
-  max-width: 600px;
   padding-left: 1.5rem;
 }
 
@@ -188,15 +182,16 @@ onMounted(getActivities)
 .activity-item {
   background-color: var(--surface-card);
   border-radius: 10px;
-  padding: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 2px solid #1b968a;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #1b968a;
 }
 
-.activity-input h2 {
+.activity-input h2,
+.activity-list h2 {
   color: var(--primary-color);
   margin-bottom: 1rem;
-  margin-top: 0;
+  font-size: 1.5rem;
 }
 
 .field {
@@ -220,19 +215,13 @@ label {
 }
 
 .activity-list {
-  margin-top: 3rem;
-}
-
-.activity-list h2 {
-  color: var(--primary-color);
-  margin-bottom: 2rem;
+  margin-top: 2rem;
 }
 
 .activity-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
-  width: 100%;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
 }
 
 .activity-item {
@@ -241,11 +230,11 @@ label {
 }
 
 .activity-item:hover {
-  transform: translateY(-5px);
+  transform: translateY(-3px);
 }
 
 .activity-item h3 {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   margin-bottom: 0.5rem;
   color: var(--primary-color);
 }
@@ -255,20 +244,85 @@ label {
   color: var(--text-color-secondary);
 }
 
-@media (max-width: 1024px) {
+@media (min-width: 768px) {
+  .activity-view {
+    padding: 2rem;
+  }
+
   .top-section {
-    grid-template-columns: 1fr;
-    gap: 2rem;
+    flex-direction: row;
+    gap: 4rem;
+    align-items: flex-start;
+  }
+
+  .welcome-title {
+    font-size: 1.2rem;
+  }
+
+  .custom-icon {
+    font-size: 3rem;
+  }
+
+  .welcome-message {
+    font-size: 1.2rem;
+  }
+
+  .activity-input,
+  .activity-item {
+    padding: 2rem;
   }
 
   .activity-input {
-    margin-top: 2rem;
+    flex: 1;
+  }
+
+  .activity-list {
+    flex-basis: 400px;
+  }
+
+  .activity-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+  }
+
+  .activity-item h3 {
+    font-size: 1.2rem;
+  }
+
+  .activity-item p {
+    font-size: 1rem;
   }
 }
 
-@media (max-width: 768px) {
+@media (min-width: 1024px) {
+  .top-section {
+    gap: 6rem;
+  }
+
   .welcome-title {
-    font-size: 2.5rem;
+    font-size: 3.3rem;
+  }
+
+  .custom-icon {
+    font-size: 3.3rem;
+  }
+
+  .activity-input,
+  .activity-item {
+    border: 2px solid #1b968a;
+  }
+
+  .activity-input h2,
+  .activity-list h2 {
+    font-size: 1.8rem;
+  }
+
+  .activity-item h3 {
+    font-size: 1.3rem;
+  }
+
+  .activity-item p {
+    font-size: 1.1rem;
   }
 }
 </style>
