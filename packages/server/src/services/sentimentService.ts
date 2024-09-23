@@ -2,21 +2,14 @@ import Sentiment from 'sentiment'
 
 const sentiment = new Sentiment()
 
-export const sentimentService = {
-  analyze: (text: string): { score: number } => {
-    const result = sentiment.analyze(text)
-    const convertedScore = sentimentService.convertScore(result.score)
-    return { score: convertedScore }
-  },
+export const analyze = (text: string): Promise<number> => {
+  const result = sentiment.analyze(text)
+  const convertedScore = convertScore(result.score)
+  return Promise.resolve(convertedScore)
+}
 
-  /**
-   * Converts a sentiment score to a range of 1 to 10.
-   *
-   * @param {number} score - The sentiment score to convert.
-   * @return {number} The converted score in the range of 1 to 10.
-   */
-  convertScore: (score: number): number => {
-    const converted = ((score + 5) / 10) * 9 + 1
-    return Math.round(Math.min(Math.max(converted, 1), 10) * 10) / 10
-  },
+function convertScore(score: number): number {
+  const normalizedScore = Math.max(0, Math.min(1, score)) // Ensure score is between 0 and 1
+  const converted = ((normalizedScore + 5) / 10) * 9 + 1
+  return Math.round(Math.min(Math.max(converted, 1), 10))
 }

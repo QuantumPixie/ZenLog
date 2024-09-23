@@ -11,7 +11,7 @@
           <li>Track your emotional journey over time.</li>
           <li>Gain insights into your mental well-being.</li>
           <li>Express yourself freely in a safe, private space.</li>
-          <li>Receive an AI-generated sentiment score for each entry.</li>
+          <li>Receive a sentiment score for each entry.</li>
         </ul>
       </div>
       <div class="journal-input">
@@ -26,6 +26,9 @@
               auto-resize
               placeholder="Write your journal entry here..."
             />
+            <small :class="{ 'p-error': isEntryTooLong }">
+              {{ newEntry.entry.length }}/5000 characters
+            </small>
           </div>
           <Button
             type="submit"
@@ -50,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { trpc } from '../utils/trpc'
 import { formatDate } from '../utils/dateUtils'
 import Button from 'primevue/button'
@@ -95,7 +98,7 @@ const createJournalEntry = async () => {
     toast.add({
       severity: 'warn',
       summary: 'Warning',
-      detail: 'Journal entry is required',
+      detail: 'Journal entry cannot be empty',
       life: 3000
     })
     return
@@ -112,19 +115,40 @@ const createJournalEntry = async () => {
     toast.add({
       severity: 'success',
       summary: 'Success',
-      detail: 'Journal entry created',
+      detail: 'Journal entry created successfully',
       life: 3000
     })
   } catch (error) {
     console.error('Failed to create journal entry:', error)
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Failed to create journal entry',
-      life: 3000
-    })
+    if (error instanceof Error) {
+      let errorMessage = 'Failed to create journal entry, please enter a valid entry'
+
+      if (error.message.includes('Entry cannot be empty')) {
+        errorMessage = 'Journal entry cannot be empty'
+      } else if (error.message.includes('Entry cannot exceed 5000 characters')) {
+        errorMessage = 'Journal entry is too long (max 5000 characters)'
+      } else if (error.message.includes('repetitive or meaningless text')) {
+        errorMessage = 'Entry seems to contain repetitive or meaningless text'
+      }
+
+      toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: errorMessage,
+        life: 5000
+      })
+    } else {
+      toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'An unexpected error occurred while creating the journal entry',
+        life: 3000
+      })
+    }
   }
 }
+
+const isEntryTooLong = computed(() => newEntry.value.entry.length > 5000)
 
 const formatSentiment = (sentiment: number | string | null | undefined) => {
   if (sentiment === null || sentiment === undefined) {

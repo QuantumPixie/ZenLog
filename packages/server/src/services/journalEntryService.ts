@@ -1,17 +1,17 @@
 import { db } from '../database/index'
 import type { NewJournalEntry } from '../models/journalEntry'
-import { sentimentService } from './sentimentService'
+import { analyze } from './sentimentService'
 
 export const journalEntryService = {
   async createJournalEntry(
     userId: number,
-    entryData: Omit<NewJournalEntry, 'user_id' | 'sentiment'>
+    entryData: Omit<NewJournalEntry, 'id' | 'user_id'> & { sentiment: number }
   ) {
-    const sentimentResult = sentimentService.analyze(entryData.entry)
+    const sentimentResult = await analyze(entryData.entry)
     const newEntry: NewJournalEntry = {
       ...entryData,
       user_id: userId,
-      sentiment: sentimentResult.score,
+      sentiment: sentimentResult,
     }
 
     return db
