@@ -18,8 +18,8 @@ export default defineConfig({
   server: {
     port: 5177,
     proxy: {
-      '/api': {
-        target: 'http://localhost:3005',
+      '/api/trpc': {
+        target: process.env.VITE_BACKEND_URL || 'http://localhost:3005',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/trpc/, '/api/trpc')
       }
