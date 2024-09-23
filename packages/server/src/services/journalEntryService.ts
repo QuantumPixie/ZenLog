@@ -5,13 +5,13 @@ import { analyze } from './sentimentService'
 export const journalEntryService = {
   async createJournalEntry(
     userId: number,
-    entryData: Omit<NewJournalEntry, 'id' | 'user_id'> & { sentiment: number }
+    entryData: Omit<NewJournalEntry, 'id' | 'user_id' | 'sentiment'>
   ) {
-    const sentimentResult = await analyze(entryData.entry)
+    const sentiment = await analyze(entryData.entry)
     const newEntry: NewJournalEntry = {
       ...entryData,
       user_id: userId,
-      sentiment: sentimentResult,
+      sentiment,
     }
 
     return db

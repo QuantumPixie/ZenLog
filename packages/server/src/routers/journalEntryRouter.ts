@@ -2,7 +2,6 @@ import { z } from 'zod'
 import { router, authedProcedure } from '../trpc'
 import { journalEntryService } from '../services/journalEntryService'
 import { journalEntrySchema } from '../schemas/journalEntrySchema'
-import { analyze } from 'services/sentimentService'
 
 const dateRangeSchema = z.object({
   startDate: z.string().refine((val) => !Number.isNaN(Date.parse(val)), {
@@ -20,13 +19,14 @@ export const journalEntryRouter = router({
   }),
 
   createJournalEntry: authedProcedure
-    .input(journalEntrySchema.omit({ id: true, user_id: true }))
+    .input(
+      journalEntrySchema.omit({ id: true, user_id: true, sentiment: true })
+    )
     .mutation(async ({ ctx, input }) => {
-      const sentiment = await analyze(input.entry)
-      const entry = await journalEntryService.createJournalEntry(ctx.user.id, {
-        ...input,
-        sentiment,
-      })
+      const entry = await journalEntryService.createJournalEntry(
+        ctx.user.id,
+        input
+      )
       return entry
     }),
 
