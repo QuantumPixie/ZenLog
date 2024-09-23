@@ -10,6 +10,7 @@ import type { Request, Response, NextFunction } from 'express'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import fs from 'fs'
+import { createProxyMiddleware } from 'http-proxy-middleware'
 
 export type AppRouter = typeof appRouter
 
@@ -33,6 +34,7 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true)
       } else {
+        console.error('CORS error: Origin not allowed:', origin)
         callback(new Error('Not allowed by CORS'))
       }
     },
@@ -42,6 +44,27 @@ app.use(
 
 app.use(express.json())
 app.use(cookieParser())
+
+// Logging middleware
+app.use((req, res, next) => {
+  console.log(`Received ${req.method} request for ${req.url}`)
+  next()
+})
+
+// Enable pre-flight requests for all routes
+app.options('*', cors())
+
+// Conditional proxy middleware for development
+if (process.env.NODE_ENV === 'development') {
+  const apiProxy = createProxyMiddleware({
+    target: process.env.VITE_BACKEND_URL || 'http://localhost:3005',
+    changeOrigin: true,
+    pathRewrite: {
+      '^/api': '', // remove /api prefix when forwarding to backend
+    },
+  })
+  app.use('/api', apiProxy)
+}
 
 app.use('/api/health', (_, res) => {
   res.status(200).send('OK')
@@ -59,12 +82,14 @@ app.use(
   '/api/trpc',
   trpcExpress.createExpressMiddleware({
     router: appRouter,
-    createContext: ({ req, res }: { req: Request; res: Response }) =>
-      createContext({ req, res }),
+    createContext: ({ req, res }: { req: Request; res: Response }) => {
+      console.log('TRPC request received:', req.url)
+      return createContext({ req, res })
+    },
   })
 )
 
-// static files
+// Static files
 const frontendPath = path.join(
   __dirname,
   '../../client/mental-health-tracker-frontend/dist'
@@ -74,7 +99,11 @@ console.log('Frontend path exists:', fs.existsSync(frontendPath))
 
 app.use(express.static(frontendPath))
 
-// catch all route
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: 'Not Found' })
+})
+
+// Catch-all route for SPA
 app.get('*', (req, res) => {
   res.sendFile(path.join(frontendPath, 'index.html'))
 })

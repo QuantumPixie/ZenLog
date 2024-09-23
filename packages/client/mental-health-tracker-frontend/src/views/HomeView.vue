@@ -99,6 +99,7 @@ const features: Feature[] = [
   margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .custom-icon {
