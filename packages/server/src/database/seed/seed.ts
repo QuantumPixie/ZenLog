@@ -75,7 +75,7 @@ export const generateUniqueDataForUser = (userId: number, count: number) => {
   const dates = new Set<string>()
   while (dates.size < count) {
     const date = new Date(chance.date({ year: 2024 }))
-    const dateString = date.toISOString().split('T')[0]
+    const dateString = date.toISOString()
     dates.add(dateString)
   }
   return Array.from(dates).map((date) => ({ userId, date }))
