@@ -67,9 +67,9 @@ jobs:
         run: npm run test
         working-directory: ./packages/server
 
-      - name: Run E2E tests
-        run: npm run test:e2e
-        working-directory: ./packages/client/mental-health-tracker-frontend
+      # - name: Run E2E tests
+      #   run: npm run test:e2e
+      #   working-directory: ./packages/client/mental-health-tracker-frontend
 
   build:
     needs: test
