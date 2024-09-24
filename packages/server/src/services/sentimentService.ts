@@ -8,8 +8,11 @@ export const analyze = (text: string): Promise<number> => {
   return Promise.resolve(convertedScore)
 }
 
-function convertScore(score: number): number {
-  const normalizedScore = Math.max(0, Math.min(1, score)) // Ensure score is between 0 and 1
-  const converted = ((normalizedScore + 5) / 10) * 9 + 1
-  return Math.round(Math.min(Math.max(converted, 1), 10))
+export function convertScore(score: number): number {
+  // Normalize the score to a range of -1 to 1
+  const normalizedScore = Math.max(-1, Math.min(1, score / 5))
+
+  const convertedScore = ((normalizedScore + 1) / 2) * 9 + 1
+
+  return Math.round(convertedScore * 10) / 10
 }

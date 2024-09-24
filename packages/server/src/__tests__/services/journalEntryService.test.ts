@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mockKysely } from '../mocks/databaseMock'
-import { sentimentService } from '../../services/sentimentService'
+import * as sentimentService from '../../services/sentimentService'
 
 vi.mock('../../database', () => ({
   db: mockKysely,
@@ -23,10 +23,17 @@ describe('journalEntryService', () => {
     it('should create and return a new journal entry', async () => {
       const userId = 1
       const entryData = { date: '2023-07-27', entry: 'Today was a great day!' }
-      const mockSentimentResult = { score: 0.8 }
-      const mockCreatedEntry = { id: 1, ...entryData, sentiment: 0.8 }
+      const mockSentimentScore = 8.0
+      const mockCreatedEntry = {
+        id: 1,
+        ...entryData,
+        sentiment: mockSentimentScore,
+      }
 
-      vi.mocked(sentimentService.analyze).mockReturnValue(mockSentimentResult)
+      // Mock the analyze function
+      vi.spyOn(sentimentService, 'analyze').mockResolvedValue(
+        mockSentimentScore
+      )
 
       mockKysely.insertInto = vi.fn().mockReturnValue({
         values: vi.fn().mockReturnThis(),
@@ -48,7 +55,7 @@ describe('journalEntryService', () => {
         expect.objectContaining({
           ...entryData,
           user_id: userId,
-          sentiment: 0.8,
+          sentiment: mockSentimentScore,
         })
       )
       expect(
