@@ -22,8 +22,9 @@ describe('Activity Service Integration Tests', () => {
   beforeEach(async () => {
     try {
       await cleanupTestDatabase()
+      const uniqueEmail = `test${Date.now()}@example.com`
       const user = await createUser({
-        email: 'test@example.com',
+        email: uniqueEmail,
         username: 'testuser',
         password: 'password123',
       })

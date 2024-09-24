@@ -7,12 +7,15 @@ import {
 import { createUser, getUserById } from '../../services/userService'
 
 describe('User Service Integration Tests', () => {
+  let uniqueEmail: string
+
   beforeAll(async () => {
     await setupTestDatabase()
   })
 
   beforeEach(async () => {
     await cleanupTestDatabase()
+    uniqueEmail = `test_${Date.now()}@example.com`
   })
 
   afterAll(async () => {
@@ -21,7 +24,7 @@ describe('User Service Integration Tests', () => {
 
   it('should create a user and retrieve it by id', async () => {
     const newUser = {
-      email: 'test@example.com',
+      email: uniqueEmail,
       username: 'testuser',
       password: 'password123',
     }
