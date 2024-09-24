@@ -140,4 +140,4 @@ jobs:
       - name: Verify deployment
         run: |
           echo "Deployed to https://${{ secrets.HEROKU_APP_NAME }}.herokuapp.com"
-          curl -sSf https://${{ secrets.HEROKU_APP_NAME }}.herokuapp.com/health || (echo "Health check failed" && exit 1)
+          curl -sSf https://${{ secrets.HEROKU_APP_NAME }}.herokuapp.com/api/health || (echo "Health check failed" && exit 1)
