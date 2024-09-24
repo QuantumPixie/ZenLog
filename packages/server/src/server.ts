@@ -99,9 +99,9 @@ console.log('Frontend path exists:', fs.existsSync(frontendPath))
 
 app.use(express.static(frontendPath))
 
-app.use('/api/*', (req, res) => {
-  res.status(404).json({ error: 'Not Found' })
-})
+// app.use('/api/*', (req, res) => {
+//   res.status(404).json({ error: 'Not Found' })
+// })
 
 // Catch-all route for SPA
 app.get('*', (req, res) => {
