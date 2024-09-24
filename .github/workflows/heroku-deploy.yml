@@ -137,7 +137,10 @@ jobs:
       - name: Run database migrations
         run: heroku run --app ${{ secrets.HEROKU_APP_NAME }} npm run migrate:latest
 
+      - name: Wait for Heroku to start
+        run: sleep 10
+
       - name: Verify deployment
         run: |
           echo "Deployed to https://${{ secrets.HEROKU_APP_NAME }}.herokuapp.com"
-          curl -sSf https://${{ secrets.HEROKU_APP_NAME }}.herokuapp.com/api/health || (echo "Health check failed" && exit 1)
+          curl -sSf https://zenlog-b49a02b5774a.herokuapp.com/api/health || (echo "Health check failed" && exit 1)
