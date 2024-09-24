@@ -67,10 +67,6 @@ jobs:
         run: npm run test
         working-directory: ./packages/server
 
-      # - name: Run E2E tests
-      #   run: npm run test:e2e
-      #   working-directory: ./packages/client/mental-health-tracker-frontend
-
   build:
     needs: test
     runs-on: ubuntu-latest
@@ -122,12 +118,6 @@ jobs:
       - name: Install dependencies
         run: npm run install-all
 
-      - name: Build server
-        run: npm run build:server
-
-      - name: Build client
-        run: npm run build:client
-
       - name: Install Heroku CLI
         run: curl https://cli-assets.heroku.com/install.sh | sh
 
@@ -137,34 +127,15 @@ jobs:
         run: heroku container:login
 
       - name: Add Heroku remote
-        env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
         run: heroku git:remote --app ${{ secrets.HEROKU_APP_NAME }}
 
-      - name: Fetch Heroku changes
-        run: git fetch heroku main
-
-      - name: Merge Heroku changes
+      - name: Deploy to Heroku via container
         run: |
-          if ! git merge-base --is-ancestor heroku/main HEAD; then
-            git merge heroku/main --strategy-option ours
-          fi
-
-      - name: Push to Heroku
-        env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-        run: |
-          git config user.email "github-actions@example.com"
-          git config user.name "GitHub Actions"
-          git add -f packages/server/dist packages/client/mental-health-tracker-frontend/dist
-          git commit -m "Add built artifacts for Heroku deployment"
-          git push heroku HEAD:main --force
+          heroku container:push web --app ${{ secrets.HEROKU_APP_NAME }}
+          heroku container:release web --app ${{ secrets.HEROKU_APP_NAME }}
 
       - name: Run database migrations
-        env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-        run: |
-          heroku run --app ${{ secrets.HEROKU_APP_NAME }} npm run migrate:latest
+        run: heroku run --app ${{ secrets.HEROKU_APP_NAME }} npm run migrate:latest
 
       - name: Verify deployment
         run: |

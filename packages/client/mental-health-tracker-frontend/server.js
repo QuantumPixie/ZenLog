@@ -13,7 +13,7 @@ const apiProxy = createProxyMiddleware('/api', {
   target: process.env.VITE_BACKEND_URL || 'http://localhost:3005',
   changeOrigin: true,
   pathRewrite: {
-    '^/api': '' // remove /api prefix when forwarding to backend
+    '^/api': ''
   },
   logLevel: 'debug'
 })
