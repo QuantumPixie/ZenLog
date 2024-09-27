@@ -1,5 +1,6 @@
-import type { Insertable } from 'kysely'
+import type { Insertable, Kysely } from 'kysely'
 import { db } from '../database/index'
+import type { Database } from '../database/index'
 import type {
   ActivityTable,
   NewActivity,
@@ -16,9 +17,12 @@ function toDbInsertableActivity(
 }
 
 export const activityService = {
-  async getActivities(userId: number): Promise<ActivityTable[]> {
+  async getActivities(
+    userId: number,
+    dbInstance: Kysely<Database> = db
+  ): Promise<ActivityTable[]> {
     console.log(`Fetching activities for user ${userId}`)
-    const activities = await db
+    const activities = await dbInstance
       .selectFrom('activities')
       .selectAll()
       .where('user_id', '=', userId)
@@ -32,9 +36,10 @@ export const activityService = {
 
   async getActivityById(
     id: number,
-    userId: number
+    userId: number,
+    dbInstance: Kysely<Database> = db
   ): Promise<ActivityTable | undefined> {
-    return db
+    return dbInstance
       .selectFrom('activities')
       .selectAll()
       .where('id', '=', id)
@@ -44,7 +49,8 @@ export const activityService = {
 
   async createActivity(
     userId: number,
-    activityData: ActivityInput
+    activityData: ActivityInput,
+    dbInstance: Kysely<Database> = db
   ): Promise<ActivityTable> {
     console.log('Creating activity for user:', userId)
     console.log('Activity data:', activityData)
@@ -59,7 +65,7 @@ export const activityService = {
 
     const dbInsertableActivity = toDbInsertableActivity(newActivity)
 
-    const insertedActivity = await db
+    const insertedActivity = await dbInstance
       .insertInto('activities')
       .values(dbInsertableActivity as Insertable<ActivityTable>)
       .returning(['id', 'user_id', 'date', 'activity', 'duration', 'notes'])
@@ -75,9 +81,10 @@ export const activityService = {
   async getActivitiesByDateRange(
     userId: number,
     startDate: string,
-    endDate: string
+    endDate: string,
+    dbInstance: Kysely<Database> = db
   ): Promise<ActivityTable[]> {
-    return db
+    return dbInstance
       .selectFrom('activities')
       .selectAll()
       .where('user_id', '=', userId)

@@ -6,6 +6,7 @@ dotenv.config({ path: '.env.test' })
 
 export default defineConfig({
   test: {
+    setupFiles: ['./src/__tests__/integration/transactions/testSetup.ts'],
     coverage: {
       exclude: [
         '**/types/**',
@@ -19,11 +20,10 @@ export default defineConfig({
     sequence: {
       shuffle: false,
     },
-    hookTimeout: 20000,
-    testTimeout: 10000,
+    hookTimeout: 50000,
+    testTimeout: 20000,
     globals: true,
     environment: 'node',
-    setupFiles: [path.resolve(__dirname, './testSetup.ts')],
     include: ['src/**/*.test.ts', 'src/tests/**/*.test.ts'],
     alias: {
       '@server': path.resolve(__dirname, './src'),

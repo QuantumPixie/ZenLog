@@ -1,8 +1,8 @@
-import { type Selectable, type Insertable, sql } from 'kysely'
+import { type Selectable, type Insertable, sql, Kysely } from 'kysely'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { TRPCError } from '@trpc/server'
-import { db } from '../database/index'
+import { db, type Database } from '../database/index'
 import type { UserTable } from '../models/user'
 
 type User = Selectable<UserTable>
@@ -10,13 +10,14 @@ type NewUser = Insertable<UserTable>
 type SafeUser = Omit<User, 'password'>
 
 export async function createUser(
-  newUser: NewUser
+  newUser: NewUser,
+  dbInstance: Kysely<Database> = db
 ): Promise<{ user: SafeUser; token: string }> {
   try {
     const hashedPassword = await bcrypt.hash(newUser.password, 10)
     const userToInsert = { ...newUser, password: hashedPassword }
 
-    const [createdUser] = await db
+    const [createdUser] = await dbInstance
       .insertInto('users')
       .values(userToInsert)
       .returning(['id', 'email', 'username', 'deleted_at'])
@@ -47,12 +48,13 @@ export async function createUser(
 
 export async function loginUser(
   email: string,
-  password: string
+  password: string,
+  dbInstance: Kysely<Database> = db
 ): Promise<{ user: SafeUser; token: string } | null> {
   try {
     console.log(`Attempting login for email: ${email}`)
 
-    const [user] = await db
+    const [user] = await dbInstance
       .selectFrom('users')
       .select(['id', 'email', 'username', 'password', 'deleted_at'])
       .where('email', '=', email)
@@ -101,10 +103,11 @@ export async function loginUser(
 }
 
 export async function getUserById(
-  userId: number
+  userId: number,
+  dbInstance: Kysely<Database> = db
 ): Promise<SafeUser | undefined> {
   try {
-    const [user] = await db
+    const [user] = await dbInstance
       .selectFrom('users')
       .select(['id', 'email', 'username', 'deleted_at'])
       .where('id', '=', userId)
@@ -121,10 +124,11 @@ export async function getUserById(
 export async function changePassword(
   id: number,
   oldPassword: string,
-  newPassword: string
+  newPassword: string,
+  dbInstance: Kysely<Database> = db
 ): Promise<boolean> {
   try {
-    const [user] = await db
+    const [user] = await dbInstance
       .selectFrom('users')
       .select(['password'])
       .where('id', '=', id)
@@ -166,8 +170,11 @@ export function generateToken(userId: number): string {
   return jwt.sign({ user_id: userId }, jwtSecret, { expiresIn: '1d' })
 }
 
-export async function deleteUser(userId: number): Promise<void> {
-  const result = await db
+export async function deleteUser(
+  userId: number,
+  dbInstance: Kysely<Database> = db
+): Promise<void> {
+  const result = await dbInstance
     .updateTable('users')
     .set({
       deleted_at: sql`CURRENT_TIMESTAMP`,

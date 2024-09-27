@@ -1,38 +1,81 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
-import { Kysely } from 'kysely'
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  vi,
+} from 'vitest'
+import { Kysely, sql } from 'kysely'
 import type { Database } from '../../models/database'
 import { migrate } from '../../database/migrations/migrateLatest'
-import { setupTestDatabase, teardownTestDatabase } from '../setupTestDatabase'
+import { db } from '../../database'
 
 describe('migrateLatest', () => {
   let testDb: Kysely<Database>
 
   beforeAll(async () => {
-    process.env.DATABASE_URL =
-      'postgres://[REDACTED]@localhost:5432/mental_health_tracker_test'
-    await setupTestDatabase()
-    const { db } = await import('../../database')
-    testDb = db as unknown as Kysely<Database>
+    testDb = db
   })
 
   afterAll(async () => {
-    await teardownTestDatabase()
-    delete process.env.DATABASE_URL
+    await testDb.destroy()
   })
 
-  it('should run migrations for all .ts files in the migrations directory', async () => {
+  beforeEach(async () => {
+    // Drop all tables in reverse order to handle dependencies
+    const tables = ['activities', 'journal_entries', 'moods', 'users']
+    for (const table of tables) {
+      await testDb.schema.dropTable(table).ifExists().cascade().execute()
+    }
+  })
+
+  async function tableExists(tableName: string): Promise<boolean> {
+    const result = await sql<{ exists: boolean }>`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = ${tableName}
+      )`.execute(testDb)
+    return result.rows[0]?.exists ?? false
+  }
+
+  it('should run migrations and create expected tables', async () => {
     await migrate(testDb)
-    expect(true).toBe(true) // Add assertions as necessary
+
+    // Check if tables exist
+    const tables = ['users', 'moods', 'journal_entries', 'activities']
+    for (const table of tables) {
+      const exists = await tableExists(table)
+      expect(exists).toBe(true)
+    }
   })
 
-  it('should handle migration files without an up function', async () => {
-    // Implement logic to test migration without an up function
-    expect(true).toBe(true) // Add assertions as necessary
+  it('should handle repeated migrations gracefully', async () => {
+    // Run migrations twice
+    await migrate(testDb)
+    await migrate(testDb)
+
+    // Check if tables still exist and no errors were thrown
+    const tables = ['users', 'moods', 'journal_entries', 'activities']
+    for (const table of tables) {
+      const exists = await tableExists(table)
+      expect(exists).toBe(true)
+    }
   })
 
   it('should log the start and completion of migrations', async () => {
-    // Implement logic to test logging
-    expect(true).toBe(true) // Add assertions as necessary
+    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+
+    await migrate(testDb)
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Running migration:')
+    )
+    expect(consoleLogSpy).toHaveBeenCalledWith('All migrations have been run.')
+
+    consoleLogSpy.mockRestore()
   })
 
   it('should throw an error if DATABASE_URL is not set when run as a script', async () => {

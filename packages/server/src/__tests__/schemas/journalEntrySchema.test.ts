@@ -2,11 +2,23 @@ import { describe, it, expect } from 'vitest'
 import { journalEntrySchema } from '../../schemas/journalEntrySchema'
 
 describe('Journal Entry Schema Validation', () => {
-  it('should validate a correct journal entry schema', () => {
+  it('should validate a correct journal entry schema with YYYY-MM-DD format', () => {
     const validEntry = {
       id: 1,
       user_id: 100,
       date: '2024-08-26',
+      entry: 'This is my journal entry for today.',
+      sentiment: 7,
+    }
+
+    expect(() => journalEntrySchema.parse(validEntry)).not.toThrow()
+  })
+
+  it('should validate a correct journal entry schema with ISO 8601 format', () => {
+    const validEntry = {
+      id: 1,
+      user_id: 100,
+      date: '2024-08-26T12:00:00.000Z',
       entry: 'This is my journal entry for today.',
       sentiment: 7,
     }
@@ -23,7 +35,7 @@ describe('Journal Entry Schema Validation', () => {
     }
 
     expect(() => journalEntrySchema.parse(invalidEntry)).toThrowError(
-      'Date must be a valid date string'
+      'Invalid date format'
     )
   })
 

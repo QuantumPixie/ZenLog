@@ -20,11 +20,16 @@ describe('moodService', () => {
       const mockMoods = [
         {
           id: 1,
-          date: '2023-08-03',
+          date: '2023-08-03T00:00:00.000Z',
           mood_score: 7,
           emotions: ['happy', 'excited'],
         },
-        { id: 2, date: '2023-08-02', mood_score: 5, emotions: ['neutral'] },
+        {
+          id: 2,
+          date: '2023-08-02T00:00:00.000Z',
+          mood_score: 5,
+          emotions: ['neutral'],
+        },
       ]
 
       const mockSelect = vi.fn().mockReturnThis()
@@ -59,7 +64,7 @@ describe('moodService', () => {
     it('should create a new mood entry', async () => {
       const userId = 1
       const moodData = {
-        date: '2023-08-03',
+        date: '2023-08-03T00:00:00.000Z',
         mood_score: 8,
         emotions: ['happy', 'relaxed'],
       }
@@ -96,11 +101,21 @@ describe('moodService', () => {
   describe('getMoodsByDateRange', () => {
     it('should return moods within a date range', async () => {
       const userId = 1
-      const startDate = '2023-01-01'
-      const endDate = '2023-01-31'
+      const startDate = '2023-01-01T00:00:00.000Z'
+      const endDate = '2023-01-31T23:59:59.999Z'
       const mockMoods = [
-        { id: 1, date: '2023-01-15', mood_score: 7, emotions: ['happy'] },
-        { id: 2, date: '2023-01-20', mood_score: 6, emotions: ['content'] },
+        {
+          id: 1,
+          date: '2023-01-15T00:00:00.000Z',
+          mood_score: 7,
+          emotions: ['happy'],
+        },
+        {
+          id: 2,
+          date: '2023-01-20T00:00:00.000Z',
+          mood_score: 6,
+          emotions: ['content'],
+        },
       ]
 
       const mockSelect = vi.fn().mockReturnThis()

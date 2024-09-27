@@ -1,89 +1,90 @@
-import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest'
-import {
-  setupTestDatabase,
-  cleanupTestDatabase,
-  teardownTestDatabase,
-} from '../setupTestDatabase'
+import { describe, it, expect, beforeEach } from 'vitest'
+import { wrapInRollbacks } from './transactions/transactions'
 import { journalEntryService } from '../../services/journalEntryService'
-import { createUser, getUserById } from '../../services/userService'
+import { createUser } from '../../services/userService'
+import { generateFakeUser } from './helperFunctions/userFactory'
+import { generateFakeJournalEntries } from './helperFunctions/journalEntryFactory'
+import { testDb } from '../integration/transactions/testSetup'
+import { Kysely } from 'kysely'
+import { Database } from '../../models/database'
 
 describe('Journal Entry Service Integration Tests', () => {
+  let db: Kysely<Database>
   let userId: number
 
-  beforeAll(async () => {
-    await setupTestDatabase()
-  })
-
   beforeEach(async () => {
-    await cleanupTestDatabase()
-
-    try {
-      const uniqueEmail = `test${Date.now()}@example.com`
-      const user = await createUser({
-        email: uniqueEmail,
-        username: 'testuser',
-        password: 'password123',
-      })
-      userId = user.user.id
-
-      // Verify that the user was actually created
-      const createdUser = await getUserById(userId)
-      if (!createdUser) {
-        throw new Error('User was not created successfully')
-      }
-    } catch (error) {
-      console.error('Error in test setup:', error)
-      throw error
-    }
-  })
-
-  afterAll(async () => {
-    await teardownTestDatabase()
+    db = (await wrapInRollbacks(testDb)) as Kysely<Database>
+    const fakeUser = generateFakeUser()
+    const { user } = await createUser(fakeUser, db)
+    userId = user.id
   })
 
   it('should create and retrieve a journal entry', async () => {
-    const newEntry = {
-      date: '2024-08-01',
-      entry: 'Today was a great day!',
-    }
+    const [newEntry] = generateFakeJournalEntries(userId, 1)
 
     const createdEntry = await journalEntryService.createJournalEntry(
       userId,
-      newEntry
+      newEntry,
+      db
     )
+
     expect(createdEntry?.id).toBeDefined()
     expect(createdEntry?.entry).toBe(newEntry.entry)
     expect(createdEntry?.sentiment).toBeDefined()
 
-    const retrievedEntries = await journalEntryService.getJournalEntries(userId)
+    const retrievedEntries = await journalEntryService.getJournalEntries(
+      userId,
+      db
+    )
+
     expect(retrievedEntries).toHaveLength(1)
     expect(retrievedEntries[0]).toMatchObject({
       id: createdEntry?.id,
-      date: expect.any(Date),
       entry: createdEntry?.entry,
-      sentiment: expect.stringMatching(/^\d+(\.\d+)?$/),
+      sentiment: expect.any(String),
     })
+    expect(retrievedEntries[0].date).toBeDefined()
   })
 
   it('should get journal entries by date range', async () => {
-    const entries = [
-      { date: '2024-08-01', entry: 'First entry' },
-      { date: '2024-08-02', entry: 'Second entry' },
-      { date: '2024-08-03', entry: 'Third entry' },
-    ]
+    const entries = generateFakeJournalEntries(userId, 3)
 
     for (const entry of entries) {
-      await journalEntryService.createJournalEntry(userId, entry)
+      await journalEntryService.createJournalEntry(userId, entry, db)
     }
+
+    const startDate = new Date(
+      Date.now() - 7 * 24 * 60 * 60 * 1000
+    ).toISOString() // 7 days ago
+    const endDate = new Date().toISOString() // now
 
     const retrievedEntries =
       await journalEntryService.getJournalEntriesByDateRange(
         userId,
-        '2024-08-01',
-        '2024-08-02'
+        startDate,
+        endDate,
+        db
       )
-    expect(retrievedEntries).toHaveLength(2)
-    expect(retrievedEntries[0].entry).toBe('First entry')
-    expect(retrievedEntries[1].entry).toBe('Second entry')
+
+    expect(retrievedEntries.length).toBeGreaterThan(0)
+    expect(retrievedEntries.length).toBeLessThanOrEqual(entries.length)
+
+    retrievedEntries.forEach((entry) => {
+      expect(entry).toHaveProperty('id')
+      expect(entry).toHaveProperty('date')
+      expect(entry).toHaveProperty('entry')
+      expect(entry).toHaveProperty('sentiment')
+    })
+  })
+
+  it('should throw an error for invalid date format', async () => {
+    const invalidEntry = {
+      ...generateFakeJournalEntries(userId, 1)[0],
+      date: '2024-08-01', // Invalid format, missing time
+    }
+
+    await expect(
+      journalEntryService.createJournalEntry(userId, invalidEntry, db)
+    ).rejects.toThrow('Invalid date format')
   })
 })

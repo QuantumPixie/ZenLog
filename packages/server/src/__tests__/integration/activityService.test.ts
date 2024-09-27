@@ -1,69 +1,40 @@
-import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest'
-import {
-  setupTestDatabase,
-  cleanupTestDatabase,
-  teardownTestDatabase,
-} from '../setupTestDatabase'
+import { describe, it, expect, beforeEach } from 'vitest'
+import { wrapInRollbacks } from './transactions/transactions'
 import { activityService } from '../../services/activityService'
 import { createUser } from '../../services/userService'
+import { generateFakeUser } from './helperFunctions/userFactory'
+import { generateFakeActivity } from './helperFunctions/activityFactory'
+import { testDb } from '../integration/transactions/testSetup'
+import { Kysely } from 'kysely'
+import { Database } from '../../models/database'
 
 describe('Activity Service Integration Tests', () => {
-  let userId: number
-
-  beforeAll(async () => {
-    try {
-      await setupTestDatabase()
-    } catch (error) {
-      console.error('Failed to set up test database:', error)
-      throw error
-    }
-  })
+  let db: Kysely<Database>
 
   beforeEach(async () => {
-    try {
-      await cleanupTestDatabase()
-      const uniqueEmail = `test${Date.now()}@example.com`
-      const user = await createUser({
-        email: uniqueEmail,
-        username: 'testuser',
-        password: 'password123',
-      })
-      userId = user.user.id
-    } catch (error) {
-      console.error('Failed to create user:', error)
-      throw error
-    }
-  })
-
-  afterAll(async () => {
-    try {
-      await teardownTestDatabase()
-    } catch (error) {
-      console.error('Failed to tear down test database:', error)
-      throw error
-    }
+    db = (await wrapInRollbacks(testDb)) as Kysely<Database>
   })
 
   it('should create and retrieve an activity', async () => {
-    const newActivity = {
-      date: '2024-08-01T09:00:00.000Z',
-      activity: 'Running',
-      duration: 30,
-      notes: 'Morning jog',
-    }
+    const fakeUser = generateFakeUser()
+    const { user } = await createUser(fakeUser, db)
+    const userId = user.id
 
+    const newActivity = generateFakeActivity()
     const createdActivity = await activityService.createActivity(
       userId,
-      newActivity
+      newActivity,
+      db
     )
+
     expect(createdActivity).toHaveProperty('id')
     expect(createdActivity.activity).toBe(newActivity.activity)
 
     const retrievedActivity = await activityService.getActivityById(
       createdActivity.id,
-      userId
+      userId,
+      db
     )
-
     expect(retrievedActivity).toMatchObject({
       id: createdActivity.id,
       user_id: userId,
@@ -75,22 +46,40 @@ describe('Activity Service Integration Tests', () => {
   })
 
   it('should get activities by date range', async () => {
+    const db = await wrapInRollbacks(testDb)
+    const fakeUser = generateFakeUser()
+    const { user } = await createUser(fakeUser, db)
+    const userId = user.id
+
     const activities = [
-      { date: '2024-08-01T09:00:00.000Z', activity: 'Running', duration: 30 },
-      { date: '2024-08-02T10:00:00.000Z', activity: 'Cycling', duration: 45 },
-      { date: '2024-08-03T11:00:00.000Z', activity: 'Swimming', duration: 60 },
+      {
+        ...generateFakeActivity(),
+        date: '2024-08-01T09:00:00.000Z',
+        activity: 'Running',
+      },
+      {
+        ...generateFakeActivity(),
+        date: '2024-08-02T10:00:00.000Z',
+        activity: 'Cycling',
+      },
+      {
+        ...generateFakeActivity(),
+        date: '2024-08-03T11:00:00.000Z',
+        activity: 'Swimming',
+      },
     ]
 
     await Promise.all(
       activities.map((activity) =>
-        activityService.createActivity(userId, activity)
+        activityService.createActivity(userId, activity, db)
       )
     )
 
     const retrievedActivities = await activityService.getActivitiesByDateRange(
       userId,
       '2024-08-01T00:00:00.000Z',
-      '2024-08-02T23:59:59.999Z'
+      '2024-08-02T23:59:59.999Z',
+      db
     )
     expect(retrievedActivities).toHaveLength(2)
     expect(retrievedActivities[0].activity).toBe('Cycling')
@@ -98,14 +87,18 @@ describe('Activity Service Integration Tests', () => {
   })
 
   it('should throw an error for invalid date format', async () => {
+    const db = await wrapInRollbacks(testDb)
+    const fakeUser = generateFakeUser()
+    const { user } = await createUser(fakeUser, db)
+    const userId = user.id
+
     const invalidActivity = {
+      ...generateFakeActivity(),
       date: '2024-08-01', // Invalid format, missing time
-      activity: 'Running',
-      duration: 30,
     }
 
     await expect(
-      activityService.createActivity(userId, invalidActivity)
+      activityService.createActivity(userId, invalidActivity, db)
     ).rejects.toThrow('Invalid date format')
   })
 })

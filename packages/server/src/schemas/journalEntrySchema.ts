@@ -1,10 +1,19 @@
 import { z } from 'zod'
 
+export const isValidDateString = (dateString: string): boolean => {
+  const date = new Date(dateString)
+  return (
+    !isNaN(date.getTime()) &&
+    (/^\d{4}-\d{2}-\d{2}$/.test(dateString) ||
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/.test(dateString))
+  )
+}
+
 export const journalEntrySchema = z.object({
   id: z.number().int().optional(),
   user_id: z.number().int(),
-  date: z.string().refine((val) => !Number.isNaN(Date.parse(val)), {
-    message: 'Date must be a valid date string',
+  date: z.string().refine(isValidDateString, {
+    message: 'Invalid date format. Use YYYY-MM-DD or ISO 8601 format.',
   }),
   entry: z
     .string()

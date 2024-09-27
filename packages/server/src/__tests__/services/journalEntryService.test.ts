@@ -22,7 +22,10 @@ describe('journalEntryService', () => {
   describe('createJournalEntry', () => {
     it('should create and return a new journal entry', async () => {
       const userId = 1
-      const entryData = { date: '2023-07-27', entry: 'Today was a great day!' }
+      const entryData = {
+        date: '2023-07-27T00:00:00.000Z',
+        entry: 'Today was a great day!',
+      }
       const mockSentimentScore = 8.0
       const mockCreatedEntry = {
         id: 1,
