@@ -18,6 +18,7 @@ export default defineConfig({
     maxConcurrency: 1,
     sequence: {
       shuffle: false,
+      concurrent: false,
     },
     hookTimeout: 20000,
     testTimeout: 10000,

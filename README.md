@@ -1,9 +1,8 @@
-# Mental Health Tracker
+# ZenLog
 
-The Mental Health Tracker is a comprehensive application designed to help users track their mental health and wellness activities. It includes features such as mood tracking, journal entries, and activity logs. Sentiment is able to provide a mood score based on journal entries. The dashboard functionality lets a user review their moods, activities and journal entries for the last 7 days.
-Users can determine what sort of activities adds to either joy or furstration in their personal lives.
+ZenLog is a comprehensive mental health tracking application designed to help users monitor their emotional well-being and daily activities. With features like mood tracking, journaling, and activity logging, ZenLog empowers users to gain insights into their mental health patterns and identify factors that contribute to their joy or frustration.
 
-The backend is built using Node.js, Express, TRPC, TypeScript, and PostgreSQL.
+
 
 ## Table of Contents
 
@@ -17,46 +16,59 @@ The backend is built using Node.js, Express, TRPC, TypeScript, and PostgreSQL.
 
 ## Features
 
-- User authentication with JWT
-- Mood tracking
-- Journal entries
-- Activity logs
-- sentiment mood score from journal entries
-- Secure password storage with bcrypt
-- User signup and login
+- User Authentication: Secure signup and login with JWT and http-only cookies
+- Mood Tracking: Log and visualize your daily moods
+- Journaling: Record your thoughts and experiences
+- Activity Logging: Keep track of your daily activities
+- Sentiment Analysis: Get mood scores based on your journal entries
+- Dashboard: Review your moods, activities, and journal entries
+
+## Tech Stack:
+
+- Backend: Node.js, Express, tRPC, TypeScript, PostgreSQL
+- Frontend: Vue 3
+- Security: bcrypt for password hashing, JWT for authentication
 
 ## Installation
 
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/TuringCollegeSubmissions/thuppe-WD.3.3.5.git
-
+git clone https://github.com/QuantumPixie/ZenLog.git
+cd ZenLog
 npm install
-
-cd packages/server
-npm run dev
 ```
 
 2. Create a PostgreSQL database with your username and password
-
 3. Create .env file with with .env.example suggestions in server:
 
 ```
 DATABASE_URL=postgres://username:password@localhost:5432/database_name
-JWT_SECRET=secretpassword
+JWT_SECRET=your_secret_key
 ```
 
 4. Run migrations
 
 ```
+cd packages/server
 npm run migrate:latest
 ```
 
-5. Run tests
+5. Start the development servers:
 
 ```
- npm run test
+cd packages/server
+npm run dev
+
+cd packages/client/mental-health-frontend
+npm run dev
+```
+
+6. Testing
+
+```
+cd packages/server
+npm run test
 ```
 
 6. Run test coverage
