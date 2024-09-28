@@ -63,6 +63,11 @@ jobs:
         run: npm run migrate:latest
         working-directory: ./packages/server
 
+      - name: Wait for database to settle
+        run: |
+          echo "Waiting for 5 seconds to ensure database is ready..."
+          sleep 5
+
       - name: Run server tests sequentially
         run: npm run test -- --config ./vitest.config.ts
         working-directory: ./packages/server
