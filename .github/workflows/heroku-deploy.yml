@@ -64,7 +64,7 @@ jobs:
         working-directory: ./packages/server
 
       - name: Run server tests sequentially
-        run: npm run test -- --single-thread --pool=forks
+        run: npm run test -- --config ./vitest.config.ts
         working-directory: ./packages/server
 
   build:
