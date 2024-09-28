@@ -8,92 +8,148 @@ on:
 
 env:
   HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
+  DATABASE_URL: postgres://test_user:${{ secrets.TEST_DB_PASSWORD }}@localhost:5432/test_db
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
+  PORT: 3005
+  CI: true
+  NODE_ENV: test
+  VITE_BACKEND_URL: http://localhost:3005/api/trpc
+  PLAYWRIGHT_TEST_BASE_URL: http://localhost:3005
+  POSTGRES_DB: test_db
+  POSTGRES_USER: test_user
+  POSTGRES_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
 
 jobs:
-  test:
+  setup:
     runs-on: ubuntu-latest
-
-    env:
-      DATABASE_URL: postgres://thuppertz:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/mental_health_tracker_db
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      PORT: 3005
-      CI: true
-      NODE_ENV: test
-      VITE_BACKEND_URL: http://localhost:3005/api/trpc
-      PLAYWRIGHT_TEST_BASE_URL: http://localhost:3005
-      POSTGRES_DB: mental_health_tracker_db
-      POSTGRES_USER: thuppertz
-      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-
-    services:
-      postgres:
-        image: postgres:16.1-alpine
-        env:
-          POSTGRES_DB: mental_health_tracker_db
-          POSTGRES_USER: thuppertz
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-        ports:
-          - 5432:5432
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20.x"
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm run install-all
 
-      - name: Install root dependencies
-        run: npm ci
-
-      - name: Install server dependencies
+  lint-and-type-check:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+      - name: Install dependencies
         run: npm ci
         working-directory: ./packages/server
-
       - name: Run server lint
         run: npm run lint
         working-directory: ./packages/server
-
       - name: Run server type check
         run: npm run type-check
         working-directory: ./packages/server
 
-      - name: Run database migrations
-        run: npm run migrate:latest
-        working-directory: ./packages/server
-
-      - name: Run server tests
-        run: npm run test
-        working-directory: ./packages/server
-
-  build:
-    needs: test
+  unit-tests:
+    needs: lint-and-type-check
     runs-on: ubuntu-latest
-
+    services:
+      postgres:
+        image: postgres:16.1-alpine
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - uses: actions/checkout@v4
-
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20.x"
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./packages/server
+      - name: Setup test database
+        run: |
+          npm run migrate:latest
+          npm run db:seed
+        working-directory: ./packages/server
+      - name: Run server tests
+        run: npm run test
+        working-directory: ./packages/server
+      - name: Teardown test database
+        if: always()
+        run: npm run db:drop
+        working-directory: ./packages/server
 
+  e2e-tests:
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16.1-alpine
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
       - name: Install dependencies
         run: npm run install-all
+      - name: Install Playwright
+        run: npx playwright install --with-deps
+      - name: Setup test database
+        run: |
+          npm run migrate:latest
+          npm run db:seed
+        working-directory: ./packages/server
+      - name: Build application
+        run: |
+          npm run build:server
+          npm run build:client
+      - name: Start application
+        run: |
+          npm run start:server &
+          npm run start:client &
+      - name: Run E2E tests
+        run: npm run test:e2e
+      - name: Teardown test database
+        if: always()
+        run: npm run db:drop
+        working-directory: ./packages/server
 
+  build:
+    needs: e2e-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+      - name: Install dependencies
+        run: npm run install-all
       - name: Build server
         run: npm run build:server
-
       - name: Build client
         run: npm run build:client
-
       - name: Upload server build artifacts
         uses: actions/upload-artifact@v3
         with:
           name: server-dist
           path: packages/server/dist
-
       - name: Upload client build artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -104,43 +160,33 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20.x"
-
       - name: Install dependencies
         run: npm run install-all
-
       - name: Install Heroku CLI
         run: curl https://cli-assets.heroku.com/install.sh | sh
-
       - name: Login to Heroku
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
         run: heroku container:login
-
       - name: Add Heroku remote
         run: heroku git:remote --app ${{ secrets.HEROKU_APP_NAME }}
-
       - name: Deploy to Heroku via container
         run: |
           heroku container:push web --app ${{ secrets.HEROKU_APP_NAME }}
           heroku container:release web --app ${{ secrets.HEROKU_APP_NAME }}
-
       - name: Run database migrations
         run: heroku run --app ${{ secrets.HEROKU_APP_NAME }} npm run migrate:latest
-
       - name: Wait for Heroku to start
         run: sleep 10
-
       - name: Verify deployment
         run: |
           echo "Deployed to https://${{ secrets.HEROKU_APP_NAME }}.herokuapp.com"
-          curl -sSf https://zenlog-b49a02b5774a.herokuapp.com/api/health || (echo "Health check failed" && exit 1)
+          curl -sSf https://${{ secrets.HEROKU_APP_NAME }}.herokuapp.com/api/health || (echo "Health check failed" && exit 1
