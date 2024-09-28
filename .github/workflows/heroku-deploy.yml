@@ -64,7 +64,7 @@ jobs:
         working-directory: ./packages/server
 
       - name: Run server tests sequentially
-        run: npm run test -- --threads false --pool=forks
+        run: npm run test -- --single-thread --pool=forks
         working-directory: ./packages/server
 
   build:
